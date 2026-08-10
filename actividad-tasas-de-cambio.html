@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actividad de Reforzamiento: Tasas de Cambio</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #e67e22;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --gray: #95a5a6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
+        .container { max-width: 850px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        header { background: var(--primary); color: #fff; padding: 25px; text-align: center; }
+        header h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        header h2 { font-size: 1.1rem; font-weight: 400; opacity: 0.9; }
+        section { padding: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input[type="text"], input[type="date"] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { display: inline-block; background: var(--secondary); color: #fff; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: background 0.3s; width: 100%; margin-top: 10px; }
+        .btn:hover { background: #d35400; }
+        .btn:disabled { background: var(--gray); cursor: not-allowed; }
+        .btn-next { background: var(--primary); }
+        .btn-next:hover { background: #1a252f; }
+        
+        .stats-bar { display: flex; justify-content: space-between; background: #f8f9fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; flex-wrap: wrap; gap: 10px; }
+        .stat-item span { color: var(--secondary); }
+        .progress-container { height: 8px; background: #e0e0e0; border-radius: 4px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.4s ease; }
+        
+        .question-box { margin-bottom: 20px; }
+        .question-text { font-size: 1.2rem; margin-bottom: 20px; font-weight: 500; background: #fdfefe; padding: 15px; border-radius: 8px; border-left: 5px solid var(--secondary); }
+        .options { display: grid; gap: 10px; }
+        .option-btn { padding: 12px; background: #fff; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s; font-size: 1.1rem; width: 100%; }
+        .option-btn:hover:not(.disabled) { border-color: var(--secondary); background: #fef5e7; }
+        .option-btn.selected { border-color: var(--secondary); background: #fdebd0; font-weight: 600; }
+        .option-btn.correct { border-color: var(--success); background: #d5f5e3; }
+        .option-btn.incorrect { border-color: var(--danger); background: #fadbd8; }
+        .option-btn.disabled { pointer-events: none; opacity: 0.7; }
+        
+        .feedback { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; }
+        .feedback.correct { background: #d5f5e3; color: #145a32; border: 1px solid #27ae60; }
+        .feedback.incorrect { background: #fadbd8; color: #7b241c; border: 1px solid #e74c3c; }
+        
+        .results-box { text-align: center; }
+        .score-circle { width: 120px; height: 120px; background: var(--secondary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; margin: 20px auto; }
+        .hidden { display: none !important; }
+        
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            section { padding: 15px; }
+            .option-btn { font-size: 1rem; padding: 10px; }
+            .stats-bar { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Actividad de Reforzamiento</h1>
+        <h2>Cálculo Diferencial | Tasas de Cambio</h2>
+    </header>
+
+    <section id="registro">
+        <div class="form-group">
+            <label for="nombre">Nombre del Estudiante</label>
+            <input type="text" id="nombre" placeholder="Tu nombre completo">
+            <label for="fecha">Fecha de Realización</label>
+            <input type="date" id="fecha">
+        </div>
+        <button class="btn" onclick="startQuiz()">Iniciar Evaluación</button>
+    </section>
+
+    <section id="actividad" class="hidden">
+        <div class="stats-bar">
+            <div class="stat-item">✅ <span id="correct-count">0</span></div>
+            <div class="stat-item">❌ <span id="error-count">0</span>/10</div>
+            <div class="stat-item">📊 <span id="progress-pct">0%</span></div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div id="question-container">
+            <div class="question-box">
+                <p class="question-text" id="q-text"></p>
+                <div class="options" id="options-container"></div>
+                <div id="feedback" class="feedback"></div>
+            </div>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()" disabled>Siguiente</button>
+        </div>
+    </section>
+
+    <section id="resultados" class="hidden">
+        <div class="results-box">
+            <h2>Resultado para <span id="student-name-display"></span></h2>
+            <div class="score-circle" id="final-score">0%</div>
+            <div id="personal-message" style="margin: 20px 0; font-size: 1.1rem;"></div>
+            <button class="btn" onclick="location.reload()">Reiniciar Actividad</button>
+        </div>
+    </section>
+</div>
+
+<script>
+    // 20 reactivos tomados de los ejercicios propuestos de TASAS DE CAMBIO
+    const questions = [
+        // ==================== SECCIÓN 1: Cambio absoluto ====================
+        {
+            q: "Si $y$ va de 5 a 12, ¿cuál es $\\Delta y$?",
+            options: ["$7$", "$5$", "$12$", "$-7$"],
+            correct: 0,
+            explanation: "$\\Delta y = y_f - y_i = 12 - 5 = 7$."
+        },
+        {
+            q: "Si $f(x) = 2x$ y $x$ va de 3 a 7, ¿cuál es $\\Delta f$?",
+            options: ["$8$", "$6$", "$14$", "$4$"],
+            correct: 0,
+            explanation: "$f(7)=14$, $f(3)=6$. $\\Delta f = 14 - 6 = 8$."
+        },
+        {
+            q: "Una temperatura sube de 15°C a 28°C. ¿Cuál es el cambio?",
+            options: ["$13$°C", "$15$°C", "$28$°C", "$43$°C"],
+            correct: 0,
+            explanation: "$\\Delta T = 28 - 15 = 13$°C."
+        },
+        {
+            q: "Una población baja de 500 a 400 habitantes. ¿Cuál es el cambio?",
+            options: ["$-100$", "$100$", "$500$", "$400$"],
+            correct: 0,
+            explanation: "$\\Delta P = 400 - 500 = -100$ habitantes."
+        },
+        {
+            q: "Un precio sube de \\$20 a \\$25. ¿Cuál es el cambio?",
+            options: ["$\\$5$", "$\\$20$", "$\\$25$", "$\\$45$"],
+            correct: 0,
+            explanation: "$\\Delta P = 25 - 20 = 5$ dólares."
+        },
+        {
+            q: "Una altura cae de 100 m a 20 m. ¿Cuál es el cambio?",
+            options: ["$-80$ m", "$80$ m", "$100$ m", "$20$ m"],
+            correct: 0,
+            explanation: "$\\Delta h = 20 - 100 = -80$ metros."
+        },
+
+        // ==================== SECCIÓN 2: Tasa de cambio promedio ====================
+        {
+            q: "Para $f(x) = 2x + 1$, encuentre la tasa de cambio entre $x=1$ y $x=4$",
+            options: ["$2$", "$3$", "$1$", "$4$"],
+            correct: 0,
+            explanation: "$\\frac{f(4)-f(1)}{4-1} = \\frac{9-3}{3} = \\frac{6}{3}=2$. Es la pendiente de la función lineal."
+        },
+        {
+            q: "Para $f(x) = x^2$, encuentre la tasa de cambio entre $x=0$ y $x=2$",
+            options: ["$2$", "$4$", "$0$", "$1$"],
+            correct: 0,
+            explanation: "$\\frac{f(2)-f(0)}{2-0} = \\frac{4-0}{2} = 2$."
+        },
+        {
+            q: "Una población pasa de 100 en año 0 a 400 en año 5. ¿Cuál es la tasa promedio?",
+            options: ["$60$ hab/año", "$80$ hab/año", "$100$ hab/año", "$300$ hab/año"],
+            correct: 0,
+            explanation: "$\\frac{400-100}{5-0} = \\frac{300}{5} = 60$ habitantes por año."
+        },
+        {
+            q: "Distancia: 0 km en hora 0, 300 km en hora 5. ¿Velocidad promedio?",
+            options: ["$60$ km/h", "$50$ km/h", "$300$ km/h", "$150$ km/h"],
+            correct: 0,
+            explanation: "$\\frac{300-0}{5-0} = 60$ km/h."
+        },
+        {
+            q: "Para $f(x) = 3x - 2$, encuentre la tasa entre $x=2$ y $x=5$",
+            options: ["$3$", "$9$", "$6$", "$1$"],
+            correct: 0,
+            explanation: "$\\frac{f(5)-f(2)}{5-2} = \\frac{13-4}{3} = \\frac{9}{3}=3$. La pendiente de la función lineal es 3."
+        },
+        {
+            q: "Temperatura: 10°C a las 6 AM, 25°C a las 2 PM (8 horas). ¿Tasa promedio?",
+            options: ["$1.875$ °C/h", "$2$ °C/h", "$15$ °C/h", "$3.125$ °C/h"],
+            correct: 0,
+            explanation: "$\\frac{25-10}{8} = \\frac{15}{8} = 1.875$ °C por hora."
+        },
+
+        // ==================== SECCIÓN 3: Pendiente de secante ====================
+        {
+            q: "Para $f(x) = x^3$, encuentre la pendiente secante entre $x=1$ y $x=2$",
+            options: ["$7$", "$8$", "$1$", "$3$"],
+            correct: 0,
+            explanation: "$\\frac{f(2)-f(1)}{2-1} = \\frac{8-1}{1} = 7$."
+        },
+        {
+            q: "Para $f(x) = \\sqrt{x}$, encuentre la pendiente secante entre $x=1$ y $x=4$",
+            options: ["$\\frac{1}{3}$", "$\\frac{1}{2}$", "$1$", "$2$"],
+            correct: 0,
+            explanation: "$\\frac{f(4)-f(1)}{4-1} = \\frac{2-1}{3} = \\frac{1}{3}$."
+        },
+        {
+            q: "Para $f(x) = \\frac{1}{x}$, encuentre la pendiente secante entre $x=1$ y $x=2$",
+            options: ["$-\\frac{1}{2}$", "$-1$", "$\\frac{1}{2}$", "$1$"],
+            correct: 0,
+            explanation: "$\\frac{f(2)-f(1)}{2-1} = \\frac{1/2-1}{1} = -\\frac{1}{2}$."
+        },
+        {
+            q: "Para $f(x) = e^x$, encuentre la pendiente secante aproximada entre $x=0$ y $x=1$",
+            options: ["$1.718$", "$1$", "$2.718$", "$0.718$"],
+            correct: 0,
+            explanation: "$\\frac{e^1-e^0}{1-0} = e-1 \\approx 2.718-1 = 1.718$."
+        },
+        {
+            q: "Para $f(x) = \\sin(x)$, encuentre la pendiente secante entre $x=0$ y $x=\\pi/2$",
+            options: ["$\\frac{2}{\\pi}$", "$1$", "$\\frac{\\pi}{2}$", "$0$"],
+            correct: 0,
+            explanation: "$\\frac{\\sin(\\pi/2)-\\sin(0)}{\\pi/2-0} = \\frac{1-0}{\\pi/2} = \\frac{2}{\\pi}$."
+        },
+        {
+            q: "Para $f(x) = x^2 + 2x$, encuentre la pendiente secante entre $x=1$ y $x=3$",
+            options: ["$6$", "$4$", "$8$", "$2$"],
+            correct: 0,
+            explanation: "$f(3)=9+6=15$, $f(1)=1+2=3$. $\\frac{15-3}{3-1} = \\frac{12}{2}=6$."
+        },
+
+        // ==================== SECCIÓN 4: Cambio porcentual ====================
+        {
+            q: "Un valor crece de 50 a 75. ¿Cuál es el cambio porcentual?",
+            options: ["$50\\%$", "$25\\%$", "$75\\%$", "$33\\%$"],
+            correct: 0,
+            explanation: "$\\frac{75-50}{50} \\times 100 = \\frac{25}{50} \\times 100 = 50\\%$."
+        },
+        {
+            q: "Una inversión de \\$2000 crece a \\$2500. ¿Ganancia porcentual?",
+            options: ["$25\\%$", "$20\\%$", "$30\\%$", "$15\\%$"],
+            correct: 0,
+            explanation: "$\\frac{2500-2000}{2000} \\times 100 = \\frac{500}{2000} \\times 100 = 25\\%$."
+        },
+        {
+            q: "Precio baja de \\$100 a \\$75. ¿Cambio porcentual?",
+            options: ["$-25\\%$", "$-30\\%$", "$-20\\%$", "$-15\\%$"],
+            correct: 0,
+            explanation: "$\\frac{75-100}{100} \\times 100 = \\frac{-25}{100} \\times 100 = -25\\%$."
+        },
+        {
+            q: "Población de 10,000 crece a 12,500. ¿Crecimiento porcentual?",
+            options: ["$25\\%$", "$20\\%$", "$30\\%$", "$15\\%$"],
+            correct: 0,
+            explanation: "$\\frac{12500-10000}{10000} \\times 100 = \\frac{2500}{10000} \\times 100 = 25\\%$."
+        }
+    ];
+
+    let currentQ = 0;
+    let correctCount = 0;
+    let errorCount = 0;
+    let studentName = "";
+    let answered = false;
+    const MAX_ERRORS = 10;
+
+    // Establecer fecha de hoy por defecto
+    const fechaInput = document.getElementById('fecha');
+    if (fechaInput) {
+        const hoy = new Date();
+        const año = hoy.getFullYear();
+        const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoy.getDate()).padStart(2, '0');
+        fechaInput.value = `${año}-${mes}-${dia}`;
+    }
+
+    function startQuiz() {
+        const nameInput = document.getElementById('nombre').value.trim();
+        const dateInput = document.getElementById('fecha').value;
+        if(!nameInput || !dateInput) {
+            alert("Por favor, ingresa tu nombre y la fecha.");
+            return;
+        }
+        studentName = nameInput;
+        document.getElementById('registro').classList.add('hidden');
+        document.getElementById('actividad').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        answered = false;
+        const q = questions[currentQ];
+        document.getElementById('q-text').innerHTML = `<strong>Pregunta ${currentQ + 1}:</strong><br>${q.q}`;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = opt;
+            btn.onclick = () => selectOption(i, btn);
+            container.appendChild(btn);
+        });
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('btn-next').disabled = true;
+        updateStats();
+        
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function selectOption(index, btn) {
+        if(answered) return;
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('btn-next').disabled = false;
+        btn.dataset.index = index;
+    }
+
+    function nextQuestion() {
+        if(!answered) {
+            const selected = document.querySelector('.option-btn.selected');
+            if(!selected) {
+                alert("Por favor, selecciona una respuesta antes de continuar.");
+                return;
+            }
+            const idx = parseInt(selected.dataset.index);
+            checkAnswer(idx);
+            answered = true;
+            document.getElementById('btn-next').innerText = (currentQ < questions.length - 1) ? "Siguiente Pregunta" : "Finalizar";
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise();
+            }
+        } else {
+            currentQ++;
+            if(currentQ < questions.length) {
+                loadQuestion();
+                document.getElementById('btn-next').innerText = "Siguiente";
+            } else {
+                showResults();
+            }
+        }
+    }
+
+    function checkAnswer(selectedIdx) {
+        const q = questions[currentQ];
+        const isCorrect = selectedIdx === q.correct;
+        const feedback = document.getElementById('feedback');
+        const btns = document.querySelectorAll('.option-btn');
+
+        btns.forEach(b => b.classList.add('disabled'));
+        btns[q.correct].classList.add('correct');
+
+        if(isCorrect) {
+            correctCount++;
+            feedback.className = "feedback correct";
+            feedback.innerHTML = "<strong>¡Excelente!</strong> " + q.explanation;
+        } else {
+            errorCount++;
+            btns[selectedIdx].classList.add('incorrect');
+            feedback.className = "feedback incorrect";
+            feedback.innerHTML = "<strong>Incorrecto.</strong> " + q.explanation;
+            
+            if(errorCount >= MAX_ERRORS) {
+                setTimeout(() => {
+                    alert(`Has alcanzado el límite de ${MAX_ERRORS} errores. Te recomendamos repasar: cambio absoluto, tasa de cambio promedio, pendiente de secante y cambio porcentual.`);
+                    location.reload();
+                }, 1500);
+            }
+        }
+        feedback.style.display = 'block';
+        updateStats();
+    }
+
+    function updateStats() {
+        document.getElementById('correct-count').innerText = correctCount;
+        document.getElementById('error-count').innerText = errorCount;
+        const prog = Math.round((currentQ / questions.length) * 100);
+        document.getElementById('progress-pct').innerText = prog + "%";
+        document.getElementById('progress-bar').style.width = prog + "%";
+    }
+
+    function showResults() {
+        document.getElementById('actividad').classList.add('hidden');
+        document.getElementById('resultados').classList.remove('hidden');
+        document.getElementById('student-name-display').innerText = studentName;
+        const score = Math.round((correctCount / questions.length) * 100);
+        document.getElementById('final-score').innerText = score + "%";
+        
+        let msg = score >= 80 ? 
+            "¡Excelente trabajo! Dominas los conceptos de cambio absoluto, tasa de cambio promedio, pendiente de secante y cambio porcentual." : 
+            "Buen esfuerzo. Te sugerimos repasar cómo calcular el cambio absoluto, la tasa de cambio promedio como pendiente de la secante, y los cambios porcentuales.";
+        document.getElementById('personal-message').innerText = msg;
+    }
+</script>
+</body>
+</html>
