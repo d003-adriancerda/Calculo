@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actividad de Reforzamiento: Máximos y Mínimos</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #e67e22;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --gray: #95a5a6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
+        .container { max-width: 850px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        header { background: var(--primary); color: #fff; padding: 25px; text-align: center; }
+        header h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        header h2 { font-size: 1.1rem; font-weight: 400; opacity: 0.9; }
+        section { padding: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input[type="text"], input[type="date"] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { display: inline-block; background: var(--secondary); color: #fff; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: background 0.3s; width: 100%; margin-top: 10px; }
+        .btn:hover { background: #d35400; }
+        .btn:disabled { background: var(--gray); cursor: not-allowed; }
+        .btn-next { background: var(--primary); }
+        .btn-next:hover { background: #1a252f; }
+        
+        .stats-bar { display: flex; justify-content: space-between; background: #f8f9fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; flex-wrap: wrap; gap: 10px; }
+        .stat-item span { color: var(--secondary); }
+        .progress-container { height: 8px; background: #e0e0e0; border-radius: 4px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.4s ease; }
+        
+        .question-box { margin-bottom: 20px; }
+        .question-text { font-size: 1.2rem; margin-bottom: 20px; font-weight: 500; background: #fdfefe; padding: 15px; border-radius: 8px; border-left: 5px solid var(--secondary); }
+        .options { display: grid; gap: 10px; }
+        .option-btn { padding: 12px; background: #fff; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s; font-size: 1.1rem; width: 100%; }
+        .option-btn:hover:not(.disabled) { border-color: var(--secondary); background: #fef5e7; }
+        .option-btn.selected { border-color: var(--secondary); background: #fdebd0; font-weight: 600; }
+        .option-btn.correct { border-color: var(--success); background: #d5f5e3; }
+        .option-btn.incorrect { border-color: var(--danger); background: #fadbd8; }
+        .option-btn.disabled { pointer-events: none; opacity: 0.7; }
+        
+        .feedback { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; }
+        .feedback.correct { background: #d5f5e3; color: #145a32; border: 1px solid #27ae60; }
+        .feedback.incorrect { background: #fadbd8; color: #7b241c; border: 1px solid #e74c3c; }
+        
+        .results-box { text-align: center; }
+        .score-circle { width: 120px; height: 120px; background: var(--secondary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; margin: 20px auto; }
+        .hidden { display: none !important; }
+        
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            section { padding: 15px; }
+            .option-btn { font-size: 1rem; padding: 10px; }
+            .stats-bar { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Actividad de Reforzamiento</h1>
+        <h2>Cálculo Diferencial | Máximos y Mínimos</h2>
+    </header>
+
+    <section id="registro">
+        <div class="form-group">
+            <label for="nombre">Nombre del Estudiante</label>
+            <input type="text" id="nombre" placeholder="Tu nombre completo">
+            <label for="fecha">Fecha de Realización</label>
+            <input type="date" id="fecha">
+        </div>
+        <button class="btn" onclick="startQuiz()">Iniciar Evaluación</button>
+    </section>
+
+    <section id="actividad" class="hidden">
+        <div class="stats-bar">
+            <div class="stat-item">✅ <span id="correct-count">0</span></div>
+            <div class="stat-item">❌ <span id="error-count">0</span>/10</div>
+            <div class="stat-item">📊 <span id="progress-pct">0%</span></div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div id="question-container">
+            <div class="question-box">
+                <p class="question-text" id="q-text"></p>
+                <div class="options" id="options-container"></div>
+                <div id="feedback" class="feedback"></div>
+            </div>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()" disabled>Siguiente</button>
+        </div>
+    </section>
+
+    <section id="resultados" class="hidden">
+        <div class="results-box">
+            <h2>Resultado para <span id="student-name-display"></span></h2>
+            <div class="score-circle" id="final-score">0%</div>
+            <div id="personal-message" style="margin: 20px 0; font-size: 1.1rem;"></div>
+            <button class="btn" onclick="location.reload()">Reiniciar Actividad</button>
+        </div>
+    </section>
+</div>
+
+<script>
+    // 20 reactivos tomados de los ejercicios propuestos de MÁXIMOS Y MÍNIMOS
+    const questions = [
+        // ==================== SECCIÓN 1: Encontrar puntos críticos ====================
+        {
+            q: "Para $f(x) = x^2 - 4x + 3$, encuentre los puntos críticos.",
+            options: ["$x=2$", "$x=4$", "$x=1$ y $x=3$", "$x=0$ y $x=4$"],
+            correct: 0,
+            explanation: "$f'(x)=2x-4=0 \\Rightarrow x=2$."
+        },
+        {
+            q: "Para $f(x) = -x^2 + 6x$, encuentre los puntos críticos.",
+            options: ["$x=3$", "$x=6$", "$x=0$ y $x=6$", "$x=2$"],
+            correct: 0,
+            explanation: "$f'(x)=-2x+6=0 \\Rightarrow x=3$."
+        },
+        {
+            q: "Para $f(x) = x^3 - 3x$, encuentre los puntos críticos.",
+            options: ["$x=-1$ y $x=1$", "$x=0$ y $x=3$", "$x=-3$ y $x=3$", "$x=0$ y $x=1$"],
+            correct: 0,
+            explanation: "$f'(x)=3x^2-3=3(x^2-1)=0 \\Rightarrow x=\\pm1$."
+        },
+        {
+            q: "Para $f(x) = x^3 - x^2$, encuentre los puntos críticos.",
+            options: ["$x=0$ y $x=\\frac{2}{3}$", "$x=0$ y $x=1$", "$x=0$ y $x=\\frac{1}{2}$", "$x=0$ y $x=2$"],
+            correct: 0,
+            explanation: "$f'(x)=3x^2-2x=x(3x-2)=0 \\Rightarrow x=0, \\frac{2}{3}$."
+        },
+        {
+            q: "Para $f(x) = 2x^3 - 3x^2 - 12x$, encuentre los puntos críticos.",
+            options: ["$x=-1$ y $x=2$", "$x=0$ y $x=2$", "$x=-2$ y $x=1$", "$x=0$ y $x=1$"],
+            correct: 0,
+            explanation: "$f'(x)=6x^2-6x-12=6(x^2-x-2)=6(x-2)(x+1)=0 \\Rightarrow x=-1,2$."
+        },
+        {
+            q: "Para $f(x) = -x^4 + 2x^2$, encuentre los puntos críticos.",
+            options: ["$x=-1,0,1$", "$x=0$", "$x=\\pm1$", "$x=\\pm\\sqrt{2}$"],
+            correct: 0,
+            explanation: "$f'(x)=-4x^3+4x=4x(1-x^2)=0 \\Rightarrow x=-1,0,1$."
+        },
+
+        // ==================== SECCIÓN 2: Clasificar con segunda derivada ====================
+        {
+            q: "Para $f(x) = x^2 - 6x + 8$, encuentre el punto crítico y clasifíquelo.",
+            options: ["$x=3$, mínimo", "$x=3$, máximo", "$x=2$, mínimo", "$x=4$, máximo"],
+            correct: 0,
+            explanation: "$f'(x)=2x-6=0 \\Rightarrow x=3$. $f''(x)=2>0$, por lo tanto es un mínimo."
+        },
+        {
+            q: "Para $f(x) = -x^2 + 4x - 3$, clasifique su punto crítico.",
+            options: ["$x=2$, máximo", "$x=2$, mínimo", "$x=4$, máximo", "$x=1$, mínimo"],
+            correct: 0,
+            explanation: "$f'(x)=-2x+4=0 \\Rightarrow x=2$. $f''(x)=-2<0$, por lo tanto es un máximo."
+        },
+        {
+            q: "Para $f(x) = x^3 - 6x^2 + 9x$, encuentre los puntos críticos y clasifíquelos.",
+            options: ["$x=1$ (máx), $x=3$ (mín)", "$x=1$ (mín), $x=3$ (máx)", "$x=0$ (máx), $x=3$ (mín)", "$x=1$ (máx), $x=2$ (mín)"],
+            correct: 0,
+            explanation: "$f'(x)=3x^2-12x+9=3(x^2-4x+3)=3(x-1)(x-3)=0 \\Rightarrow x=1,3$. $f''(x)=6x-12$. $f''(1)=-6<0$ (máx), $f''(3)=6>0$ (mín)."
+        },
+        {
+            q: "Para $f(x) = 2x^3 - 3x^2$, clasifique sus puntos críticos.",
+            options: ["$x=0$ (máx), $x=1$ (mín)", "$x=0$ (mín), $x=1$ (máx)", "$x=0$ (máx), $x=2$ (mín)", "$x=0$ (máx), $x=1$ (mín)"],
+            correct: 0,
+            explanation: "$f'(x)=6x^2-6x=6x(x-1)=0 \\Rightarrow x=0,1$. $f''(x)=12x-6$. $f''(0)=-6<0$ (máx), $f''(1)=6>0$ (mín)."
+        },
+        {
+            q: "Para $f(x) = \\frac{1}{3}x^3 - 2x^2 + 3x$, clasifique sus puntos críticos.",
+            options: ["$x=1$ (máx), $x=3$ (mín)", "$x=1$ (mín), $x=3$ (máx)", "$x=0$ (máx), $x=3$ (mín)", "$x=1$ (máx), $x=2$ (mín)"],
+            correct: 0,
+            explanation: "$f'(x)=x^2-4x+3=(x-1)(x-3)=0 \\Rightarrow x=1,3$. $f''(x)=2x-4$. $f''(1)=-2<0$ (máx), $f''(3)=2>0$ (mín)."
+        },
+        {
+            q: "Para $f(x) = x^4 - 4x^2$, encuentre los puntos críticos.",
+            options: ["$x=-\\sqrt{2},0,\\sqrt{2}$", "$x=-2,0,2$", "$x=0,\\pm2$", "$x=0,\\pm\\sqrt{2}$"],
+            correct: 0,
+            explanation: "$f'(x)=4x^3-8x=4x(x^2-2)=0 \\Rightarrow x=-\\sqrt{2},0,\\sqrt{2}$."
+        },
+
+        // ==================== SECCIÓN 3: Optimización aplicada ====================
+        {
+            q: "Para la ganancia $G(x) = 100x - x^2 - 500$, encuentre la producción para máxima ganancia.",
+            options: ["$x=50$", "$x=100$", "$x=25$", "$x=200$"],
+            correct: 0,
+            explanation: "$G'(x)=100-2x=0 \\Rightarrow x=50$. $G''(x)=-2<0$, máximo."
+        },
+        {
+            q: "Para el costo $C(x) = x^2 - 10x + 50$, encuentre la cantidad que minimiza el costo.",
+            options: ["$x=5$", "$x=10$", "$x=0$", "$x=25$"],
+            correct: 0,
+            explanation: "$C'(x)=2x-10=0 \\Rightarrow x=5$. $C''(x)=2>0$, mínimo."
+        },
+        {
+            q: "Para los ingresos $R(x) = 200x - 2x^2$, encuentre la cantidad que maximiza los ingresos.",
+            options: ["$x=50$", "$x=100$", "$x=25$", "$x=200$"],
+            correct: 0,
+            explanation: "$R'(x)=200-4x=0 \\Rightarrow x=50$. $R''(x)=-4<0$, máximo."
+        },
+        {
+            q: "Un proyectil sigue $h(t)=50t-5t^2$. ¿Cuándo alcanza su altura máxima?",
+            options: ["$t=5$ segundos", "$t=10$ segundos", "$t=25$ segundos", "$t=50$ segundos"],
+            correct: 0,
+            explanation: "$h'(t)=50-10t=0 \\Rightarrow t=5$ segundos. $h''(t)=-10<0$, máximo."
+        },
+        {
+            q: "Para el área de un rectángulo inscrito en $y=4-x^2$, el área es $A(x)=2x(4-x^2)$. Encuentre el valor de $x$ que maximiza el área.",
+            options: ["$x=\\sqrt{\\frac{4}{3}}$", "$x=1$", "$x=\\sqrt{2}$", "$x=2$"],
+            correct: 0,
+            explanation: "$A(x)=8x-2x^3$. $A'(x)=8-6x^2=0 \\Rightarrow x^2=\\frac{4}{3} \\Rightarrow x=\\sqrt{\\frac{4}{3}}$."
+        },
+
+        // ==================== SECCIÓN 4: Optimización en intervalos cerrados ====================
+        {
+            q: "Para $f(x) = x^2 - 4x + 3$ en $[0,3]$, encuentre el máximo y mínimo.",
+            options: ["Máx: 3 en $x=0$, Mín: -1 en $x=2$", "Máx: 0 en $x=3$, Mín: -1 en $x=2$", "Máx: 3 en $x=3$, Mín: -1 en $x=2$", "Máx: 3 en $x=0$, Mín: 0 en $x=3$"],
+            correct: 0,
+            explanation: "$f'(x)=2x-4=0 \\Rightarrow x=2$. $f(0)=3$, $f(2)=-1$, $f(3)=0$. Máx: 3 en $x=0$, Mín: -1 en $x=2$."
+        },
+        {
+            q: "Para $f(x) = -x^2 + 6x - 5$ en $[0,4]$, encuentre el máximo y mínimo.",
+            options: ["Máx: 4 en $x=3$, Mín: -5 en $x=0$", "Máx: 4 en $x=3$, Mín: 0 en $x=4$", "Máx: 4 en $x=3$, Mín: -5 en $x=0$", "Máx: 0 en $x=4$, Mín: -5 en $x=0$"],
+            correct: 0,
+            explanation: "$f'(x)=-2x+6=0 \\Rightarrow x=3$. $f(0)=-5$, $f(3)=4$, $f(4)=3$. Máx: 4 en $x=3$, Mín: -5 en $x=0$."
+        },
+        {
+            q: "Para $f(x) = x^3 - 3x$ en $[-2,2]$, encuentre el máximo y mínimo.",
+            options: ["Máx: 2 en $x=-1,2$, Mín: -2 en $x=-2,1$", "Máx: 2 en $x=-1$, Mín: -2 en $x=1$", "Máx: 2 en $x=2$, Mín: -2 en $x=-2$", "Máx: 2 en $x=-1$, Mín: -2 en $x=-2$"],
+            correct: 0,
+            explanation: "$f'(x)=3x^2-3=0 \\Rightarrow x=\\pm1$. $f(-2)=-2$, $f(-1)=2$, $f(1)=-2$, $f(2)=2$. Máx: 2 en $x=-1,2$, Mín: -2 en $x=-2,1$."
+        },
+        {
+            q: "Para $f(x) = \\sin(x)$ en $[0,2\\pi]$, encuentre el máximo y mínimo.",
+            options: ["Máx: 1 en $x=\\pi/2$, Mín: -1 en $x=3\\pi/2$", "Máx: 1 en $x=0$, Mín: -1 en $x=\\pi$", "Máx: 1 en $x=\\pi/2$, Mín: 0 en $x=0$", "Máx: 0 en $x=\\pi$, Mín: -1 en $x=3\\pi/2$"],
+            correct: 0,
+            explanation: "$f'(x)=\\cos(x)=0 \\Rightarrow x=\\pi/2,3\\pi/2$. $f(0)=0$, $f(\\pi/2)=1$, $f(\\pi)=0$, $f(3\\pi/2)=-1$, $f(2\\pi)=0$. Máx: 1, Mín: -1."
+        },
+        {
+            q: "Para $f(x) = e^{-x^2}$ en $[-1,1]$, encuentre el máximo.",
+            options: ["$1$ en $x=0$", "$e^{-1}$ en $x=\\pm1$", "$1$ en $x=\\pm1$", "$e^{-1}$ en $x=0$"],
+            correct: 0,
+            explanation: "$f'(x)=-2xe^{-x^2}=0 \\Rightarrow x=0$. $f(0)=1$, $f(\\pm1)=e^{-1}$. Máx: 1 en $x=0$."
+        },
+        {
+            q: "Para $f(x) = x + \\frac{1}{x}$ en $[0.5,2]$, encuentre el mínimo.",
+            options: ["$2$ en $x=1$", "$2.5$ en $x=0.5$", "$2.5$ en $x=2$", "$1$ en $x=1$"],
+            correct: 0,
+            explanation: "$f'(x)=1-\\frac{1}{x^2}=0 \\Rightarrow x=1$. $f(0.5)=2.5$, $f(1)=2$, $f(2)=2.5$. Mín: 2 en $x=1$."
+        }
+    ];
+
+    let currentQ = 0;
+    let correctCount = 0;
+    let errorCount = 0;
+    let studentName = "";
+    let answered = false;
+    const MAX_ERRORS = 10;
+
+    // Establecer fecha de hoy por defecto
+    const fechaInput = document.getElementById('fecha');
+    if (fechaInput) {
+        const hoy = new Date();
+        const año = hoy.getFullYear();
+        const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoy.getDate()).padStart(2, '0');
+        fechaInput.value = `${año}-${mes}-${dia}`;
+    }
+
+    function startQuiz() {
+        const nameInput = document.getElementById('nombre').value.trim();
+        const dateInput = document.getElementById('fecha').value;
+        if(!nameInput || !dateInput) {
+            alert("Por favor, ingresa tu nombre y la fecha.");
+            return;
+        }
+        studentName = nameInput;
+        document.getElementById('registro').classList.add('hidden');
+        document.getElementById('actividad').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        answered = false;
+        const q = questions[currentQ];
+        document.getElementById('q-text').innerHTML = `<strong>Pregunta ${currentQ + 1}:</strong><br>${q.q}`;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = opt;
+            btn.onclick = () => selectOption(i, btn);
+            container.appendChild(btn);
+        });
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('btn-next').disabled = true;
+        updateStats();
+        
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function selectOption(index, btn) {
+        if(answered) return;
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('btn-next').disabled = false;
+        btn.dataset.index = index;
+    }
+
+    function nextQuestion() {
+        if(!answered) {
+            const selected = document.querySelector('.option-btn.selected');
+            if(!selected) {
+                alert("Por favor, selecciona una respuesta antes de continuar.");
+                return;
+            }
+            const idx = parseInt(selected.dataset.index);
+            checkAnswer(idx);
+            answered = true;
+            document.getElementById('btn-next').innerText = (currentQ < questions.length - 1) ? "Siguiente Pregunta" : "Finalizar";
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise();
+            }
+        } else {
+            currentQ++;
+            if(currentQ < questions.length) {
+                loadQuestion();
+                document.getElementById('btn-next').innerText = "Siguiente";
+            } else {
+                showResults();
+            }
+        }
+    }
+
+    function checkAnswer(selectedIdx) {
+        const q = questions[currentQ];
+        const isCorrect = selectedIdx === q.correct;
+        const feedback = document.getElementById('feedback');
+        const btns = document.querySelectorAll('.option-btn');
+
+        btns.forEach(b => b.classList.add('disabled'));
+        btns[q.correct].classList.add('correct');
+
+        if(isCorrect) {
+            correctCount++;
+            feedback.className = "feedback correct";
+            feedback.innerHTML = "<strong>¡Excelente!</strong> " + q.explanation;
+        } else {
+            errorCount++;
+            btns[selectedIdx].classList.add('incorrect');
+            feedback.className = "feedback incorrect";
+            feedback.innerHTML = "<strong>Incorrecto.</strong> " + q.explanation;
+            
+            if(errorCount >= MAX_ERRORS) {
+                setTimeout(() => {
+                    alert(`Has alcanzado el límite de ${MAX_ERRORS} errores. Te recomendamos repasar: encontrar puntos críticos resolviendo $f'(x)=0$, clasificar con el criterio de la segunda derivada, y evaluar en fronteras para intervalos cerrados.`);
+                    location.reload();
+                }, 1500);
+            }
+        }
+        feedback.style.display = 'block';
+        updateStats();
+    }
+
+    function updateStats() {
+        document.getElementById('correct-count').innerText = correctCount;
+        document.getElementById('error-count').innerText = errorCount;
+        const prog = Math.round((currentQ / questions.length) * 100);
+        document.getElementById('progress-pct').innerText = prog + "%";
+        document.getElementById('progress-bar').style.width = prog + "%";
+    }
+
+    function showResults() {
+        document.getElementById('actividad').classList.add('hidden');
+        document.getElementById('resultados').classList.remove('hidden');
+        document.getElementById('student-name-display').innerText = studentName;
+        const score = Math.round((correctCount / questions.length) * 100);
+        document.getElementById('final-score').innerText = score + "%";
+        
+        let msg = score >= 80 ? 
+            "¡Excelente trabajo! Dominas la optimización: encontrar puntos críticos, clasificar con la segunda derivada y evaluar en intervalos cerrados." : 
+            "Buen esfuerzo. Te sugerimos repasar: cómo encontrar puntos críticos resolviendo $f'(x)=0$, el criterio de la segunda derivada para clasificar, y la evaluación en fronteras para intervalos cerrados.";
+        document.getElementById('personal-message').innerText = msg;
+    }
+</script>
+</body>
+</html>
