@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actividad: Cálculo Vectorial</title>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #1C362E;
+            --secondary: #B5651D;
+            --success: #1F4D2B;
+            --danger: #333399;
+            --gray: #95a5a6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
+        .container { max-width: 850px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        header { background: var(--primary); color: #fff; padding: 25px; text-align: center; }
+        header h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        header h2 { font-size: 1.1rem; font-weight: 400; opacity: 0.9; }
+        section { padding: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input[type="text"], input[type="date"] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { display: inline-block; background: var(--secondary); color: #fff; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: background 0.3s; width: 100%; margin-top: 10px; }
+        .btn:hover { background: #965418; }
+        .btn:disabled { background: var(--gray); cursor: not-allowed; }
+        .btn-next { background: var(--primary); }
+        .btn-next:hover { background: #0F1F1A; }
+
+        .stats-bar { display: flex; justify-content: space-between; background: #f8f9fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; flex-wrap: wrap; gap: 10px; }
+        .stat-item span { color: var(--secondary); }
+        .progress-container { height: 8px; background: #e0e0e0; border-radius: 4px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.4s ease; }
+
+        .question-box { margin-bottom: 20px; }
+        .question-text { font-size: 1.1rem; margin-bottom: 20px; font-weight: 500; background: #fdfefe; padding: 15px; border-radius: 8px; border-left: 5px solid var(--secondary); }
+        .options { display: grid; gap: 8px; }
+        .option-btn { padding: 12px; background: #fff; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s; font-size: 1rem; width: 100%; }
+        .option-btn:hover:not(.disabled) { border-color: var(--secondary); background: #fef5e7; }
+        .option-btn.selected { border-color: var(--secondary); background: #fdebd0; font-weight: 600; }
+        .option-btn.correct { border-color: var(--success); background: #e8f5e9; color: var(--success); }
+        .option-btn.incorrect { border-color: var(--danger); background: #e8eaf6; color: var(--danger); }
+        .option-btn.disabled { pointer-events: none; opacity: 0.7; }
+
+        .feedback { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; }
+        .feedback.correct { background: #e8f5e9; color: var(--success); border: 1px solid var(--success); }
+        .feedback.incorrect { background: #e8eaf6; color: var(--danger); border: 1px solid var(--danger); }
+
+        .results-box { text-align: center; }
+        .score-circle { width: 120px; height: 120px; background: var(--secondary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; margin: 20px auto; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            section { padding: 15px; }
+            .option-btn { font-size: 0.95rem; padding: 10px; }
+            .stats-bar { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Actividad de Reforzamiento</h1>
+        <h2>Cálculo Vectorial | Vectores, Rectas, Planos y Superficies</h2>
+    </header>
+
+    <section id="registro">
+        <div class="form-group">
+            <label for="nombre">Nombre del Estudiante</label>
+            <input type="text" id="nombre" placeholder="Tu nombre completo">
+            <label for="fecha">Fecha de Realización</label>
+            <input type="date" id="fecha">
+        </div>
+        <button class="btn" onclick="startQuiz()">Iniciar Evaluación</button>
+    </section>
+
+    <section id="actividad" class="hidden">
+        <div class="stats-bar">
+            <div class="stat-item">✅ <span id="correct-count">0</span></div>
+            <div class="stat-item">❌ <span id="error-count">0</span>/3</div>
+            <div class="stat-item">📊 <span id="progress-pct">0%</span></div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div id="question-container">
+            <div class="question-box">
+                <p class="question-text" id="q-text"></p>
+                <div class="options" id="options-container"></div>
+                <div id="feedback" class="feedback"></div>
+            </div>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()" disabled>Siguiente</button>
+        </div>
+    </section>
+
+    <section id="resultados" class="hidden">
+        <div class="results-box">
+            <h2>Resultado para <span id="student-name-display"></span></h2>
+            <div class="score-circle" id="final-score">0%</div>
+            <div id="personal-message" style="margin: 20px 0; font-size: 1.1rem;"></div>
+            <button class="btn" onclick="location.reload()">Reiniciar Actividad</button>
+        </div>
+    </section>
+</div>
+
+<script>
+    function shuffle(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    const questions = [
+        {
+            q: "Dados \\(\\mathbf{u}=\\langle 1,2,-1\\rangle\\) y \\(\\mathbf{v}=\\langle 0,3,1\\rangle\\), calcula \\(\\mathbf{u}\\cdot\\mathbf{v}\\)",
+            options: ["5", "7", "3", "6"],
+            correctAnswer: "5",
+            explanation: "\\(\\mathbf{u}\\cdot\\mathbf{v} = (1)(0) + (2)(3) + (-1)(1) = 0 + 6 - 1 = 5\\)"
+        },
+        {
+            q: "Dados \\(\\mathbf{u}=\\langle 1,2,-1\\rangle\\) y \\(\\mathbf{v}=\\langle 0,3,1\\rangle\\), calcula \\(\\mathbf{u}\\times\\mathbf{v}\\)",
+            options: ["\\(\\langle 5,-1,3\\rangle\\)", "\\(\\langle 5,1,3\\rangle\\)", "\\(\\langle -5,1,3\\rangle\\)", "\\(\\langle 5,-1,-3\\rangle\\)"],
+            correctAnswer: "\\(\\langle 5,-1,3\\rangle\\)",
+            explanation: "\\(\\mathbf{u}\\times\\mathbf{v} = \\langle (2)(1)-(-1)(3), (-1)(0)-(1)(1), (1)(3)-(2)(0)\\rangle = \\langle 5,-1,3\\rangle\\)"
+        },
+        {
+            q: "¿Los vectores \\(\\mathbf{u}=\\langle 2,-3,1\\rangle\\) y \\(\\mathbf{v}=\\langle 1,4,10\\rangle\\) son ortogonales?",
+            options: ["Sí, porque \\(\\mathbf{u}\\cdot\\mathbf{v} = 0\\)", "No, porque \\(\\mathbf{u}\\cdot\\mathbf{v} = 0\\)", "Sí, porque \\(\\mathbf{u}\\times\\mathbf{v} = 0\\)", "No, porque \\(\\mathbf{u}\\cdot\\mathbf{v} \\neq 0\\)"],
+            correctAnswer: "Sí, porque \\(\\mathbf{u}\\cdot\\mathbf{v} = 0\\)",
+            explanation: "\\(\\mathbf{u}\\cdot\\mathbf{v} = (2)(1) + (-3)(4) + (1)(10) = 2 - 12 + 10 = 0\\). Dos vectores son ortogonales si y solo si su producto punto es cero."
+        },
+        {
+            q: "El producto triple escalar \\(\\mathbf{u}\\cdot(\\mathbf{v}\\times\\mathbf{w})\\) representa geométricamente:",
+            options: ["El volumen del paralelepípedo formado por los tres vectores", "El área del triángulo formado por los tres vectores", "La longitud del vector resultante", "El ángulo entre los tres vectores"],
+            correctAnswer: "El volumen del paralelepípedo formado por los tres vectores",
+            explanation: "El valor absoluto del producto triple escalar \\(|\\mathbf{u}\\cdot(\\mathbf{v}\\times\\mathbf{w})|\\) es igual al volumen del paralelepípedo determinado por los tres vectores."
+        },
+        {
+            q: "Si \\(\\mathbf{u}\\cdot(\\mathbf{v}\\times\\mathbf{w}) = V\\), entonces \\(\\mathbf{v}\\cdot(\\mathbf{u}\\times\\mathbf{w})\\) es igual a:",
+            options: ["\\(-V\\)", "\\(V\\)", "\\(2V\\)", "\\(0\\)"],
+            correctAnswer: "\\(-V\\)",
+            explanation: "Al intercambiar dos vectores en el producto triple escalar, el resultado cambia de signo. Intercambiar \\(\\mathbf{u}\\) y \\(\\mathbf{v}\\) es equivalente a una permutación impar, por lo que el resultado es \\(-V\\)."
+        },
+        {
+            q: "La ecuación vectorial de la recta que pasa por \\((1,-2,3)\\) con dirección \\(\\langle 0,1,-2\\rangle\\) es:",
+            options: ["\\(\\mathbf{r}(t) = \\langle 1, -2+t, 3-2t\\rangle\\)", "\\(\\mathbf{r}(t) = \\langle t, -2+t, 3-2t\\rangle\\)", "\\(\\mathbf{r}(t) = \\langle 1+t, -2+t, 3-2t\\rangle\\)", "\\(\\mathbf{r}(t) = \\langle 1, -2t, 3-2t\\rangle\\)"],
+            correctAnswer: "\\(\\mathbf{r}(t) = \\langle 1, -2+t, 3-2t\\rangle\\)",
+            explanation: "La ecuación vectorial es \\(\\mathbf{r}(t) = \\mathbf{r}_0 + t\\mathbf{d}\\), donde \\(\\mathbf{r}_0\\) es el punto y \\(\\mathbf{d}\\) es el vector dirección. Entonces: \\(\\langle 1,-2,3\\rangle + t\\langle 0,1,-2\\rangle = \\langle 1, -2+t, 3-2t\\rangle\\)."
+        },
+        {
+            q: "La ecuación del plano que pasa por \\((2,0,0)\\) con vector normal \\(\\langle 1,1,1\\rangle\\) es:",
+            options: ["\\(x+y+z=2\\)", "\\(x+y+z=0\\)", "\\(x+y+z=1\\)", "\\(2x+y+z=2\\)"],
+            correctAnswer: "\\(x+y+z=2\\)",
+            explanation: "La ecuación del plano es \\(a(x-x_0)+b(y-y_0)+c(z-z_0)=0\\). Sustituyendo: \\(1(x-2)+1(y-0)+1(z-0)=0 \\Rightarrow x+y+z=2\\)."
+        },
+        {
+            q: "Dos rectas en \\(\\mathbb{R}^3\\) son alabeadas (skew) cuando:",
+            options: ["No son paralelas y no se intersecan", "Son paralelas pero no coinciden", "Se intersecan en un punto", "Son perpendiculares"],
+            correctAnswer: "No son paralelas y no se intersecan",
+            explanation: "Dos rectas son alabeadas si no son paralelas (sus vectores directores no son proporcionales) y no se intersecan (no existe un punto común). Además, no están en el mismo plano."
+        },
+        {
+            q: "La distancia de un punto \\(P(x_0,y_0,z_0)\\) al plano \\(ax+by+cz+d=0\\) está dada por:",
+            options: ["\\(\\dfrac{|ax_0+by_0+cz_0+d|}{\\sqrt{a^2+b^2+c^2}}\\)", "\\(\\dfrac{ax_0+by_0+cz_0+d}{a^2+b^2+c^2}\\)", "\\(\\sqrt{(x_0-a)^2+(y_0-b)^2+(z_0-c)^2}\\)", "\\(|ax_0+by_0+cz_0+d|\\)"],
+            correctAnswer: "\\(\\dfrac{|ax_0+by_0+cz_0+d|}{\\sqrt{a^2+b^2+c^2}}\\)",
+            explanation: "La distancia de un punto a un plano se calcula usando la proyección del vector desde un punto del plano hasta \\(P\\) sobre el vector normal, dividida por la norma del normal."
+        },
+        {
+            q: "Si duplicamos las coordenadas de los tres vértices de un triángulo (escalamos por factor 2), el área del triángulo:",
+            options: ["Se multiplica por 4", "Se duplica", "Se multiplica por 8", "No cambia"],
+            correctAnswer: "Se multiplica por 4",
+            explanation: "El área del triángulo es \\(\\frac{1}{2}\\|\\mathbf{u}\\times\\mathbf{v}\\|\\). Si escalamos por factor \\(k\\), los vectores se multiplican por \\(k\\), y \\(\\|k\\mathbf{u}\\times k\\mathbf{v}\\| = k^2\\|\\mathbf{u}\\times\\mathbf{v}\\|\\). Para \\(k=2\\), el área se multiplica por 4."
+        },
+        {
+            q: "La superficie \\(x^2+y^2=9\\) en \\(\\mathbb{R}^3\\) es:",
+            options: ["Un cilindro circular de radio 3 con eje en el eje \\(z\\)", "Una esfera de radio 3", "Un cono", "Un elipsoide"],
+            correctAnswer: "Un cilindro circular de radio 3 con eje en el eje \\(z\\)",
+            explanation: "La ecuación \\(x^2+y^2=9\\) no contiene la variable \\(z\\), lo que significa que se extiende infinitamente en la dirección del eje \\(z\\). Es un cilindro circular recto de radio 3."
+        },
+        {
+            q: "La superficie \\(\\dfrac{x^2}{4}+y^2-\\dfrac{z^2}{9}=1\\) es un:",
+            options: ["Hiperboloide de una hoja", "Hiperboloide de dos hojas", "Elipsoide", "Cono"],
+            correctAnswer: "Hiperboloide de una hoja",
+            explanation: "La forma estándar de un hiperboloide de una hoja es \\(\\frac{x^2}{a^2}+\\frac{y^2}{b^2}-\\frac{z^2}{c^2}=1\\). Tiene exactamente un signo negativo."
+        },
+        {
+            q: "La superficie \\(x^2+4y^2+9z^2=36\\) es:",
+            options: ["Un elipsoide", "Un hiperboloide de una hoja", "Un paraboloide elíptico", "Un cilindro elíptico"],
+            correctAnswer: "Un elipsoide",
+            explanation: "Dividiendo por 36: \\(\\frac{x^2}{36}+\\frac{y^2}{9}+\\frac{z^2}{4}=1\\). Todos los términos tienen signo positivo, lo que corresponde a un elipsoide con semiejes \\(a=6, b=3, c=2\\)."
+        },
+        {
+            q: "La superficie \\(z=x^2-y^2\\) es un:",
+            options: ["Paraboloide hiperbólico (silla de montar)", "Paraboloide elíptico", "Hiperboloide de una hoja", "Cono"],
+            correctAnswer: "Paraboloide hiperbólico (silla de montar)",
+            explanation: "La forma \\(z=x^2-y^2\\) tiene una variable lineal (\\(z\\)) y dos cuadráticas con signos opuestos, lo que corresponde a un paraboloide hiperbólico. Sus trazas son parábolas en direcciones opuestas."
+        },
+        {
+            q: "La superficie \\(x^2+y^2-z^2=1\\) es:",
+            options: ["Un hiperboloide de una hoja con eje en \\(z\\)", "Un hiperboloide de dos hojas con eje en \\(z\\)", "Un cono", "Un elipsoide"],
+            correctAnswer: "Un hiperboloide de una hoja con eje en \\(z\\)",
+            explanation: "La forma \\(x^2+y^2-z^2=1\\) tiene dos signos positivos y uno negativo, igualado a una constante positiva. El eje de simetría es el correspondiente al término negativo (\\(z\\))."
+        },
+        {
+            q: "La ecuación \\(y=x^2\\) en \\(\\mathbb{R}^3\\) representa:",
+            options: ["Un cilindro parabólico con generatrices paralelas al eje \\(z\\)", "Una parábola en el plano \\(xy\\)", "Un paraboloide", "Un plano"],
+            correctAnswer: "Un cilindro parabólico con generatrices paralelas al eje \\(z\\)",
+            explanation: "En \\(\\mathbb{R}^3\\), una ecuación que no contiene una variable (en este caso \\(z\\)) representa un cilindro cuyas generatrices son paralelas al eje de la variable faltante."
+        },
+        {
+            q: "Las trazas de una superficie son:",
+            options: ["Las intersecciones de la superficie con los planos coordenados", "Los puntos críticos de la superficie", "Las asíntotas de la superficie", "Los ejes de simetría"],
+            correctAnswer: "Las intersecciones de la superficie con los planos coordenados",
+            explanation: "Las trazas son las curvas que resultan de intersectar la superficie con los planos \\(x=0\\), \\(y=0\\) y \\(z=0\\). Ayudan a visualizar y clasificar superficies cuádricas."
+        },
+        {
+            q: "La función vectorial \\(\\mathbf{r}(t)=\\langle 2\\cos t, 2\\sin t, 3\\rangle\\) describe:",
+            options: ["Un círculo de radio 2 en el plano \\(z=3\\)", "Una hélice", "Una elipse en el plano \\(xy\\)", "Una recta"],
+            correctAnswer: "Un círculo de radio 2 en el plano \\(z=3\\)",
+            explanation: "Las componentes \\(x=2\\cos t\\) y \\(y=2\\sin t\\) satisfacen \\(x^2+y^2=4\\), que es un círculo de radio 2. La componente \\(z=3\\) es constante, por lo que la curva vive en el plano \\(z=3\\)."
+        },
+        {
+            q: "Si \\(\\mathbf{r}(t)=\\langle t^2, \\ln t, e^t\\rangle\\), entonces \\(\\mathbf{r}'(t)\\) es:",
+            options: ["\\(\\langle 2t, \\frac{1}{t}, e^t\\rangle\\)", "\\(\\langle 2t, \\ln t, e^t\\rangle\\)", "\\(\\langle t, \\frac{1}{t}, te^{t-1}\\rangle\\)", "\\(\\langle t^2, \\frac{1}{t}, e^t\\rangle\\)"],
+            correctAnswer: "\\(\\langle 2t, \\frac{1}{t}, e^t\\rangle\\)",
+            explanation: "Se deriva cada componente: \\(\\frac{d}{dt}(t^2)=2t\\), \\(\\frac{d}{dt}(\\ln t)=\\frac{1}{t}\\), \\(\\frac{d}{dt}(e^t)=e^t\\)."
+        },
+        {
+            q: "Si \\(\\mathbf{r}(t)=\\langle \\cos t, \\sin t, 0\\rangle\\) describe la posición de una partícula, su velocidad es:",
+            options: ["\\(\\mathbf{v}(t)=\\langle -\\sin t, \\cos t, 0\\rangle\\)", "\\(\\mathbf{v}(t)=\\langle \\sin t, -\\cos t, 0\\rangle\\)", "\\(\\mathbf{v}(t)=\\langle \\cos t, \\sin t, 0\\rangle\\)", "\\(\\mathbf{v}(t)=\\langle 0, 0, 1\\rangle\\)"],
+            correctAnswer: "\\(\\mathbf{v}(t)=\\langle -\\sin t, \\cos t, 0\\rangle\\)",
+            explanation: "La velocidad es la derivada de la posición: \\(\\mathbf{v}(t)=\\mathbf{r}'(t)=\\langle -\\sin t, \\cos t, 0\\rangle\\)."
+        },
+        {
+            q: "La rapidez de la partícula con \\(\\mathbf{r}(t)=\\langle \\cos t, \\sin t, 0\\rangle\\) es:",
+            options: ["1 (constante)", "\\(\\sqrt{\\cos^2 t+\\sin^2 t}\\)", "Depende de \\(t\\)", "0"],
+            correctAnswer: "1 (constante)",
+            explanation: "La rapidez es \\(\\|\\mathbf{v}(t)\\|=\\sqrt{(-\\sin t)^2+(\\cos t)^2+0^2}=\\sqrt{\\sin^2 t+\\cos^2 t}=1\\). Es constante e independiente de \\(t\\)."
+        },
+        {
+            q: "La integral \\(\\displaystyle\\int_0^1 \\langle t, 2t, 3t^2\\rangle\\,dt\\) es:",
+            options: ["\\(\\langle \\frac{1}{2}, 1, 1\\rangle\\)", "\\(\\langle 1, 2, 3\\rangle\\)", "\\(\\langle \\frac{1}{2}, 1, \\frac{3}{2}\\rangle\\)", "\\(\\langle 0, 0, 0\\rangle\\)"],
+            correctAnswer: "\\(\\langle \\frac{1}{2}, 1, 1\\rangle\\)",
+            explanation: "Se integra cada componente: \\(\\int_0^1 t\\,dt=\\frac{1}{2}\\), \\(\\int_0^1 2t\\,dt=1\\), \\(\\int_0^1 3t^2\\,dt=1\\)."
+        },
+        {
+            q: "Si \\(\\mathbf{r}(t)=\\langle \\cos t, \\sin t, t\\rangle\\), entonces \\(\\|\\mathbf{r}'(t)\\|\\) es:",
+            options: ["\\(\\sqrt{2}\\)", "1", "\\(\\sqrt{1+t^2}\\)", "2"],
+            correctAnswer: "\\(\\sqrt{2}\\)",
+            explanation: "\\(\\mathbf{r}'(t)=\\langle -\\sin t, \\cos t, 1\\rangle\\), entonces \\(\\|\\mathbf{r}'(t)\\|=\\sqrt{\\sin^2 t+\\cos^2 t+1}=\\sqrt{1+1}=\\sqrt{2}\\)."
+        },
+        {
+            q: "El vector tangente unitario \\(\\mathbf{T}(t)\\) se define como:",
+            options: ["\\(\\dfrac{\\mathbf{r}'(t)}{\\|\\mathbf{r}'(t)\\|}\\)", "\\(\\mathbf{r}'(t)\\)", "\\(\\dfrac{\\mathbf{r}(t)}{\\|\\mathbf{r}(t)\\|}\\)", "\\(\\mathbf{r}''(t)\\)"],
+            correctAnswer: "\\(\\dfrac{\\mathbf{r}'(t)}{\\|\\mathbf{r}'(t)\\|}\\)",
+            explanation: "El vector tangente unitario se obtiene normalizando el vector velocidad: \\(\\mathbf{T}(t)=\\frac{\\mathbf{r}'(t)}{\\|\\mathbf{r}'(t)\\|}\\)."
+        },
+        {
+            q: "La longitud de arco de una curva \\(\\mathbf{r}(t)\\) desde \\(t=a\\) hasta \\(t=b\\) se calcula como:",
+            options: ["\\(\\displaystyle\\int_a^b \\|\\mathbf{r}'(t)\\|\\,dt\\)", "\\(\\displaystyle\\int_a^b \\mathbf{r}'(t)\\,dt\\)", "\\(\\|\\mathbf{r}(b)-\\mathbf{r}(a)\\|\\)", "\\(\\displaystyle\\int_a^b \\mathbf{r}(t)\\,dt\\)"],
+            correctAnswer: "\\(\\displaystyle\\int_a^b \\|\\mathbf{r}'(t)\\|\\,dt\\)",
+            explanation: "La longitud de arco es la integral de la rapidez: \\(L=\\int_a^b \\|\\mathbf{r}'(t)\\|\\,dt\\)."
+        },
+        {
+            q: "La Identidad de Lagrange establece que:",
+            options: ["\\(\\|\\mathbf{u}\\times\\mathbf{v}\\|^2 = \\|\\mathbf{u}\\|^2\\|\\mathbf{v}\\|^2 - (\\mathbf{u}\\cdot\\mathbf{v})^2\\)", "\\(\\|\\mathbf{u}\\times\\mathbf{v}\\| = \\|\\mathbf{u}\\|\\|\\mathbf{v}\\|\\)", "\\(\\mathbf{u}\\cdot\\mathbf{v} = \\|\\mathbf{u}\\|\\|\\mathbf{v}\\|\\cos\\theta\\)", "\\(\\|\\mathbf{u}+\\mathbf{v}\\|^2 = \\|\\mathbf{u}\\|^2+\\|\\mathbf{v}\\|^2\\)"],
+            correctAnswer: "\\(\\|\\mathbf{u}\\times\\mathbf{v}\\|^2 = \\|\\mathbf{u}\\|^2\\|\\mathbf{v}\\|^2 - (\\mathbf{u}\\cdot\\mathbf{v})^2\\)",
+            explanation: "La Identidad de Lagrange relaciona el producto cruz con el producto punto. Se demuestra usando \\(\\|\\mathbf{u}\\times\\mathbf{v}\\|=\\|\\mathbf{u}\\|\\|\\mathbf{v}\\|\\sin\\theta\\) y la identidad \\(\\sin^2\\theta+\\cos^2\\theta=1\\)."
+        }
+    ];
+
+    let currentQ = 0;
+    let correctCount = 0;
+    let errorCount = 0;
+    let studentName = "";
+    let answered = false;
+    let currentOptions = [];
+    let currentCorrectAnswer = "";
+    const MAX_ERRORS = 3;
+
+    const fechaInput = document.getElementById('fecha');
+    if (fechaInput) {
+        const hoy = new Date();
+        fechaInput.value = hoy.toISOString().split('T')[0];
+    }
+
+    function startQuiz() {
+        const nameInput = document.getElementById('nombre').value.trim();
+        const dateInput = document.getElementById('fecha').value;
+        if(!nameInput || !dateInput) {
+            alert("Por favor, ingresa tu nombre y la fecha.");
+            return;
+        }
+        studentName = nameInput;
+        document.getElementById('registro').classList.add('hidden');
+        document.getElementById('actividad').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        answered = false;
+        const q = questions[currentQ];
+        document.getElementById('q-text').innerHTML = `<strong>Pregunta ${currentQ + 1} de ${questions.length}:</strong><br>${q.q}`;
+        
+        currentOptions = shuffle(q.options);
+        currentCorrectAnswer = q.correctAnswer;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        currentOptions.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `${String.fromCharCode(97 + i)}) ${opt}`;
+            btn.onclick = () => selectOption(opt, btn);
+            container.appendChild(btn);
+        });
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('btn-next').disabled = true;
+        updateStats();
+
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function selectOption(optionText, btn) {
+        if(answered) return;
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('btn-next').disabled = false;
+        btn.dataset.option = optionText;
+    }
+
+    function nextQuestion() {
+        if(!answered) {
+            const selected = document.querySelector('.option-btn.selected');
+            if(!selected) {
+                alert("Por favor, selecciona una respuesta antes de continuar.");
+                return;
+            }
+            const selectedText = selected.dataset.option;
+            checkAnswer(selectedText);
+            answered = true;
+            document.getElementById('btn-next').innerText = (currentQ < questions.length - 1) ? "Siguiente Pregunta" : "Finalizar";
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise();
+            }
+        } else {
+            currentQ++;
+            if(currentQ < questions.length) {
+                loadQuestion();
+                document.getElementById('btn-next').innerText = "Siguiente";
+            } else {
+                showResults();
+            }
+        }
+    }
+
+    function checkAnswer(selectedText) {
+        const q = questions[currentQ];
+        const isCorrect = selectedText === currentCorrectAnswer;
+        const feedback = document.getElementById('feedback');
+        const btns = document.querySelectorAll('.option-btn');
+
+        btns.forEach(b => {
+            b.classList.add('disabled');
+            if (b.dataset.option === currentCorrectAnswer) {
+                b.classList.add('correct');
+            }
+        });
+
+        if(isCorrect) {
+            correctCount++;
+            feedback.className = "feedback correct";
+            feedback.innerHTML = "<strong>¡Excelente!</strong> " + q.explanation;
+        } else {
+            errorCount++;
+            btns.forEach(b => {
+                if (b.dataset.option === selectedText) {
+                    b.classList.add('incorrect');
+                }
+            });
+            feedback.className = "feedback incorrect";
+            feedback.innerHTML = "<strong>Incorrecto.</strong> " + q.explanation;
+
+            if(errorCount >= MAX_ERRORS) {
+                setTimeout(() => {
+                    alert(`Has alcanzado el límite de ${MAX_ERRORS} errores. Te recomendamos repasar: operaciones con vectores, ecuaciones de rectas y planos, superficies cuádricas y funciones vectoriales.`);
+                    location.reload();
+                }, 1500);
+            }
+        }
+        feedback.style.display = 'block';
+        updateStats();
+    }
+
+    function updateStats() {
+        document.getElementById('correct-count').innerText = correctCount;
+        document.getElementById('error-count').innerText = errorCount;
+        const prog = Math.round((currentQ / questions.length) * 100);
+        document.getElementById('progress-pct').innerText = prog + "%";
+        document.getElementById('progress-bar').style.width = prog + "%";
+    }
+
+    function showResults() {
+        document.getElementById('actividad').classList.add('hidden');
+        document.getElementById('resultados').classList.remove('hidden');
+        document.getElementById('student-name-display').innerText = studentName;
+        const score = Math.round((correctCount / questions.length) * 100);
+        document.getElementById('final-score').innerText = score + "%";
+
+        let msg = score >= 80 ?
+            "¡Excelente trabajo! Dominas los conceptos de cálculo vectorial: operaciones con vectores, geometría analítica en el espacio, superficies cuádricas y curvas paramétricas." :
+            "Buen esfuerzo. Te sugerimos repasar: producto punto y cruz, ecuaciones de rectas y planos, clasificación de superficies cuádricas, derivadas e integrales de funciones vectoriales, y longitud de arco.";
+        document.getElementById('personal-message').innerText = msg;
+    }
+</script>
+</body>
+</html>
