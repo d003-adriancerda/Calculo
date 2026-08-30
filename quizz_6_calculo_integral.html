@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario: Integración por Sustitución (Sesión 6)</title>
+    
+    <!-- Cargamos MathJax para renderizar código LaTeX de forma dinámica -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 95%;
+            max-width: 1000px;
+            padding: 40px;
+            margin: auto;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 1rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .register-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 500px;
+            margin: 30px auto 0 auto;
+        }
+
+        .register-form label {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-color);
+        }
+
+        .register-form input {
+            padding: 14px;
+            font-size: 1.1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .register-form input:focus {
+            border-color: var(--secondary-color);
+        }
+
+        .progress-bar-container {
+            background-color: #e5e7eb;
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            margin-bottom: 35px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--secondary-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .question {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 18px 25px;
+            font-size: 1.15rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #eff6ff;
+            border-color: var(--secondary-color);
+        }
+
+        .option-btn.correct {
+            background-color: #d1fae5;
+            border-color: var(--success-color);
+            color: #065f46;
+            font-weight: bold;
+        }
+
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: var(--error-color);
+            color: #991b1b;
+        }
+
+        .feedback {
+            margin-top: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-align: center;
+            min-height: 28px;
+        }
+
+        .next-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 30px auto 0 auto;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: #172554;
+        }
+
+        .next-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: #eff6ff;
+            border: 4px solid var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px auto;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- PANTALLA 1: REGISTRO -->
+    <div id="register-screen">
+        <h1>Cálculo Integral</h1>
+        <p style="text-align: center; color: #4b5563; font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+            Ingresa tus datos para iniciar la evaluación práctica de la Sesión 6 <br>(Integración por Sustitución y Completando el Diferencial).
+        </p>
+        
+        <div class="register-form">
+            <label for="student-name">Nombre Completo:</label>
+            <input type="text" id="student-name" placeholder="Escribe tu nombre aquí..." autocomplete="off">
+            <button class="next-btn" id="start-button">Comenzar Cuestionario</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: CUESTIONARIO -->
+    <div id="quiz-screen" class="hidden">
+        <h1>Cálculo Integral</h1>
+        <h2 id="quiz-subtitle">Sesión 6: Integración por Sustitución</h2>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div class="question" id="question-text">Cargando pregunta...</div>
+        
+        <div class="options-container" id="options">
+            <!-- Botones dinámicos -->
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+        
+        <button class="next-btn" id="next-button" disabled>Siguiente Pregunta</button>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADOS -->
+    <div id="result-screen" class="hidden">
+        <h1>¡Cuestionario Completado!</h1>
+        <h2 id="result-user-greeting">Resultados</h2>
+        <div class="score-circle" id="score-text">0/10</div>
+        <p id="evaluation-comment" style="line-height: 1.6; font-size: 1.2rem; padding: 0 20px; max-width: 700px; margin: 0 auto;"></p>
+        <button class="next-btn" onclick="resetQuiz()">Volver a intentar</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            question: "Calcule la integral indefinida aplicando una sustitución de exponente para \\( u \\): $$\\int x e^{-x^2} \\, dx$$",
+            options: [
+                "\\( -\\frac{1}{2} e^{-x^2} + C \\)",
+                "\\( -2 e^{-x^2} + C \\)",
+                "\\( \\frac{1}{2} e^{-x^2} + C \\)",
+                "\\( -e^{-x^2} + C \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Halle la siguiente integral utilizando una sustitución logarítmica adecuada: $$\\int \\frac{x}{x^2 + 5} \\, dx$$",
+            options: [
+                "\\( \\ln(x^2 + 5) + C \\)",
+                "\\( \\frac{1}{2} \\ln(x^2 + 5) + C \\)",
+                "\\( 2 \\ln(x^2 + 5) + C \\)",
+                "\\( \\frac{1}{2(x^2+5)^2} + C \\)"
+            ],
+            correct: 1
+        },
+        {
+            question: "Evalúe la integral trigonométrica directa mediante un cambio de variable: $$\\int \\sin^4(x) \\cos(x) \\, dx$$",
+            options: [
+                "\\( \\frac{\\sin^5(x)}{5} + C \\)",
+                "\\( -\\frac{\\cos^5(x)}{5} + C \\)",
+                "\\( \\frac{\\sin^4(x)}{4} + C \\)",
+                "\\( \\sin^5(x)\\cos^2(x) + C \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Determine la integral indefinida para \\( x > 0 \\): $$\\int \\frac{\\ln(x)}{x} \\, dx$$",
+            options: [
+                "\\( \\ln(\\ln(x)) + C \\)",
+                "\\( \\frac{(\\ln(x))^2}{2} + C \\)",
+                "\\( (\\ln(x))^2 + C \\)",
+                "\\( \\frac{1}{2x^2} + C \\)"
+            ],
+            correct: 1
+        },
+        {
+            question: "Complete el trinomio cuadrado perfecto en el denominador y determine la antiderivada asociada a una función inversa: $$\\int \\frac{1}{x^2 + 6x + 13} \\, dx$$",
+            options: [
+                "\\( \\arctan(x+3) + C \\)",
+                "\\( \\frac{1}{2}\\arctan\\left(\\frac{x+3}{2}\\right) + C \\)",
+                "\\( \\frac{1}{4}\\arctan\\left(\\frac{x+3}{4}\\right) + C \\)",
+                "\\( \\ln|x^2 + 6x + 13| + C \\)"
+            ],
+            correct: 1
+        },
+        {
+            question: "Encuentre la antiderivada general de la función exponencial compuesta: $$\\int \\frac{e^x}{1 + e^{2x}} \\, dx$$",
+            options: [
+                "\\( \\arctan(e^x) + C \\)",
+                "\\( \\ln(1 + e^{2x}) + C \\)",
+                "\\( \\frac{1}{2}\\arctan(e^x) + C \\)",
+                "\\( e^x\\arctan(e^x) + C \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Resuelva la integral utilizando la regla de sustitución para funciones con radicales (para \\( x > -2 \\)): $$\\int x^2 \\sqrt{x^3 + 8} \\, dx$$",
+            options: [
+                "\\( \\frac{2}{3}(x^3 + 8)^{3/2} + C \\)",
+                "\\( \\frac{2}{9}(x^3 + 8)^{3/2} + C \\)",
+                "\\( \\frac{1}{3}(x^3 + 8)^{3/2} + C \\)",
+                "\\( \\frac{2}{9}\\sqrt{x^3 + 8} + C \\)"
+            ],
+            correct: 1
+        },
+        {
+            question: "Calcule la integral indefinida de la siguiente función compuesta con radical en el argumento (para \\( x > 0 \\)): $$\\int \\frac{\\cos(\\sqrt{x})}{\\sqrt{x}} \\, dx$$",
+            options: [
+                "\\( 2\\sin(\\sqrt{x}) + C \\)",
+                "\\( \\frac{1}{2}\\sin(\\sqrt{x}) + C \\)",
+                "\\( -2\\sin(\\sqrt{x}) + C \\)",
+                "\\( \\sin(\\sqrt{x}) + C \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Complete el diferencial para resolver la integral de la función racional: $$\\int \\frac{x + 2}{x^2 + 4x + 10} \\, dx$$",
+            options: [
+                "\\( \\ln(x^2 + 4x + 10) + C \\)",
+                "\\( \\frac{1}{2}\\ln(x^2 + 4x + 10) + C \\)",
+                "\\( 2\\ln(x^2 + 4x + 10) + C \\)",
+                "\\( \\arctan\\left(\\frac{x+2}{\\sqrt{6}}\\right) + C \\)"
+            ],
+            correct: 1
+        },
+        {
+            question: "Halle la integral de la función logarítmica para \\( x > 1 \\): $$\\int \\frac{1}{x \\ln(x)} \\, dx$$",
+            options: [
+                "\\( \\ln|x| + C \\)",
+                "\\( \\ln|\\ln(x)| + C \\)",
+                "\\( \\frac{1}{\\ln(x)} + C \\)",
+                "\\( -\\frac{1}{\\ln(x)} + C \\)"
+            ],
+            correct: 1
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+    let userName = "";
+    let currentShuffledOptions = [];
+
+    // Elementos de Interfaz
+    const registerScreen = document.getElementById("register-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultScreen = document.getElementById("result-screen");
+    const studentNameInput = document.getElementById("student-name");
+    const startButton = document.getElementById("start-button");
+    const questionText = document.getElementById("question-text");
+    const optionsContainer = document.getElementById("options");
+    const progressBar = document.getElementById("progress");
+    const nextButton = document.getElementById("next-button");
+    const feedback = document.getElementById("feedback");
+    const quizSubtitle = document.getElementById("quiz-subtitle");
+    const resultUserGreeting = document.getElementById("result-user-greeting");
+    const scoreText = document.getElementById("score-text");
+    const evaluationComment = document.getElementById("evaluation-comment");
+
+    // Algoritmo Fisher-Yates para mezclar aleatoriamente las opciones
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    startButton.addEventListener("click", () => {
+        const inputName = studentNameInput.value.trim();
+        if (inputName === "") {
+            alert("Por favor, ingresa tu nombre completo para comenzar.");
+            return;
+        }
+        userName = inputName;
+        
+        registerScreen.classList.add("hidden");
+        quizScreen.classList.remove("hidden");
+        
+        quizSubtitle.innerHTML = `Evaluación de ${userName} <br>Sesión 6: Integración por Sustitución`;
+        
+        loadQuestion();
+    });
+
+    function loadQuestion() {
+        hasAnswered = false;
+        nextButton.disabled = true;
+        nextButton.innerText = "Siguiente Pregunta";
+        feedback.innerText = "";
+        
+        const currentQuestion = quizData[currentQuestionIndex];
+        questionText.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+        
+        // Actualizar barra de progreso
+        const progressPercent = (currentQuestionIndex / quizData.length) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // Mapeamos las opciones asociando a cada una si es la correcta
+        const mappedOptions = currentQuestion.options.map((option, idx) => ({
+            text: option,
+            isCorrect: idx === currentQuestion.correct
+        }));
+
+        // Mezclamos aleatoriamente las opciones mapeadas
+        currentShuffledOptions = shuffleArray([...mappedOptions]);
+
+        optionsContainer.innerHTML = "";
+        currentShuffledOptions.forEach((opt, index) => {
+            const button = document.createElement("button");
+            button.classList.add("option-btn");
+            button.innerHTML = opt.text;
+            button.addEventListener("click", () => selectOption(opt.isCorrect, button));
+            optionsContainer.appendChild(button);
+        });
+
+        // Forzar a MathJax a procesar y renderizar las nuevas fórmulas LaTeX en la pantalla
+        if (window.MathJax) {
+            MathJax.typesetPromise([questionText, optionsContainer]).catch((err) => console.log(err));
+        }
+    }
+
+    function selectOption(isCorrect, selectedButton) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        const buttons = optionsContainer.getElementsByClassName("option-btn");
+
+        for (let btn of buttons) {
+            btn.disabled = true;
+        }
+
+        if (isCorrect) {
+            selectedButton.classList.add("correct");
+            feedback.innerHTML = "¡Correcto! Definición de \\( u \\) y diferencial \\( du \\) impecables.";
+            feedback.style.color = "var(--success-color)";
+            score++;
+        } else {
+            selectedButton.classList.add("incorrect");
+            // Buscamos cuál de los botones mezclados era el correcto para iluminarlo en verde
+            currentShuffledOptions.forEach((opt, idx) => {
+                if (opt.isCorrect) {
+                    buttons[idx].classList.add("correct");
+                }
+            });
+            feedback.innerHTML = "Incorrecto. Analiza el cambio de variable y completa el diferencial de forma correcta.";
+            feedback.style.color = "var(--error-color)";
+        }
+
+        // Forzar renderizado de LaTeX en el feedback
+        if (window.MathJax) {
+            MathJax.typesetPromise([feedback]).catch((err) => console.log(err));
+        }
+
+        nextButton.disabled = false;
+        if (currentQuestionIndex === quizData.length - 1) {
+            nextButton.innerText = "Ver Resultados";
+        }
+    }
+
+    nextButton.addEventListener("click", () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    });
+
+    function showResults() {
+        progressBar.style.width = "100%";
+        quizScreen.classList.add("hidden");
+        resultScreen.classList.remove("hidden");
+        
+        resultUserGreeting.innerText = `Estudiante: ${userName}`;
+        scoreText.innerText = `${score}/${quizData.length}`;
+
+        if (score === 10) {
+            evaluationComment.innerHTML = `<strong>¡Brillante, ${userName}!</strong> Has demostrado un dominio absoluto de la regla de sustitución (cambio de variable) y la técnica de completar el diferencial. Tu intuición algebraica para identificar \\( u \\) y \\( du \\) es impecable.`;
+        } else if (score >= 7) {
+            evaluationComment.innerHTML = `<strong>¡Muy bien, ${userName}!</strong> Comprendes con solidez el método de integración por sustitución, incluyendo las formas trigonométricas y con radicales. Solo vigila la constante de ajuste cuando completas diferenciales.`;
+        } else {
+            evaluationComment.innerHTML = `<strong>Vamos a repasar, ${userName}.</strong> Identificar el cambio de variable correcto \\( u \\) y su correspondiente diferencial \\( du \\) es una habilidad fundamental que requiere práctica continua. Te sugerimos revisar los apuntes de la Sesión 6 y volver a intentar el cuestionario.`;
+        }
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([evaluationComment]).catch((err) => console.log(err));
+        }
+    }
+
+    function resetQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        resultScreen.classList.add("hidden");
+        studentNameInput.value = "";
+        registerScreen.classList.remove("hidden");
+    }
+</script>
+</body>
+</html>
