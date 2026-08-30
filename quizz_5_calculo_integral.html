@@ -1,0 +1,514 @@
+Para continuar con el desarrollo de tu material didáctico interactivo para la **UNITI**, he diseñado el cuestionario completo para la **Sesión 5: Fórmulas de Integración Elementales**. 
+
+De acuerdo con tus indicaciones, **he evitado preguntas de carácter memorístico o con referencias textuales indirectas**. En su lugar, el cuestionario se compone de **10 ejercicios prácticos de cálculo directo** donde el estudiante debe demostrar que conoce las fórmulas de integración inmediata de funciones polinomiales, racionales, exponenciales, trigonométricas (directas e inversas) e hiperbólicas, aplicándolas y simplificando algebraicamente de forma correcta.
+
+El código conserva el flujo interactivo de las sesiones previas: **pantalla de registro de nombre del alumno, barra de progreso en tiempo real, validación inmediata de respuestas y pantalla final de resultados con retroalimentación personalizada dirigida al nombre del estudiante**.
+
+---
+
+### Código del Cuestionario de la Sesión 5 (`index.html`)
+
+Puedes copiar el siguiente bloque de código completo para guardarlo en tu archivo de trabajo:
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario: Fórmulas de Integración Elementales (Sesión 5)</title>
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            margin: auto;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 1.6rem;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Formulario de registro */
+        .register-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .register-form label {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        .register-form input {
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .register-form input:focus {
+            border-color: var(--secondary-color);
+        }
+
+        .progress-bar-container {
+            background-color: #e5e7eb;
+            border-radius: 10px;
+            height: 10px;
+            width: 100%;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--secondary-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .question {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #eff6ff;
+            border-color: var(--secondary-color);
+        }
+
+        .option-btn.correct {
+            background-color: #d1fae5;
+            border-color: var(--success-color);
+            color: #065f46;
+            font-weight: bold;
+        }
+
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: var(--error-color);
+            color: #991b1b;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            font-weight: 600;
+            text-align: center;
+            min-height: 24px;
+        }
+
+        .next-btn {
+            display: block;
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: #172554;
+        }
+
+        .next-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #eff6ff;
+            border: 4px solid var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- PANTALLA 1: REGISTRO -->
+    <div id="register-screen">
+        <h1>UNITI - Cálculo Integral</h1>
+        <h2>Registro de Estudiante</h2>
+        <p style="text-align: center; color: #4b5563;">Ingresa tus datos para iniciar la evaluación práctica de la Sesión 5 (Fórmulas de Integración Elementales).</p>
+        
+        <div class="register-form">
+            <label for="student-name">Nombre Completo:</label>
+            <input type="text" id="student-name" placeholder="Ej. Juan Pérez" autocomplete="off">
+            <button class="next-btn" id="start-button" style="margin-top: 10px;">Comenzar Cuestionario</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: CUESTIONARIO -->
+    <div id="quiz-screen" class="hidden">
+        <h1>UNITI - Cálculo Integral</h1>
+        <h2 id="quiz-subtitle">Sesión 5: Integración Elemental</h2>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div class="question" id="question-text">Cargando pregunta...</div>
+        
+        <div class="options-container" id="options">
+            <!-- Botones de opciones dinámicas -->
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+        
+        <button class="next-btn" id="next-button" disabled>Siguiente Pregunta</button>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADOS -->
+    <div id="result-screen" class="hidden">
+        <h1>¡Cuestionario Completado!</h1>
+        <h2 id="result-user-greeting">Resultados</h2>
+        <div class="score-circle" id="score-text">0/10</div>
+        <p id="evaluation-comment" style="line-height: 1.5; font-size: 1.1rem; padding: 0 10px;"></p>
+        <button class="next-btn" onclick="resetQuiz()">Volver a intentar</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            question: "Calcule la integral indefinida ∫ (3x⁵ - 2x³ + x) dx aplicando linealidad.",
+            options: [
+                "F(x) = (1/2)x⁶ - (1/2)x⁴ + (1/2)x² + C",
+                "F(x) = 15x⁴ - 6x² + 1 + C",
+                "F(x) = 3x⁶ - 2x⁴ + x² + C",
+                "F(x) = (3/5)x⁶ - (2/3)x⁴ + x² + C"
+            ],
+            correct: 0
+        },
+        {
+            question: "Encuentre la integral indefinida de la función racional ∫ (5 / x) dx para x > 0.",
+            options: [
+                "F(x) = -5 / x² + C",
+                "F(x) = 5 ln(x) + C",
+                "F(x) = ln(5x) + C",
+                "F(x) = 5 / x² + C"
+            ],
+            correct: 1
+        },
+        {
+            question: "Determine la integral inmediata de la combinación ∫ (2eˣ + 4 cos(x)) dx.",
+            options: [
+                "F(x) = 2eˣ - 4 sen(x) + C",
+                "F(x) = 2eˣ + 4 sen(x) + C",
+                "F(x) = eˣ + sen(x) + C",
+                "F(x) = 2eˣ + 4 cos(x) + C"
+            ],
+            correct: 1
+        },
+        {
+            question: "Evalúe la integral trigonométrica inmediata ∫ (3 sec²(x) - 5 csc²(x)) dx.",
+            options: [
+                "F(x) = 3 tan(x) - 5 cot(x) + C",
+                "F(x) = 3 tan(x) + 5 cot(x) + C",
+                "F(x) = 3 sec(x) - 5 csc(x) + C",
+                "F(x) = -3 cot(x) + 5 tan(x) + C"
+            ],
+            correct: 1
+        },
+        {
+            question: "Resuelva la integral ∫ [(x³ + 2) / x²] dx, simplificando algebraicamente el integrando antes de evaluar (para x > 0).",
+            options: [
+                "F(x) = (x² / 2) - 2/x + C",
+                "F(x) = (x² / 2) + 2/x + C",
+                "F(x) = x - 2/x³ + C",
+                "F(x) = (x³ + 2x) / x² + C"
+            ],
+            correct: 0
+        },
+        {
+            question: "Determine la integral indefinida de base exponencial no natural ∫ 3ˣ dx.",
+            options: [
+                "F(x) = 3ˣ ln(3) + C",
+                "F(x) = 3ˣ / ln(3) + C",
+                "F(x) = 3ˣ⁺¹ / (x + 1) + C",
+                "F(x) = 3ˣ + C"
+            ],
+            correct: 1
+        },
+        {
+            question: "Calcule la integral inmediata vinculada a trigonométricas inversas ∫ [4 / (1 + x²)] dx.",
+            options: [
+                "F(x) = 4 arcsen(x) + C",
+                "F(x) = 4 ln(1 + x²) + C",
+                "F(x) = 4 arctan(x) + C",
+                "F(x) = -4 / x + C"
+            ],
+            correct: 2
+        },
+        {
+            question: "Halle la integral inmediata ∫ [2 / √(1 - x²)] dx para el intervalo abierto |x| < 1.",
+            options: [
+                "F(x) = 2 arcsen(x) + C",
+                "F(x) = 2 arctan(x) + C",
+                "F(x) = 2 ln|1 - x²| + C",
+                "F(x) = -2 √(1 - x²) + C"
+            ],
+            correct: 0
+        },
+        {
+            question: "Calcule la integral de funciones hiperbólicas ∫ (2 senh(x) + 3 cosh(x)) dx.",
+            options: [
+                "F(x) = 2 cosh(x) - 3 senh(x) + C",
+                "F(x) = -2 cosh(x) + 3 senh(x) + C",
+                "F(x) = 2 cosh(x) + 3 senh(x) + C",
+                "F(x) = 2 senh(x) + 3 cosh(x) + C"
+            ],
+            correct: 2
+        },
+        {
+            question: "Evalúe la integral polinomial ∫ (x - 1)(x + 2) dx multiplicando previamente los factores.",
+            options: [
+                "F(x) = (x³ / 3) + (x² / 2) - 2x + C",
+                "F(x) = (x³ / 3) - (x² / 2) + 2x + C",
+                "F(x) = x² + x - 2 + C",
+                "F(x) = (x² / 2)(x³ / 3) + C"
+            ],
+            correct: 0
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+    let userName = "";
+
+    // Elementos de Pantallas
+    const registerScreen = document.getElementById("register-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultScreen = document.getElementById("result-screen");
+
+    // Elementos de Registro
+    const studentNameInput = document.getElementById("student-name");
+    const startButton = document.getElementById("start-button");
+
+    // Elementos de Juego
+    const questionText = document.getElementById("question-text");
+    const optionsContainer = document.getElementById("options");
+    const progressBar = document.getElementById("progress");
+    const nextButton = document.getElementById("next-button");
+    const feedback = document.getElementById("feedback");
+    const quizSubtitle = document.getElementById("quiz-subtitle");
+
+    // Elementos de Resultado
+    const resultUserGreeting = document.getElementById("result-user-greeting");
+    const scoreText = document.getElementById("score-text");
+    const evaluationComment = document.getElementById("evaluation-comment");
+
+    // EVENTO 1: Iniciar cuestionario tras validación de nombre
+    startButton.addEventListener("click", () => {
+        const inputName = studentNameInput.value.trim();
+        if (inputName === "") {
+            alert("Por favor, ingresa tu nombre completo para comenzar.");
+            return;
+        }
+        userName = inputName;
+        
+        // Transición de pantalla
+        registerScreen.classList.add("hidden");
+        quizScreen.classList.remove("hidden");
+        
+        // Personalizar subtítulo del cuestionario
+        quizSubtitle.innerText = `Evaluación de ${userName}`;
+        
+        loadQuestion();
+    });
+
+    function loadQuestion() {
+        hasAnswered = false;
+        nextButton.disabled = true;
+        nextButton.innerText = "Siguiente Pregunta";
+        feedback.innerText = "";
+        
+        const currentQuestion = quizData[currentQuestionIndex];
+        questionText.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+        
+        // Actualizar barra de progreso
+        const progressPercent = (currentQuestionIndex / quizData.length) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        optionsContainer.innerHTML = "";
+        currentQuestion.options.forEach((option, index) => {
+            const button = document.createElement("button");
+            button.classList.add("option-btn");
+            button.innerText = option;
+            button.addEventListener("click", () => selectOption(index, button));
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function selectOption(selectedIndex, selectedButton) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        const currentQuestion = quizData[currentQuestionIndex];
+        const buttons = optionsContainer.getElementsByClassName("option-btn");
+
+        for (let btn of buttons) {
+            btn.disabled = true;
+        }
+
+        if (selectedIndex === currentQuestion.correct) {
+            selectedButton.classList.add("correct");
+            feedback.innerText = "¡Correcto! Uso excelente de fórmulas fundamentales.";
+            feedback.style.color = "var(--success-color)";
+            score++;
+        } else {
+            selectedButton.classList.add("incorrect");
+            buttons[currentQuestion.correct].classList.add("correct");
+            feedback.innerText = "Incorrecto. Analiza la estructura y verifica tu antiderivada.";
+            feedback.style.color = "var(--error-color)";
+        }
+
+        nextButton.disabled = false;
+        if (currentQuestionIndex === quizData.length - 1) {
+            nextButton.innerText = "Ver Resultados";
+        }
+    }
+
+    nextButton.addEventListener("click", () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    });
+
+    // EVENTO 2: Mostrar resultados con retroalimentación personalizada
+    function showResults() {
+        progressBar.style.width = "100%";
+        quizScreen.classList.add("hidden");
+        resultScreen.classList.remove("hidden");
+        
+        resultUserGreeting.innerText = `Estudiante: ${userName}`;
+        scoreText.innerText = `${score}/${quizData.length}`;
+
+        // Lógica de retroalimentación dirigida por nombre
+        if (score === 10) {
+            evaluationComment.innerHTML = `<strong>¡Brillante, ${userName}!</strong> Has demostrado una precisión matemática sobresaliente y un dominio impecable del formulario de integración elemental. ¡Estás más que listo para abordar métodos avanzados como la integración por sustitución!`;
+        } else if (score >= 7) {
+            evaluationComment.innerHTML = `<strong>¡Muy bien, ${userName}!</strong> Conoces con solidez las fórmulas inmediatas y los procedimientos de simplificación algebraica. Solo vigila la conversión de exponentes fraccionarios y funciones inversas.`;
+        } else {
+            evaluationComment.innerHTML = `<strong>Vamos a repasar, ${userName}.</strong> Memorizar y aplicar fluidamente el formulario de integrales inmediatas es vital antes de pasar a la Session 6. Te sugiero repasar tu tabla de integrales y realizar la prueba de nuevo.`;
+        }
+    }
+
+    function resetQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        resultScreen.classList.add("hidden");
+        studentNameInput.value = "";
+        registerScreen.classList.remove("hidden");
+    }
+</script>
+</body>
+</html>
+```
+
+---
+
+### ¿Qué evalúa con exactitud este cuestionario?
+1. **Regla de la Potencia de Integración** combinando coeficientes racionales y linealidad.
+2. **La Integral del Logaritmo Natural** (\\(\int \frac{1}{x}dx\\)) identificando el valor absoluto para \\(x > 0\\).
+3. **Linealidad con Funciones Trascendentes** (exponencial natural y trigonométrica básica seno/coseno).
+4. **Integrales Trigonométricas Elementales** (derivadas directas de la tangente y cotangente).
+5. **División Término a Término** como paso de simplificación algebraica obligada antes de integrar.
+6. **Integración Exponencial con Base General** (\\(\int a^x dx\\)).
+7. **Formas Racionales de la Arcocoseno/Arcotangente**.
+8. **Formas de la Arcoseno** en denominadores con radicales.
+9. **Funciones Hiperbólicas inmediatas** (seno y coseno hiperbólico).
+10. **Desarrollo de Binomios / Productos** antes de integrar para aplicar la regla de la potencia polinomial.
+
+¿Te gustaría que diseñemos el recurso para la **Sesión 6 (Integración por sustitución y completando el diferencial)** o prefieres revisar algún ajuste estético sobre este código en particular?
