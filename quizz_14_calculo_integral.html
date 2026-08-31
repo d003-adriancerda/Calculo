@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario: Introducción a las Técnicas de Integración (Sesión 14)</title>
+    
+    <!-- MathJax para renderizado dinámico de LaTeX de alta calidad -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+
+        .quiz-container {
+            background-color: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 95%;
+            max-width: 1000px; /* Ancho expandido a 1000px */
+            padding: 40px;
+            box-sizing: border-box;
+            margin: auto;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            text-align: center;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 1rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .register-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 500px;
+            margin: 30px auto 0 auto;
+        }
+
+        .register-form input {
+            padding: 14px;
+            font-size: 1.1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .register-form input:focus {
+            border-color: var(--secondary);
+        }
+
+        .progress-bar-container {
+            background-color: #e5e7eb;
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            margin-bottom: 35px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--secondary);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .question {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 18px 25px;
+            font-size: 1.15rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #eff6ff;
+            border-color: var(--secondary);
+        }
+
+        .option-btn.correct {
+            background-color: #d1fae5;
+            border-color: var(--success);
+            color: #065f46;
+            font-weight: bold;
+        }
+
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: var(--error);
+            color: #991b1b;
+        }
+
+        .feedback {
+            margin-top: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-align: center;
+            min-height: 28px;
+        }
+
+        .next-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 30px auto 0 auto;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: #172554;
+        }
+
+        .next-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: #eff6ff;
+            border: 4px solid var(--secondary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px auto;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- PANTALLA 1: BIENVENIDA -->
+    <div id="register-screen">
+        <h1>Cálculo Integral</h1>
+        <p style="text-align: center; color: #4b5563; font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+            Ingresa tus datos para iniciar la evaluación práctica de la Sesión 14 <br>(Introducción a las Técnicas de Integración Avanzadas).
+        </p>
+        <div class="register-form">
+            <input type="text" id="student-name" placeholder="Escribe tu nombre aquí..." autocomplete="off">
+            <button class="next-btn" id="start-button">Comenzar Cuestionario</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: CUESTIONARIO -->
+    <div id="quiz-screen" class="hidden">
+        <h1>Cálculo Integral</h1>
+        <h2 id="quiz-subtitle">Sesión 14: Técnicas de Integración</h2>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div class="question" id="question-text">Cargando pregunta...</div>
+        <div class="options-container" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        
+        <button class="next-btn" id="next-button" disabled>Siguiente Pregunta</button>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADOS -->
+    <div id="result-screen" class="hidden">
+        <h1>¡Evaluación Completada!</h1>
+        <h2 id="result-user-greeting">Resultados</h2>
+        <div class="score-circle" id="score-text">0/10</div>
+        <p id="evaluation-comment" style="line-height: 1.6; font-size: 1.2rem; padding: 0 20px; max-width: 700px; margin: 0 auto; text-align: center;"></p>
+        <button class="next-btn" onclick="resetQuiz()">Volver a intentar</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            q: "Para la integral \\( \\int x \\cos(x) \\, dx \\), ¿cuál es la técnica avanzada de integración más adecuada?",
+            opts: [
+                { t: "Integración por partes (producto de una función algebraica y una trigonométrica).", ok: true },
+                { t: "Sustitución trigonométrica.", ok: false },
+                { t: "Descomposición en fracciones parciales.", ok: false },
+                { t: "Sustitución simple con \\( u = \\cos(x) \\).", ok: false }
+            ]
+        },
+        {
+            q: "Identifique la técnica óptima para resolver la siguiente integral de tipo racional: $$\\int \\frac{2x+3}{x^2 - 5x + 6} \\, dx$$",
+            opts: [
+                { t: "Descomposición en fracciones parciales, dado que el denominador es factorizable.", ok: true },
+                { t: "Integración por partes iterativa.", ok: false },
+                { t: "Sustitución trigonométrica de tipo tangente.", ok: false },
+                { t: "Integración inmediata por linealidad directa.", ok: false }
+            ]
+        },
+        {
+            q: "Para evaluar la integral con radical cuadrático \\( \\int \\sqrt{9 - x^2} \\, dx \\), ¿qué método simplifica el integrando de manera óptima?",
+            opts: [
+                { t: "Sustitución trigonométrica usando \\( x = 3 \\operatorname{sen}(\\theta) \\).", ok: true },
+                { t: "Integración por partes asignando \\( u = \\sqrt{9-x^2} \\).", ok: false },
+                { t: "Sustitución algebraica simple con \\( u = 9 - x^2 \\).", ok: false },
+                { t: "Descomposición en fracciones parciales de factores cuadráticos.", ok: false }
+            ]
+        },
+        {
+            q: "¿Cuál es la primera estrategia analítica recomendada al enfrentarse a la integral: $$\\int \\frac{x^2 - 4}{x - 2} \\, dx$$",
+            opts: [
+                { t: "Simplificar algebraicamente el integrando mediante factorización antes de integrar.", ok: true },
+                { t: "Aplicar sustitución trigonométrica inmediata en el numerador.", ok: false },
+                { t: "Resolver por descomposición en fracciones parciales.", ok: false },
+                { t: "Aplicar la fórmula de integración por partes.", ok: false }
+            ]
+        },
+        {
+            q: "Para la integral de tipo compuesto \\( \\int x^2 e^{x^3} \\, dx \\), ¿es necesario recurrir a una técnica avanzada como la integración por partes?",
+            opts: [
+                { t: "No, se resuelve mediante una sustitución simple con \\( u = x^3 \\) para completar el diferencial.", ok: true },
+                { t: "Sí, requiere integración por partes repitiendo el proceso dos veces.", ok: false },
+                { t: "Sí, requiere sustitución trigonométrica debido al exponente cúbico.", ok: false },
+                { t: "No, es una integral directa de la tabla exponencial natural.", ok: false }
+            ]
+        },
+        {
+            q: "Si el integrando es una fracción racional propia de la forma \\( \\frac{P(x)}{Q(x)} \\) donde el grado de \\( P(x) \\) es mayor o igual al de \\( Q(x) \\), ¿cuál es el paso algebraico preliminar indispensable?",
+            opts: [
+                { t: "Realizar una división polinomial para obtener una parte entera y una fracción propia antes de integrar.", ok: true },
+                { t: "Aplicar directamente la descomposición en fracciones parciales.", ok: false },
+                { t: "Completar el trinomio cuadrado perfecto en el denominador.", ok: false },
+                { t: "Integrar por partes el numerador y el denominador de forma independiente.", ok: false }
+            ]
+        },
+        {
+            q: "La integral indefinida de la forma \\( \\int e^x \\operatorname{sen}(x) \\, dx \\) es un caso clásico de:",
+            opts: [
+                { t: "Integración por partes cíclica, donde el integrando vuelve a aparecer tras aplicar el método dos veces.", ok: true },
+                { t: "Sustitución trigonométrica de tipo secante.", ok: false },
+                { t: "Integración elemental directa por linealidad.", ok: false },
+                { t: "Descomposición en fracciones parciales con raíces complejas conjugadas.", ok: false }
+            ]
+        },
+        {
+            q: "¿Qué técnica avanzada de integración se deriva directamente del reverso de la Regla del Producto del Cálculo Diferencial?",
+            opts: [
+                { t: "Integración por partes.", ok: true },
+                { t: "Integración por sustitución trigonométrica.", ok: false },
+                { t: "Descomposición en fracciones parciales.", ok: false },
+                { t: "Sustitución y completado algebraico del diferencial.", ok: false }
+            ]
+        },
+        {
+            q: "Para resolver la integral indefinida \\( \\int \\frac{dx}{x^2 + 6x + 25} \\), ¿cuál es la mejor estrategia de modelación?",
+            opts: [
+                { t: "Completar el cuadrado para obtener \\( (x+3)^2 + 16 \\) y aplicar la fórmula de la arcotangente.", ok: true },
+                { t: "Utilizar descomposición en fracciones parciales tras factorizar en reales.", ok: false },
+                { t: "Aplicar integración por partes asignando \\( u = 1 \\).", ok: false },
+                { t: "Aplicar sustitución simple con \\( u = x^2 + 6x + 25 \\).", ok: false }
+            ]
+        },
+        {
+            q: "Al intentar evaluar la integral logarítmica básica \\( \\int \\ln(x) \\, dx \\), ¿cómo se debe estructurar la integración por partes?",
+            opts: [
+                { t: "Asignar \\( u = \\ln(x) \\) de modo que \\( du = \\frac{1}{x}dx \\), y \\( dv = dx \\) de modo que \\( v = x \\).", ok: true },
+                { t: "Asignar \\( u = 1 \\) y \\( dv = \\ln(x) \\, dx \\).", ok: false },
+                { t: "Asignar \\( u = x \\) y \\( dv = \\frac{1}{x} \\, dx \\).", ok: false },
+                { t: "No es posible resolver por partes; requiere de sustitución exponencial directa.", ok: false }
+            ]
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+    let userName = "";
+    let currentShuffledOptions = [];
+
+    const registerScreen = document.getElementById("register-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultScreen = document.getElementById("result-screen");
+    const studentNameInput = document.getElementById("student-name");
+    const startButton = document.getElementById("start-button");
+    const questionText = document.getElementById("question-text");
+    const optionsContainer = document.getElementById("options");
+    const progressBar = document.getElementById("progress");
+    const nextButton = document.getElementById("next-button");
+    const feedback = document.getElementById("feedback");
+    const quizSubtitle = document.getElementById("quiz-subtitle");
+    const resultUserGreeting = document.getElementById("result-user-greeting");
+    const scoreText = document.getElementById("score-text");
+    const evaluationComment = document.getElementById("evaluation-comment");
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    startButton.addEventListener("click", () => {
+        const inputName = studentNameInput.value.trim();
+        if (inputName === "") {
+            alert("Por favor, ingresa tu nombre completo para comenzar.");
+            return;
+        }
+        userName = inputName;
+        registerScreen.classList.add("hidden");
+        quizScreen.classList.remove("hidden");
+        quizSubtitle.innerHTML = `Evaluación de ${userName} <br>Sesión 14: Introducción a las Técnicas Avanzadas`;
+        loadQuestion();
+    });
+
+    function loadQuestion() {
+        hasAnswered = false;
+        nextButton.disabled = true;
+        nextButton.innerText = "Siguiente Pregunta";
+        feedback.innerText = "";
+        
+        const currentQuestion = quizData[currentQuestionIndex];
+        questionText.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.q}`;
+        
+        const progressPercent = (currentQuestionIndex / quizData.length) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        currentShuffledOptions = shuffleArray([...currentQuestion.opts]);
+
+        optionsContainer.innerHTML = "";
+        currentShuffledOptions.forEach((opt) => {
+            const button = document.createElement("button");
+            button.classList.add("option-btn");
+            button.innerHTML = opt.t;
+            button.addEventListener("click", () => selectOption(opt.ok, button));
+            optionsContainer.appendChild(button);
+        });
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([questionText, optionsContainer]).catch((err) => console.log(err));
+        }
+    }
+
+    function selectOption(isCorrect, selectedButton) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        const buttons = optionsContainer.getElementsByClassName("option-btn");
+        for (let btn of buttons) {
+            btn.disabled = true;
+        }
+
+        if (isCorrect) {
+            selectedButton.classList.add("correct");
+            feedback.innerHTML = "¡Correcto! Has analizado de manera sobresaliente la estructura analítica del integrando.";
+            feedback.style.color = "var(--success)";
+            score++;
+        } else {
+            selectedButton.classList.add("incorrect");
+            currentShuffledOptions.forEach((opt, idx) => {
+                if (opt.ok) {
+                    buttons[idx].classList.add("correct");
+                }
+            });
+            feedback.innerHTML = "Incorrecto. Identifica si el integrando contiene productos, radicales cuadráticos o fracciones factorizables.";
+            feedback.style.color = "var(--error)";
+        }
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([feedback]).catch((err) => console.log(err));
+        }
+
+        nextButton.disabled = false;
+        if (currentQuestionIndex === quizData.length - 1) {
+            nextButton.innerText = "Ver Resultados";
+        }
+    }
+
+    nextButton.addEventListener("click", () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    });
+
+    function showResults() {
+        progressBar.style.width = "100%";
+        quizScreen.classList.add("hidden");
+        resultScreen.classList.remove("hidden");
+        
+        resultUserGreeting.innerText = `Estudiante: ${userName}`;
+        scoreText.innerText = `${score}/${quizData.length}`;
+
+        if (score === 10) {
+            evaluationComment.innerHTML = `<strong>¡Excelente, ${userName}!</strong> Tu criterio analítico para seleccionar la estrategia ideal antes de empezar a operar mecánicamente es perfecto. Estás listo para dominar el Bloque de Técnicas Avanzadas de Integración.`;
+        } else if (score >= 7) {
+            evaluationComment.innerHTML = `<strong>¡Buen trabajo, ${userName}!</strong> Logras diferenciar con solidez cuándo aplicar integración por partes, fracciones parciales y sustitución trigonométrica en la mayoría de los casos.`;
+        } else {
+            evaluationComment.innerHTML = `<strong>Es momento de repasar, ${userName}.</strong> Recuerda que antes de integrar, es fundamental "clasificar" la expresión matemática basándonos en la naturaleza de las funciones del integrando. Te sugerimos revisar las tablas del libro de Stewart y volver a intentar.`;
+        }
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([evaluationComment]).catch((err) => console.log(err));
+        }
+    }
+
+    function resetQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        resultScreen.classList.add("hidden");
+        studentNameInput.value = "";
+        registerScreen.classList.remove("hidden");
+    }
+</script>
+</body>
+</html>
+
+*¿Te gustaría que pasemos a diseñar la **Sesión 15: Integración por partes (Parte 1)** con sus cuestionarios interactivos correspondientes, o prefieres revisar algún punto adicional de las sesiones anteriores?*
