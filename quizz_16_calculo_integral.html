@@ -1,0 +1,435 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario: Integración por Partes Iterativa y Cíclica (Sesión 16)</title>
+    
+    <!-- Cargamos la librería MathJax para interpretar notación matemática LaTeX en vivo -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+
+        .quiz-container {
+            background-color: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 1000px; /* Ancho extendido de 1000px óptimo para lectura matemática */
+            padding: 40px;
+            box-sizing: border-box;
+            margin: auto;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            text-align: center;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 1rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .register-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 500px;
+            margin: 30px auto 0 auto;
+        }
+
+        .register-form input {
+            padding: 14px;
+            font-size: 1.1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .register-form input:focus {
+            border-color: var(--secondary);
+        }
+
+        .progress-bar-container {
+            background-color: #e5e7eb;
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            margin-bottom: 35px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--secondary);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .question {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 18px 25px;
+            font-size: 1.15rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #eff6ff;
+            border-color: var(--secondary);
+        }
+
+        .option-btn.correct {
+            background-color: #d1fae5;
+            border-color: var(--success);
+            color: #065f46;
+            font-weight: bold;
+        }
+
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: var(--error);
+            color: #991b1b;
+        }
+
+        .feedback {
+            margin-top: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-align: center;
+            min-height: 28px;
+        }
+
+        .next-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 30px auto 0 auto;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: #172554;
+        }
+
+        .next-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: #eff6ff;
+            border: 4px solid var(--secondary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px auto;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- PANTALLA 1: REGISTRO -->
+    <div id="register-screen">
+        <h1>Cálculo Integral</h1>
+        <p style="text-align: center; color: #4b5563; font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+            Ingresa tus datos para iniciar la evaluación práctica de la Sesión 16 <br>(Técnicas de Integración: Integración por Partes - Parte 2: Casos Iterativos y Cíclicos).
+        </p>
+        
+        <div class="register-form">
+            <input type="text" id="student-name" placeholder="Escribe tu nombre aquí..." autocomplete="off">
+            <button class="next-btn" id="start-button">Comenzar Cuestionario</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: CUESTIONARIO -->
+    <div id="quiz-screen" class="hidden">
+        <h1>Cálculo Integral</h1>
+        <h2 id="quiz-subtitle">Sesión 16: Integración por Partes (Parte 2)</h2>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div class="question" id="question-text">Cargando pregunta...</div>
+        <div class="options-container" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        
+        <button class="next-btn" id="next-button" disabled>Siguiente Pregunta</button>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADOS -->
+    <div id="result-screen" class="hidden">
+        <h1>¡Evaluación Completada!</h1>
+        <h2 id="result-user-greeting">Resultados</h2>
+        <div class="score-circle" id="score-text">0/5</div>
+        <p id="evaluation-comment" style="line-height: 1.6; font-size: 1.2rem; padding: 0 20px; max-width: 700px; margin: 0 auto; text-align: center;"></p>
+        <button class="next-btn" onclick="resetQuiz()">Volver a intentar</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            q: "Para resolver de manera iterativa la integral indefinida \\( \\int x^2 \\cos(x) \\, dx \\), ¿cuántas veces debe aplicarse consecutivamente la fórmula de integración por partes?",
+            opts: [
+                { t: "Dos veces, porque el término algebraico polinomial es de segundo grado \\( (x^2) \\).", ok: true },
+                { t: "Una sola vez, ya que la primera derivada elimina la variable de inmediato.", ok: false },
+                { t: "Tres veces, debido al comportamiento alternante de la función trigonométrica coseno.", ok: false },
+                { t: "Infinitas veces; es una integral de comportamiento cíclico que nunca se desgasta.", ok: false }
+            ]
+        },
+        {
+            q: "¿Qué característica matemática distingue a una integral por partes de tipo cíclica como \\( \\int e^x \\operatorname{sen}(x) \\, dx \\)?",
+            opts: [
+                { t: "El integrando original vuelve a aparecer con un coeficiente constante en el desarrollo algebraico tras aplicar el método dos veces, permitiendo despejar la integral como una ecuación.", ok: true },
+                { t: "El término algebraico se anula o desgasta por completo tras una serie definida de derivaciones sucesivas.", ok: false },
+                { t: "Requiere un cambio de variable trigonométrico mediante un triángulo de referencia para eliminar un radical.", ok: false },
+                { t: "La integral se indetermina debido a que las funciones exponencial y trigonométrica se anulan recíprocamente.", ok: false }
+            ]
+        },
+        {
+            q: "Calcule la antiderivada general de la función polinomial-exponencial de segundo grado: \\( \\int x^2 e^x \\, dx \\).",
+            opts: [
+                { t: "\\( e^x (x^2 - 2x + 2) + C \\)", ok: true },
+                { t: "\\( e^x (x^2 + 2x - 2) + C \\)", ok: false },
+                { t: "\\( \\frac{1}{3} x^3 e^x + C \\)", ok: false },
+                { t: "\\( e^x (x^2 - 2x) + C \\)", ok: false }
+            ]
+        },
+        {
+            q: "Determine el resultado analítico exacto obtenido al evaluar la integral cíclica clásica: \\( \\int e^x \\operatorname{sen}(x) \\, dx \\).",
+            opts: [
+                { t: "\\( \\frac{e^x}{2} (\\operatorname{sen}(x) - \\cos(x)) + C \\)", ok: true },
+                { t: "\\( e^x (\\operatorname{sen}(x) + \\cos(x)) + C \\)", ok: false },
+                { t: "\\( \\frac{e^x}{2} (\\operatorname{sen}(x) + \\cos(x)) + C \\)", ok: false },
+                { t: "\\( e^x \\cos(x) - e^x \\operatorname{sen}(x) + C \\)", ok: false }
+            ]
+        },
+        {
+            q: "Al resolver la integral cíclica \\( \\int e^x \\cos(x) \\, dx \\) por partes, ¿qué ocurre si en la primera aplicación se elige \\( u = e^x \\) y en la segunda aplicación se invierte el criterio eligiendo \\( u = \\operatorname{sen}(x) \\)?",
+            opts: [
+                { t: "Se anula el avance algebraico y se llega a una identidad matemática trivial e inútil del tipo \\( 0 = 0 \\) o \\( I = I \\).", ok: true },
+                { t: "Se acelera la simplificación del integrando, obteniendo la antiderivada en la mitad de los pasos usuales.", ok: false },
+                { t: "La integral se vuelve divergente e imposible de resolver por métodos reales estándar.", ok: false },
+                { t: "Se obtiene directamente el resultado correcto sin necesidad de recurrir a un despeje algebraico final.", ok: false }
+            ]
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+    let userName = "";
+    let currentShuffledOptions = [];
+
+    const registerScreen = document.getElementById("register-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultScreen = document.getElementById("result-screen");
+    const studentNameInput = document.getElementById("student-name");
+    const startButton = document.getElementById("start-button");
+    const questionText = document.getElementById("question-text");
+    const optionsContainer = document.getElementById("options");
+    const progressBar = document.getElementById("progress");
+    const nextButton = document.getElementById("next-button");
+    const feedback = document.getElementById("feedback");
+    const quizSubtitle = document.getElementById("quiz-subtitle");
+    const resultUserGreeting = document.getElementById("result-user-greeting");
+    const scoreText = document.getElementById("score-text");
+    const evaluationComment = document.getElementById("evaluation-comment");
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    startButton.addEventListener("click", () => {
+        const inputName = studentNameInput.value.trim();
+        if (inputName === "") {
+            alert("Por favor, ingresa tu nombre completo para comenzar.");
+            return;
+        }
+        userName = inputName;
+        registerScreen.classList.add("hidden");
+        quizScreen.classList.remove("hidden");
+        quizSubtitle.innerHTML = `Evaluación de ${userName} <br>Sesión 16: Integración por Partes (Parte 2)`;
+        loadQuestion();
+    });
+
+    function loadQuestion() {
+        hasAnswered = false;
+        nextButton.disabled = true;
+        nextButton.innerText = "Siguiente Pregunta";
+        feedback.innerText = "";
+        
+        const currentQuestion = quizData[currentQuestionIndex];
+        questionText.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.q}`;
+        
+        const progressPercent = (currentQuestionIndex / quizData.length) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        currentShuffledOptions = shuffleArray([...currentQuestion.opts]);
+
+        optionsContainer.innerHTML = "";
+        currentShuffledOptions.forEach((opt) => {
+            const button = document.createElement("button");
+            button.classList.add("option-btn");
+            button.innerHTML = opt.t;
+            button.addEventListener("click", () => selectOption(opt.ok, button));
+            optionsContainer.appendChild(button);
+        });
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([questionText, optionsContainer]).catch((err) => console.log(err));
+        }
+    }
+
+    function selectOption(isCorrect, selectedButton) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        const buttons = optionsContainer.getElementsByClassName("option-btn");
+        for (let btn of buttons) {
+            btn.disabled = true;
+        }
+
+        if (isCorrect) {
+            selectedButton.classList.add("correct");
+            feedback.innerHTML = "¡Correcto! Elección y análisis procedimental impecable.";
+            feedback.style.color = "var(--success)";
+            score++;
+        } else {
+            selectedButton.classList.add("incorrect");
+            currentShuffledOptions.forEach((opt, idx) => {
+                if (opt.ok) {
+                    buttons[idx].classList.add("correct");
+                }
+            });
+            feedback.innerHTML = "Incorrecto. Analiza el comportamiento iterativo del polinomio o mantén constante el criterio de elección de u en cada paso.";
+            feedback.style.color = "var(--error)";
+        }
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([feedback]).catch((err) => console.log(err));
+        }
+
+        nextButton.disabled = false;
+        if (currentQuestionIndex === quizData.length - 1) {
+            nextButton.innerText = "Ver Resultados";
+        }
+    }
+
+    nextButton.addEventListener("click", () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    });
+
+    function showResults() {
+        progressBar.style.width = "100%";
+        quizScreen.classList.add("hidden");
+        resultScreen.classList.remove("hidden");
+        
+        resultUserGreeting.innerText = `Estudiante: ${userName}`;
+        scoreText.innerText = `${score}/${quizData.length}`;
+
+        if (score === 5) {
+            evaluationComment.innerHTML = `<strong>¡Absolutamente brillante, ${userName}!</strong> Has demostrado un dominio analítico extraordinario sobre los métodos avanzados de integración iterativa y cíclica. Estás listo para avanzar al siguiente bloque.`;
+        } else if (score >= 3) {
+            evaluationComment.innerHTML = `<strong>¡Buen trabajo, ${userName}!</strong> Logras diferenciar con solidez cuándo aplicar el método de forma consecutiva y cómo despejar una integral cíclica como si fuera una ecuación algebraica.`;
+        } else {
+            evaluationComment.innerHTML = `<strong>Es momento de repasar, ${userName}.</strong> Recuerda que si inviertes la elección de u en el segundo paso, anularás tu avance. Te sugerimos repasar la sección 7.1 de Stewart y volver a intentar.`;
+        }
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([evaluationComment]).catch((err) => console.log(err));
+        }
+    }
+
+    function resetQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        resultScreen.classList.add("hidden");
+        studentNameInput.value = "";
+        registerScreen.classList.remove("hidden");
+    }
+</script>
+</body>
+</html>
