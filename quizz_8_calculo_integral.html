@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario: La Integral Definida y las Sumas de Riemann</title>
+    
+    <!-- Cargamos MathJax para renderizar código LaTeX de forma dinámica -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 95%;
+            max-width: 1000px; /* Ancho expandido para lectura óptima de fórmulas */
+            padding: 40px;
+            margin: auto;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 1rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* Formulario de registro */
+        .register-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 500px;
+            margin: 30px auto 0 auto;
+        }
+
+        .register-form label {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-color);
+        }
+
+        .register-form input {
+            padding: 14px;
+            font-size: 1.1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .register-form input:focus {
+            border-color: var(--secondary-color);
+        }
+
+        .progress-bar-container {
+            background-color: #e5e7eb;
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            margin-bottom: 35px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--secondary-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .question {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 18px 25px;
+            font-size: 1.15rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #eff6ff;
+            border-color: var(--secondary-color);
+        }
+
+        .option-btn.correct {
+            background-color: #d1fae5;
+            border-color: var(--success-color);
+            color: #065f46;
+            font-weight: bold;
+        }
+
+        .option-btn.incorrect {
+            background-color: #fee2e2;
+            border-color: var(--error-color);
+            color: #991b1b;
+        }
+
+        .feedback {
+            margin-top: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-align: center;
+            min-height: 28px;
+        }
+
+        .next-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 30px auto 0 auto;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: #172554;
+        }
+
+        .next-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: #eff6ff;
+            border: 4px solid var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px auto;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- PANTALLA 1: REGISTRO -->
+    <div id="register-screen">
+        <h1>Cálculo Integral</h1>
+        <p style="text-align: center; color: #4b5563; font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+            Ingresa tus datos para iniciar la evaluación práctica de la Sesión 8 <br>(La Integral Definida y las Sumas de Riemann).
+        </p>
+        
+        <div class="register-form">
+            <label for="student-name">Nombre Completo:</label>
+            <input type="text" id="student-name" placeholder="Escribe tu nombre aquí..." autocomplete="off">
+            <button class="next-btn" id="start-button">Comenzar Cuestionario</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: CUESTIONARIO -->
+    <div id="quiz-screen" class="hidden">
+        <h1>Cálculo Integral</h1>
+        <h2 id="quiz-subtitle">Sesión 8: <br>Sumas de Riemann e Integral Definida</h2>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div class="question" id="question-text">Cargando pregunta...</div>
+        
+        <div class="options-container" id="options">
+            <!-- Botones dinámicos -->
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+        
+        <button class="next-btn" id="next-button" disabled>Siguiente Pregunta</button>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADOS -->
+    <div id="result-screen" class="hidden">
+        <h1>¡Cuestionario Completado!</h1>
+        <h2 id="result-user-greeting">Resultados</h2>
+        <div class="score-circle" id="score-text">0/10</div>
+        <p id="evaluation-comment" style="line-height: 1.6; font-size: 1.2rem; padding: 0 20px; max-width: 700px; margin: 0 auto;"></p>
+        <button class="next-btn" onclick="resetQuiz()">Volver a intentar</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            question: "Aproxime el área bajo la curva de la función \\( f(x) = x^2 \\) en el intervalo \\( [1] \\) usando una suma de Riemann por la derecha con \\( n = 4 \\) subintervalos de igual ancho.",
+            options: [
+                "\\( 3.75 \\)",
+                "\\( 1.75 \\)",
+                "\\( 2.33 \\)",
+                "\\( 2.75 \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Aproxime el área bajo la curva de la función \\( f(x) = x^2 \\) en el intervalo \\( [1] \\) usando una suma de Riemann por la izquierda con \\( n = 4 \\) subintervalos de igual ancho.",
+            options: [
+                "\\( 1.75 \\)",
+                "\\( 3.75 \\)",
+                "\\( 2.67 \\)",
+                "\\( 1.25 \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Aproxime el área bajo la curva de \\( f(x) = 2x + 1 \\) en el intervalo \\( [2, 3] \\) usando el punto medio de Riemann con \\( n = 2 \\) subintervalos de igual ancho.",
+            options: [
+                "\\( 10 \\)",
+                "\\( 9 \\)",
+                "\\( 11 \\)",
+                "\\( 12 \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Exprese la integral definida como un límite de sumas de Riemann usando extremos de la derecha sobre el intervalo \\( [a, b] \\) con subintervalos de igual ancho \\( \\Delta x = \\frac{b-a}{n} \\) y puntos de muestra \\( x_i = a + i\\Delta x \\): $$\\int_{1}^{4} x^3 \\, dx$$",
+            options: [
+                "\\( \\lim_{n \\to \\infty} \\sum_{i=1}^{n} \\left(1 + \\frac{3i}{n}\\right)^3 \\frac{3}{n} \\)",
+                "\\( \\lim_{n \\to \\infty} \\sum_{i=1}^{n} \\left(\\frac{3i}{n}\\right)^3 \\frac{3}{n} \\)",
+                "\\( \\lim_{n \\to \\infty} \\sum_{i=1}^{n} \\left(1 + \\frac{i}{n}\\right)^3 \\frac{1}{n} \\)",
+                "\\( \\lim_{n \\to \\infty} \\sum_{i=1}^{n} \\left(1 + \\frac{3i}{n}\\right)^3 \\frac{1}{n} \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "¿A qué integral definida corresponde el siguiente límite de sumas de Riemann sobre el intervalo \\( [0, \\pi] \\)? $$\\lim_{n \\to \\infty} \\sum_{i=1}^{n} \\operatorname{sen}\\left(\\frac{i\\pi}{n}\\right) \\frac{\\pi}{n}$$",
+            options: [
+                "\\( \\int_{0}^{\\pi} \\operatorname{sen}(x) \\, dx \\)",
+                "\\( \\int_{0}^{1} \\operatorname{sen}(\\pi x) \\, dx \\)",
+                "\\( \\int_{0}^{\\pi} \\operatorname{sen}(\\pi x) \\, dx \\)",
+                "\\( \\int_{0}^{\\pi/2} \\operatorname{sen}(x) \\, dx \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Si el área exacta bajo la curva \\( f(x) = x^3 \\) en el intervalo \\( [1] \\) es \\( 4 \\), ¿cuál de las siguientes afirmaciones describe la relación con las sumas de Riemann por la derecha (\\( R_n \\)) e izquierda (\\( L_n \\)) para cualquier valor de \\( n \\) finito?",
+            options: [
+                "\\( L_n < 4 < R_n \\)",
+                "\\( R_n < 4 < L_n \\)",
+                "\\( L_n = R_n = 4 \\)",
+                "\\( L_n < R_n < 4 \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Calcule el valor de la siguiente sumatoria usando el desarrollo algebraico directo: $$\\sum_{i=1}^{4} (2i - 1)$$",
+            options: [
+                "\\( 16 \\)",
+                "\\( 20 \\)",
+                "\\( 12 \\)",
+                "\\( 10 \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Calcule el valor numérico de la suma expresada en notación sigma usando sus propiedades elementales: $$\\sum_{i=1}^{10} 5$$",
+            options: [
+                "\\( 50 \\)",
+                "\\( 5 \\)",
+                "\\( 10 \\)",
+                "\\( 55 \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "Para la función \\( f(x) = x + 2 \\) en el intervalo \\( [3] \\), calcule la suma de Riemann usando el punto medio de \\( n = 3 \\) subintervalos de igual ancho.",
+            options: [
+                "\\( 10.5 \\)",
+                "\\( 9.0 \\)",
+                "\\( 11.5 \\)",
+                "\\( 12.0 \\)"
+            ],
+            correct: 0
+        },
+        {
+            question: "¿Cuál es la expresión para el ancho de intervalo \\( \\Delta x \\) si se divide el intervalo \\( [-2, 5] \\) de la integral en \\( n \\) partes de igual longitud? $$\\int_{-2}^{5} (x^2 + 1) \\, dx$$",
+            options: [
+                "\\( \\frac{7}{n} \\)",
+                "\\( \\frac{3}{n} \\)",
+                "\\( \\frac{5}{n} \\)",
+                "\\( \\frac{2}{n} \\)"
+            ],
+            correct: 0
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+    let userName = "";
+    let currentShuffledOptions = [];
+
+    // Elementos de Interfaz
+    const registerScreen = document.getElementById("register-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultScreen = document.getElementById("result-screen");
+    const studentNameInput = document.getElementById("student-name");
+    const startButton = document.getElementById("start-button");
+    const questionText = document.getElementById("question-text");
+    const optionsContainer = document.getElementById("options");
+    const progressBar = document.getElementById("progress");
+    const nextButton = document.getElementById("next-button");
+    const feedback = document.getElementById("feedback");
+    const quizSubtitle = document.getElementById("quiz-subtitle");
+    const resultUserGreeting = document.getElementById("result-user-greeting");
+    const scoreText = document.getElementById("score-text");
+    const evaluationComment = document.getElementById("evaluation-comment");
+
+    // Algoritmo Fisher-Yates para mezclar aleatoriamente las opciones
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    startButton.addEventListener("click", () => {
+        const inputName = studentNameInput.value.trim();
+        if (inputName === "") {
+            alert("Por favor, ingresa tu nombre completo para comenzar.");
+            return;
+        }
+        userName = inputName;
+        
+        registerScreen.classList.add("hidden");
+        quizScreen.classList.remove("hidden");
+        
+        quizSubtitle.innerHTML = `Evaluación de ${userName} <br>Sesión 8: Integral Definida y Sumas de Riemann`;
+        
+        loadQuestion();
+    });
+
+    function loadQuestion() {
+        hasAnswered = false;
+        nextButton.disabled = true;
+        nextButton.innerText = "Siguiente Pregunta";
+        feedback.innerText = "";
+        
+        const currentQuestion = quizData[currentQuestionIndex];
+        questionText.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+        
+        // Actualizar barra de progreso
+        const progressPercent = (currentQuestionIndex / quizData.length) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // Mapeamos las opciones asociando a cada una si es la correcta (opción 0 de la base siempre es correcta originalmente)
+        const mappedOptions = currentQuestion.options.map((option, idx) => ({
+            text: option,
+            isCorrect: idx === currentQuestion.correct
+        }));
+
+        // Mezclamos aleatoriamente las opciones mapeadas
+        currentShuffledOptions = shuffleArray([...mappedOptions]);
+
+        optionsContainer.innerHTML = "";
+        currentShuffledOptions.forEach((opt, index) => {
+            const button = document.createElement("button");
+            button.classList.add("option-btn");
+            button.innerHTML = opt.text;
+            button.addEventListener("click", () => selectOption(opt.isCorrect, button));
+            optionsContainer.appendChild(button);
+        });
+
+        // Forzar a MathJax a procesar y renderizar las nuevas fórmulas LaTeX en la pantalla
+        if (window.MathJax) {
+            MathJax.typesetPromise([questionText, optionsContainer]).catch((err) => console.log(err));
+        }
+    }
+
+    function selectOption(isCorrect, selectedButton) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        const buttons = optionsContainer.getElementsByClassName("option-btn");
+
+        for (let btn of buttons) {
+            btn.disabled = true;
+        }
+
+        if (isCorrect) {
+            selectedButton.classList.add("correct");
+            feedback.innerHTML = "¡Correcto! Interpretación geométrica y cálculo precisos.";
+            feedback.style.color = "var(--success-color)";
+            score++;
+        } else {
+            selectedButton.classList.add("incorrect");
+            // Buscamos cuál de los botones mezclados era el correcto para iluminarlo en verde
+            currentShuffledOptions.forEach((opt, idx) => {
+                if (opt.isCorrect) {
+                    buttons[idx].classList.add("correct");
+                }
+            });
+            feedback.innerHTML = "Incorrecto. Revisa el ancho del intervalo y los puntos de evaluación de la suma.";
+            feedback.style.color = "var(--error-color)";
+        }
+
+        // Forzar renderizado de LaTeX en el feedback
+        if (window.MathJax) {
+            MathJax.typesetPromise([feedback]).catch((err) => console.log(err));
+        }
+
+        nextButton.disabled = false;
+        if (currentQuestionIndex === quizData.length - 1) {
+            nextButton.innerText = "Ver Resultados";
+        }
+    }
+
+    nextButton.addEventListener("click", () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    });
+
+    function showResults() {
+        progressBar.style.width = "100%";
+        quizScreen.classList.add("hidden");
+        resultScreen.classList.remove("hidden");
+        
+        resultUserGreeting.innerText = `Estudiante: ${userName}`;
+        scoreText.innerText = `${score}/${quizData.length}`;
+
+        // Lógica de retroalimentación dirigida por nombre
+        if (score === 10) {
+            evaluationComment.innerHTML = `<strong>¡Brillante, ${userName}!</strong> Has demostrado un dominio absoluto de la aproximación por sumas de Riemann (por izquierda, derecha y punto medio), la notación sigma y la transición al límite para construir la integral definida.`;
+        } else if (score >= 7) {
+            evaluationComment.innerHTML = `<strong>¡Muy bien hecho, ${userName}!</strong> Posees bases sólidas para entender el concepto geométrico del área bajo la curva mediante rectángulos. Solo vigila la evaluación aritmética exacta de los extremos.`;
+        } else {
+            evaluationComment.innerHTML = `<strong>Vamos a repasar, ${userName}.</strong> Entender las sumas de Riemann es el puente conceptual para comprender el Teorema Fundamental del Cálculo en la siguiente sesión. Te sugerimos revisar las fórmulas básicas y volver a intentar el cuestionario.`;
+        }
+
+        if (window.MathJax) {
+            MathJax.typesetPromise([evaluationComment]).catch((err) => console.log(err));
+        }
+    }
+
+    function resetQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        resultScreen.classList.add("hidden");
+        studentNameInput.value = "";
+        registerScreen.classList.remove("hidden");
+    }
+</script>
+</body>
+</html>
