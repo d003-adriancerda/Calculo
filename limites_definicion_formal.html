@@ -44,12 +44,19 @@
   }
   .wrap{max-width:1400px;margin:0 auto;padding:22px 20px 48px}
 
+  /* ---------- Header ---------- */
   .header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:6px}
   header h1{font-size:clamp(20px,2.4vw,29px);margin:0 0 6px;letter-spacing:-.02em;font-weight:700}
   header .tag{font-size:.5em;vertical-align:middle;color:var(--eps);border:1px solid color-mix(in srgb,var(--eps) 40%, transparent);
        border-radius:99px;padding:4px 11px;margin-left:8px;letter-spacing:.08em;white-space:nowrap}
   header p{margin:0 0 18px;color:var(--muted);font-size:13.5px;line-height:1.65;max-width:88ch}
   header p b{font-weight:700}
+
+  /* Contenedor de acciones a la derecha del header */
+  .header-actions{
+    flex:0 0 auto;display:flex;align-items:center;gap:14px;
+  }
+
   .theme-btn{
     flex:0 0 auto;width:42px;height:42px;border-radius:12px;
     background:var(--panel);border:1px solid var(--line);color:var(--txt);
@@ -60,6 +67,35 @@
   :root[data-theme="dark"] .ico-moon{display:none}
   :root[data-theme="light"] .ico-sun{display:none}
 
+  /* Logotipo */
+  .logo{
+    height:46px;
+    width:auto;
+    max-width:180px;
+    object-fit:contain;
+    display:block;
+    user-select:none;
+    pointer-events:none;
+    filter:drop-shadow(0 4px 14px rgba(0,0,0,.35));
+    transition:filter .3s, opacity .3s;
+  }
+  :root[data-theme="light"] .logo{
+    filter:drop-shadow(0 4px 14px rgba(15,23,42,.18));
+  }
+  /* Si el logo no carga, ocultar el hueco */
+  .logo[data-failed="true"]{display:none}
+
+  @media(max-width:640px){
+    .header-actions{gap:10px}
+    .logo{height:36px;max-width:120px}
+    .theme-btn{width:38px;height:38px}
+    .theme-btn svg{width:18px;height:18px}
+  }
+  @media(max-width:420px){
+    .logo{height:30px;max-width:100px}
+  }
+
+  /* ---------- Grid ---------- */
   .grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
   @media(max-width:1040px){.grid{grid-template-columns:1fr}}
 
@@ -160,15 +196,24 @@
     <header>
       <h1>La definición formal de límite <span class="tag">ε — δ</span></h1>
     </header>
-    <button id="themeToggle" class="theme-btn" aria-label="Cambiar tema" title="Cambiar tema">
-      <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="4"/>
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-      </svg>
-      <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-    </button>
+
+    <div class="header-actions">
+      <button id="themeToggle" class="theme-btn" aria-label="Cambiar tema" title="Cambiar tema">
+        <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+
+      <!-- Logotipo a la derecha del botón de tema -->
+      <img id="logo" class="logo"
+           src="LogoTransparente.png"
+           alt="Logotipo"
+           onerror="this.dataset.failed='true'">
+    </div>
   </div>
 
   <p>
@@ -1245,7 +1290,6 @@ delRange.addEventListener('input', () => {
 btnOpt.addEventListener('click', () => {
   const F = FUNCS[state.fi];
   if (F.noLimit){
-    // No hay δ óptimo cuando el límite no existe.
     delRange.value = F.delMax;
     state.del = parseFloat(delRange.value);
     update();
