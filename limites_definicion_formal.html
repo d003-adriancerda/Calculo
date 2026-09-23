@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Definición formal de límite · ε–δ</title>
+
+<!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg1:#16233d; --bg2:#0b1220; --bg3:#070b14;
+    --panel:#111a2e; --panel2:#0d1526;
+    --line:#22304d; --line2:#1a2740;
+    --txt:#e6edf7; --muted:#8fa1bd; --muted2:#c4d2e8;
+    --eps:#60a5fa; --del:#fbbf24; --ok:#34d399; --bad:#fb7185;
+    --violet:#a78bfa; --accent:#3b82f6;
+    --hl-bg:#1a2740; --hl-eps-bg:rgba(96,165,250,.12); --hl-del-bg:rgba(251,191,36,.12);
+    --btn-bg:#1a2740; --btn-hover:#22304d;
+    --shadow:0 24px 60px -34px rgba(0,0,0,.95);
+  }
+  :root[data-theme="light"]{
+    --bg1:#e8eefb; --bg2:#f5f7fb; --bg3:#ffffff;
+    --panel:#ffffff; --panel2:#f8fafc;
+    --line:#e2e8f0; --line2:#eef2f7;
+    --txt:#0f172a; --muted:#64748b; --muted2:#334155;
+    --eps:#2563eb; --del:#d97706; --ok:#059669; --bad:#e11d48;
+    --violet:#7c3aed; --accent:#2563eb;
+    --hl-bg:#eef2f7; --hl-eps-bg:rgba(37,99,235,.1); --hl-del-bg:rgba(217,119,6,.1);
+    --btn-bg:#eef2f7; --btn-hover:#e2e8f0;
+    --shadow:0 18px 40px -28px rgba(15,23,42,.35);
+  }
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 700px at 15% -5%, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%);
+    color:var(--txt);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    transition:background .3s, color .25s;
+  }
+  .wrap{max-width:1400px;margin:0 auto;padding:22px 20px 48px}
+
+  .header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:6px}
+  header h1{font-size:clamp(20px,2.4vw,29px);margin:0 0 6px;letter-spacing:-.02em;font-weight:700}
+  header .tag{font-size:.5em;vertical-align:middle;color:var(--eps);border:1px solid color-mix(in srgb,var(--eps) 40%, transparent);
+       border-radius:99px;padding:4px 11px;margin-left:8px;letter-spacing:.08em;white-space:nowrap}
+  header p{margin:0 0 18px;color:var(--muted);font-size:13.5px;line-height:1.65;max-width:88ch}
+  header p b{font-weight:700}
+  .theme-btn{
+    flex:0 0 auto;width:42px;height:42px;border-radius:12px;
+    background:var(--panel);border:1px solid var(--line);color:var(--txt);
+    cursor:pointer;display:grid;place-items:center;transition:.18s;
+  }
+  .theme-btn:hover{background:var(--btn-hover);transform:translateY(-1px)}
+  .theme-btn svg{width:20px;height:20px}
+  :root[data-theme="dark"] .ico-moon{display:none}
+  :root[data-theme="light"] .ico-sun{display:none}
+
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+  @media(max-width:1040px){.grid{grid-template-columns:1fr}}
+
+  .plot-area{position:relative;height:clamp(380px,62vh,620px);border:1px solid var(--line);
+             border-radius:16px;overflow:hidden;background:var(--bg2);box-shadow:var(--shadow);transition:background .3s}
+  canvas{display:block;position:absolute;top:0;left:0}
+
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+         border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:15px;transition:background .3s,border-color .3s}
+
+  .block{display:flex;flex-direction:column;gap:8px}
+  .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:800}
+  select{width:100%;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;
+         padding:10px 12px;font-size:13.5px;outline:none;font-family:inherit;cursor:pointer;transition:.15s}
+  select:focus{border-color:var(--eps)}
+  .note{font-size:12.5px;color:var(--muted);margin:0;line-height:1.55}
+
+  .fx-box{
+    background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;text-align:center;overflow-x:auto;
+  }
+  .fx-box .katex{color:var(--txt)}
+
+  .slider-row{display:flex;justify-content:space-between;align-items:baseline}
+  .val{font-variant-numeric:tabular-nums;font-weight:800;font-size:15px}
+  .val.eps{color:var(--eps)}
+  .val.del{color:var(--del)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;
+                    background:var(--line2);outline:none;margin:8px 0 0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+      background:#fff;border:4px solid var(--eps);box-shadow:0 2px 10px rgba(0,0,0,.4);cursor:pointer;transition:.12s}
+  input[type=range].del::-webkit-slider-thumb{border-color:var(--del)}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;
+      border:4px solid var(--eps);cursor:pointer}
+  input[type=range].del::-moz-range-thumb{border-color:var(--del)}
+  input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
+
+  .btn-row{display:flex;gap:8px;margin-top:10px}
+  .btn{flex:1;background:var(--btn-bg);color:var(--txt);border:1px solid var(--line);border-radius:10px;
+       padding:9px 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+  .btn:hover{background:var(--btn-hover)}
+  .btn.primary{background:linear-gradient(180deg,#3b82f6,#2563eb);border-color:#2563eb;color:#fff}
+  .btn.primary:hover{filter:brightness(1.12)}
+
+  .chk{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted2);cursor:pointer;user-select:none}
+  .chk input{width:16px;height:16px;accent-color:var(--eps);cursor:pointer}
+
+  .status{border-radius:12px;padding:11px 14px;font-size:12.6px;line-height:1.6;border:1px solid;transition:.2s}
+  .status.ok{background:color-mix(in srgb, var(--ok) 8%, transparent);border-color:color-mix(in srgb, var(--ok) 38%, transparent)}
+  .status.bad{background:color-mix(in srgb, var(--bad) 8%, transparent);border-color:color-mix(in srgb, var(--bad) 38%, transparent)}
+  .status-head{font-weight:800;margin-bottom:4px;font-size:13px}
+  .status.ok .status-head{color:var(--ok)}
+  .status.bad .status-head{color:var(--bad)}
+  .status-body{color:var(--muted)}
+  .status-body b{color:var(--txt);font-variant-numeric:tabular-nums}
+
+  .formal{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .formal-title{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+                font-weight:800;margin-bottom:8px}
+  .formal-def{margin:0 0 8px;overflow-x:auto;text-align:center;padding:2px 0}
+  .formal-live{margin:0;overflow-x:auto;text-align:center;font-size:13px;padding:2px 0}
+  .formal-def .katex{font-size:1.02em}
+  .formal-live .katex{font-size:1.02em}
+
+  .algebraic{
+    margin-top:18px;background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:16px;padding:20px 24px;
+    transition:background .3s,border-color .3s;
+  }
+  .alg-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;
+            padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .alg-title{font-size:13.5px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+  .alg-title::before{content:"";width:4px;height:18px;border-radius:2px;background:linear-gradient(180deg,var(--eps),var(--violet))}
+  .alg-tech{
+    font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;
+    color:var(--violet);background:color-mix(in srgb, var(--violet) 14%, transparent);
+    border:1px solid color-mix(in srgb, var(--violet) 35%, transparent);
+    padding:4px 11px;border-radius:99px;
+  }
+  .alg-body{overflow-x:auto}
+  .alg-body .katex-display{margin:0;padding:3px 0}
+  .alg-body .katex{color:var(--txt)}
+  .alg-note{margin:14px 0 0;font-size:12.8px;color:var(--muted);line-height:1.6;
+            padding-top:12px;border-top:1px dashed var(--line)}
+
+  .katex-display{margin:.4em 0 !important;overflow-x:auto;overflow-y:hidden;padding:2px 0}
+
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <header>
+      <h1>La definición formal de límite <span class="tag">ε — δ</span></h1>
+    </header>
+    <button id="themeToggle" class="theme-btn" aria-label="Cambiar tema" title="Cambiar tema">
+      <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
+
+  <p>
+    Para cada <b style="color:var(--eps)">ε &gt; 0</b> que elijas, debe existir un
+    <b style="color:var(--del)">δ &gt; 0</b> tal que <em>todos</em> los puntos de la gráfica con
+    <span style="color:var(--muted2)">0 &lt; |x − a| &lt; δ</span> caigan dentro de la franja
+    <span style="color:var(--muted2)">|f(x) − L| &lt; ε</span>. Mueve los deslizadores y observa la
+    <b>vecindad tubular</b>. Abajo encontrarás el cálculo algebraico, la <b>obtención de δ en función de ε</b>
+    o el <b>análisis de no existencia</b> del límite.
+  </p>
+
+  <div class="grid">
+    <section class="plot-area" id="plotArea">
+      <canvas id="plot"></canvas>
+    </section>
+
+    <aside class="panel">
+      <div class="block">
+        <label class="lbl" for="fnSel">Función de ejemplo</label>
+        <select id="fnSel"></select>
+      </div>
+
+      <div class="fx-box" id="fxBox"></div>
+
+      <div class="block">
+        <div class="slider-row">
+          <span class="lbl">ε (épsilon)</span>
+          <span class="val eps" id="epsVal">0.50</span>
+        </div>
+        <input type="range" id="epsRange" class="rng eps" />
+
+        <div class="slider-row" style="margin-top:6px">
+          <span class="lbl">δ (delta)</span>
+          <span class="val del" id="delVal">0.50</span>
+        </div>
+        <input type="range" id="delRange" class="rng del" />
+
+        <div class="btn-row">
+          <button id="btnOpt" class="btn primary">δ óptimo</button>
+          <button id="btnReset" class="btn">Reiniciar</button>
+        </div>
+      </div>
+
+      <label class="chk"><input type="checkbox" id="chkTube" checked> Mostrar vecindades ε–δ</label>
+
+      <div class="status ok" id="status"></div>
+
+      <div class="formal">
+        <div class="formal-title">Definición formal</div>
+        <div class="formal-def" id="formalDef"></div>
+        <div class="formal-live" id="liveStmt"></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="algebraic">
+    <div class="alg-head">
+      <span class="alg-title" id="algTitle">Cálculo algebraico del límite</span>
+      <span class="alg-tech" id="algTech">—</span>
+    </div>
+    <div class="alg-body" id="algBody"></div>
+    <p class="alg-note" id="algNote"></p>
+  </section>
+
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ===================================================================== */
+/*  Utilidades                                                           */
+/* ===================================================================== */
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const fmt = (v, step)=>{
+  if (Math.abs(v)<1e-12) v=0;
+  if (step>=1)    return v.toFixed(0);
+  if (step>=0.1)  return v.toFixed(1);
+  if (step>=0.01) return v.toFixed(2);
+  return v.toFixed(3);
+};
+function niceStep(range, target){
+  const raw = range/target;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw/mag;
+  let m;
+  if (n<1.5) m=1; else if (n<3) m=2; else if (n<7) m=5; else m=10;
+  return m*mag;
+}
+function rrect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+function tex(el, str, display){
+  if (window.katex){
+    try { katex.render(str, el, {throwOnError:false, displayMode:!!display}); return; }
+    catch(e){ /* fallback */ }
+  }
+  el.textContent = str;
+}
+
+/* ===================================================================== */
+/*  FUNCS                                                               */
+/* ===================================================================== */
+const FUNCS = [
+
+  /* ============ Continuidad directa ============ */
+  {
+    cat:'Continuidad directa',
+    label:'f(x) = x²  ·  x → 1',
+    tex:'f(x) = x^2',
+    limitTex:'\\lim_{x \\to 1} x^2 = 1',
+    a:1, L:1, xs:1.6, ys:1.6, epsMax:1.4, delMax:1.4, hole:false,
+    f:x=>x*x,
+    tech:'Sustitución directa',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 1} x^2 &= 1^2 \\\\[2pt]' +
+      '&= 1' +
+      '\\end{aligned}',
+    note:'La función es un polinomio, por lo tanto es continua en todo ℝ. El límite coincide con el valor de la función en el punto: basta sustituir.'
+  },
+  {
+    cat:'Continuidad directa',
+    label:'f(x) = x³ − 2x + 1  ·  x → 1',
+    tex:'f(x) = x^3 - 2x + 1',
+    limitTex:'\\lim_{x \\to 1}\\left(x^3 - 2x + 1\\right) = 0',
+    a:1, L:0, xs:1.6, ys:2.4, epsMax:1.6, delMax:1.4, hole:false,
+    f:x=>x*x*x - 2*x + 1,
+    tech:'Sustitución directa',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 1}\\left(x^3 - 2x + 1\\right) &= 1^3 - 2(1) + 1 \\\\[2pt]' +
+      '&= 0' +
+      '\\end{aligned}',
+    note:'Nuevamente un polinomio: continuo en ℝ. La sustitución directa da el valor del límite.'
+  },
+  {
+    cat:'Continuidad directa',
+    label:'f(x) = √x  ·  x → 4',
+    tex:'f(x) = \\sqrt{x}',
+    limitTex:'\\lim_{x \\to 4} \\sqrt{x} = 2',
+    a:4, L:2, xs:2.6, ys:1.6, epsMax:1.4, delMax:3.4, hole:false,
+    f:x=>Math.sqrt(x),
+    tech:'Sustitución directa',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 4} \\sqrt{x} &= \\sqrt{4} \\\\[2pt]' +
+      '&= 2' +
+      '\\end{aligned}',
+    note:'La raíz cuadrada es continua en [0, ∞). En x = 4 se puede sustituir directamente. Nota: δ debe ser menor que 4 para no salir del dominio.'
+  },
+
+  /* ============ Factorización ============ */
+  {
+    cat:'Factorización (0/0)',
+    label:'f(x) = (x² − 1)/(x − 1)  ·  x → 1',
+    tex:'f(x) = \\dfrac{x^2 - 1}{x - 1}',
+    limitTex:'\\lim_{x \\to 1} \\dfrac{x^2 - 1}{x - 1} = 2',
+    a:1, L:2, xs:1.6, ys:1.5, epsMax:1.4, delMax:1.4, hole:true,
+    f:x=>(x*x-1)/(x-1),
+    tech:'Factor común',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 1} \\frac{x^2 - 1}{x - 1}' +
+      '&= \\lim_{x \\to 1} \\frac{(x-1)(x+1)}{x-1} \\\\[3pt]' +
+      '&= \\lim_{x \\to 1}\\,(x+1) \\\\[3pt]' +
+      '&= 2' +
+      '\\end{aligned}',
+    note:'Indeterminación 0/0. Se factoriza el numerador como diferencia de cuadrados y se cancela el factor (x − 1), válido para x ≠ 1.'
+  },
+  {
+    cat:'Factorización (0/0)',
+    label:'f(x) = (x² − 4)/(x − 2)  ·  x → 2',
+    tex:'f(x) = \\dfrac{x^2 - 4}{x - 2}',
+    limitTex:'\\lim_{x \\to 2} \\dfrac{x^2 - 4}{x - 2} = 4',
+    a:2, L:4, xs:1.6, ys:1.8, epsMax:1.6, delMax:1.6, hole:true,
+    f:x=>(x*x-4)/(x-2),
+    tech:'Factor común',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 2} \\frac{x^2 - 4}{x - 2}' +
+      '&= \\lim_{x \\to 2} \\frac{(x-2)(x+2)}{x-2} \\\\[3pt]' +
+      '&= \\lim_{x \\to 2}\\,(x+2) \\\\[3pt]' +
+      '&= 4' +
+      '\\end{aligned}',
+    note:'Mismo patrón: diferencia de cuadrados. La cancelación es válida porque x ≠ 2 en el proceso de límite.'
+  },
+  {
+    cat:'Factorización (0/0)',
+    label:'f(x) = (x³ − 1)/(x − 1)  ·  x → 1',
+    tex:'f(x) = \\dfrac{x^3 - 1}{x - 1}',
+    limitTex:'\\lim_{x \\to 1} \\dfrac{x^3 - 1}{x - 1} = 3',
+    a:1, L:3, xs:1.6, ys:1.6, epsMax:1.6, delMax:1.4, hole:true,
+    f:x=>(x*x*x-1)/(x-1),
+    tech:'Diferencia de cubos',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 1} \\frac{x^3 - 1}{x - 1}' +
+      '&= \\lim_{x \\to 1} \\frac{(x-1)(x^2+x+1)}{x-1} \\\\[3pt]' +
+      '&= \\lim_{x \\to 1}\\,(x^2+x+1) \\\\[3pt]' +
+      '&= 1+1+1 = 3' +
+      '\\end{aligned}',
+    note:'Se usa la identidad a³ − b³ = (a − b)(a² + ab + b²) con a = x, b = 1.'
+  },
+  {
+    cat:'Factorización (0/0)',
+    label:'f(x) = (x³ − 8)/(x − 2)  ·  x → 2',
+    tex:'f(x) = \\dfrac{x^3 - 8}{x - 2}',
+    limitTex:'\\lim_{x \\to 2} \\dfrac{x^3 - 8}{x - 2} = 12',
+    a:2, L:12, xs:1.6, ys:4, epsMax:2.4, delMax:1.6, hole:true,
+    f:x=>(x*x*x-8)/(x-2),
+    tech:'Diferencia de cubos',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 2} \\frac{x^3 - 8}{x - 2}' +
+      '&= \\lim_{x \\to 2} \\frac{(x-2)(x^2+2x+4)}{x-2} \\\\[3pt]' +
+      '&= \\lim_{x \\to 2}\\,(x^2+2x+4) \\\\[3pt]' +
+      '&= 4+4+4 = 12' +
+      '\\end{aligned}',
+    note:'Aquí a = x, b = 2. La identidad a³ − b³ sigue siendo el recurso clave para eliminar la indeterminación.'
+  },
+
+  /* ============ Racionalización ============ */
+  {
+    cat:'Racionalización',
+    label:'f(x) = (√(x+1) − 1)/x  ·  x → 0',
+    tex:'f(x) = \\dfrac{\\sqrt{x+1} - 1}{x}',
+    limitTex:'\\lim_{x \\to 0} \\dfrac{\\sqrt{x+1}-1}{x} = \\tfrac{1}{2}',
+    a:0, L:0.5, xs:1.6, ys:0.8, epsMax:0.35, delMax:1.4, hole:true,
+    f:x=>(Math.sqrt(x+1)-1)/x,
+    tech:'Multiplicar por el conjugado',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 0} \\frac{\\sqrt{x+1}-1}{x}' +
+      '&= \\lim_{x \\to 0} \\frac{\\bigl(\\sqrt{x+1}-1\\bigr)\\bigl(\\sqrt{x+1}+1\\bigr)}{x\\bigl(\\sqrt{x+1}+1\\bigr)} \\\\[3pt]' +
+      '&= \\lim_{x \\to 0} \\frac{x}{x\\bigl(\\sqrt{x+1}+1\\bigr)} \\\\[3pt]' +
+      '&= \\lim_{x \\to 0} \\frac{1}{\\sqrt{x+1}+1} \\\\[3pt]' +
+      '&= \\frac{1}{2}' +
+      '\\end{aligned}',
+    note:'Se multiplica y divide por el conjugado √(x+1) + 1. Así se usa la diferencia de cuadrados (a − b)(a + b) = a² − b².'
+  },
+  {
+    cat:'Racionalización',
+    label:'f(x) = (√x − 2)/(x − 4)  ·  x → 4',
+    tex:'f(x) = \\dfrac{\\sqrt{x} - 2}{x - 4}',
+    limitTex:'\\lim_{x \\to 4} \\dfrac{\\sqrt{x}-2}{x-4} = \\tfrac{1}{4}',
+    a:4, L:0.25, xs:2.6, ys:0.5, epsMax:0.2, delMax:2.6, hole:true,
+    f:x=>(Math.sqrt(x)-2)/(x-4),
+    tech:'Multiplicar por el conjugado',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 4} \\frac{\\sqrt{x}-2}{x-4}' +
+      '&= \\lim_{x \\to 4} \\frac{\\bigl(\\sqrt{x}-2\\bigr)\\bigl(\\sqrt{x}+2\\bigr)}{(x-4)\\bigl(\\sqrt{x}+2\\bigr)} \\\\[3pt]' +
+      '&= \\lim_{x \\to 4} \\frac{x-4}{(x-4)\\bigl(\\sqrt{x}+2\\bigr)} \\\\[3pt]' +
+      '&= \\lim_{x \\to 4} \\frac{1}{\\sqrt{x}+2} \\\\[3pt]' +
+      '&= \\frac{1}{4}' +
+      '\\end{aligned}',
+    note:'Idéntica estrategia: el conjugado √x + 2 convierte el numerador en x − 4, que cancela con el denominador.'
+  },
+  {
+    cat:'Racionalización',
+    label:'f(x) = (∛x − 1)/(x − 1)  ·  x → 1',
+    tex:'f(x) = \\dfrac{\\sqrt[3]{x} - 1}{x - 1}',
+    limitTex:'\\lim_{x \\to 1} \\dfrac{\\sqrt[3]{x}-1}{x-1} = \\tfrac{1}{3}',
+    a:1, L:1/3, xs:1.6, ys:0.9, epsMax:0.4, delMax:1.4, hole:true,
+    f:x=>(Math.cbrt(x)-1)/(x-1),
+    tech:'Cambio de variable',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Sustitución } u = \\sqrt[3]{x},\\;\\; x = u^3,\\;\\; x\\to 1 \\Rightarrow u\\to 1 \\\\[4pt]' +
+      '\\lim_{x \\to 1} \\frac{\\sqrt[3]{x}-1}{x-1}' +
+      '&= \\lim_{u \\to 1} \\frac{u-1}{u^3-1} \\\\[3pt]' +
+      '&= \\lim_{u \\to 1} \\frac{u-1}{(u-1)(u^2+u+1)} \\\\[3pt]' +
+      '&= \\lim_{u \\to 1} \\frac{1}{u^2+u+1} \\\\[3pt]' +
+      '&= \\frac{1}{3}' +
+      '\\end{aligned}',
+    note:'El cambio u = ∛x transforma la raíz cúbica en un polinomio. Después se factoriza u³ − 1 = (u − 1)(u² + u + 1).'
+  },
+
+  /* ============ Trigonométricos ============ */
+  {
+    cat:'Trigonométricos (emparedado)',
+    label:'f(x) = sen(x)/x  ·  x → 0',
+    tex:'f(x) = \\dfrac{\\sin x}{x}',
+    limitTex:'\\lim_{x \\to 0} \\dfrac{\\sin x}{x} = 1',
+    a:0, L:1, xs:8, ys:0.85, epsMax:0.4, delMax:8, hole:true,
+    f:x=>Math.sin(x)/x,
+    tech:'Teorema del emparedado',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\cos x \\; < \\; \\frac{\\sin x}{x} \\; < \\; 1' +
+      '\\qquad x \\in \\left(-\\tfrac{\\pi}{2},\\,\\tfrac{\\pi}{2}\\right)\\setminus\\{0\\} \\\\[4pt]' +
+      '&\\lim_{x \\to 0} \\cos x = 1 \\;\\Longrightarrow\\; ' +
+      '\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1' +
+      '\\end{aligned}',
+    note:'Límite fundamental de la trigonometría. Se demuestra geométricamente comparando áreas (o longitudes de arco) y aplicando el teorema del emparedado.'
+  },
+  {
+    cat:'Trigonométricos (emparedado)',
+    label:'f(x) = (1 − cos x)/x²  ·  x → 0',
+    tex:'f(x) = \\dfrac{1 - \\cos x}{x^2}',
+    limitTex:'\\lim_{x \\to 0} \\dfrac{1-\\cos x}{x^2} = \\tfrac{1}{2}',
+    a:0, L:0.5, xs:8, ys:0.5, epsMax:0.3, delMax:8, hole:true,
+    f:x=>(1-Math.cos(x))/(x*x),
+    tech:'Identidad trigonométrica',
+    algebra:
+      '\\begin{aligned}' +
+      '\\lim_{x \\to 0} \\frac{1-\\cos x}{x^2}' +
+      '&= \\lim_{x \\to 0} \\frac{(1-\\cos x)(1+\\cos x)}{x^2\\,(1+\\cos x)} \\\\[3pt]' +
+      '&= \\lim_{x \\to 0} \\frac{\\sin^2 x}{x^2\\,(1+\\cos x)} \\\\[3pt]' +
+      '&= \\left(\\lim_{x \\to 0} \\frac{\\sin x}{x}\\right)^{\\!2} \\cdot \\frac{1}{1+\\cos 0} \\\\[3pt]' +
+      '&= 1^2 \\cdot \\frac{1}{2} = \\frac{1}{2}' +
+      '\\end{aligned}',
+    note:'Se multiplica por el conjugado 1 + cos x para aprovechar la identidad 1 − cos²x = sen²x y reducir el problema al límite fundamental.'
+  },
+  {
+    cat:'Trigonométricos (emparedado)',
+    label:'f(x) = x·sen(1/x)  ·  x → 0',
+    tex:'f(x) = x\\,\\sin\\!\\left(\\dfrac{1}{x}\\right)',
+    limitTex:'\\lim_{x \\to 0} x\\,\\sin\\!\\left(\\tfrac{1}{x}\\right) = 0',
+    a:0, L:0, xs:0.4, ys:0.4, epsMax:0.3, delMax:0.4, hole:true,
+    f:x=>x*Math.sin(1/x),
+    tech:'Teorema del emparedado',
+    algebra:
+      '\\begin{aligned}' +
+      '&-1 \\le \\sin\\!\\left(\\tfrac{1}{x}\\right) \\le 1 ' +
+      '\\;\\Longrightarrow\\; -|x| \\le x\\,\\sin\\!\\left(\\tfrac{1}{x}\\right) \\le |x| \\\\[4pt]' +
+      '&\\lim_{x \\to 0}\\,(-|x|) = \\lim_{x \\to 0}\\,|x| = 0 \\\\[4pt]' +
+      '&\\Longrightarrow\\; \\lim_{x \\to 0} x\\,\\sin\\!\\left(\\tfrac{1}{x}\\right) = 0' +
+      '\\end{aligned}',
+    note:'La función oscila infinitamente cerca de x = 0, pero su amplitud está acotada por |x|. El emparedado fuerza el límite a 0.'
+  },
+
+  /* ================================================================= */
+  /*  ============  DEMOSTRACIONES ε–δ (δ en función de ε) ============ */
+  /* ================================================================= */
+  {
+    cat:'Demostración ε–δ (δ = f(ε))',
+    label:'lim (2x + 1) = 7  ·  x → 3',
+    tex:'f(x) = 2x + 1',
+    limitTex:'\\lim_{x \\to 3}(2x+1) = 7',
+    a:3, L:7, xs:2, ys:1.8, epsMax:2, delMax:2, hole:false,
+    f:x=>2*x+1,
+    tech:'Lineal · δ = ε/2',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Análisis previo (borrador):}\\\\[3pt]' +
+      '&\\quad \\bigl|(2x+1)-7\\bigr| < \\varepsilon ' +
+      '\\;\\Longleftrightarrow\\; |2x-6| < \\varepsilon ' +
+      '\\;\\Longleftrightarrow\\; 2\\,|x-3| < \\varepsilon \\\\[3pt]' +
+      '&\\quad \\Longleftrightarrow\\; |x-3| < \\tfrac{\\varepsilon}{2} ' +
+      '\\;\\Longrightarrow\\; \\text{candidato: } \\delta = \\tfrac{\\varepsilon}{2} \\\\[8pt]' +
+      '&\\text{Demostración oficial:}\\\\[3pt]' +
+      '&\\quad \\text{Dado } \\varepsilon>0,\\ \\text{elegimos } \\delta=\\tfrac{\\varepsilon}{2}. ' +
+      '\\text{ Si } 0<|x-3|<\\delta,\\ \\text{entonces}\\\\[3pt]' +
+      '&\\quad \\bigl|(2x+1)-7\\bigr| = |2x-6| = 2\\,|x-3| < 2\\delta = 2\\!\\left(\\tfrac{\\varepsilon}{2}\\right) = \\varepsilon ' +
+      '\\quad\\blacksquare' +
+      '\\end{aligned}',
+    note:'Caso lineal: la desigualdad se despeja directamente, sin necesidad de acotar |x+2|. El δ obtenido depende solo de ε.'
+  },
+  {
+    cat:'Demostración ε–δ (δ = f(ε))',
+    label:'lim x² = 4  ·  x → 2',
+    tex:'f(x) = x^2',
+    limitTex:'\\lim_{x \\to 2} x^2 = 4',
+    a:2, L:4, xs:2, ys:2, epsMax:2, delMax:2, hole:false,
+    f:x=>x*x,
+    tech:'Cuadrática · acotación δ ≤ 1',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Análisis previo (borrador):}\\\\[3pt]' +
+      '&\\quad |x^2-4| = |x-2|\\,|x+2| < \\varepsilon \\\\[3pt]' +
+      '&\\quad \\text{Acotamos imponiendo } \\delta\\le 1:' +
+      '\\; |x-2|<1 \\Rightarrow 3<x+2<5 \\Rightarrow |x+2|<5 \\\\[3pt]' +
+      '&\\quad \\Rightarrow |x-2|\\cdot 5 < \\varepsilon ' +
+      '\\Rightarrow |x-2| < \\tfrac{\\varepsilon}{5} \\\\[3pt]' +
+      '&\\quad \\text{Candidato: } \\delta=\\min\\!\\left(1,\\tfrac{\\varepsilon}{5}\\right) \\\\[8pt]' +
+      '&\\text{Demostración oficial:}\\\\[3pt]' +
+      '&\\quad \\text{Dado } \\varepsilon>0,\\ \\text{sea } \\delta=\\min\\!\\left(1,\\tfrac{\\varepsilon}{5}\\right). ' +
+      '\\text{Si } 0<|x-2|<\\delta\\text{:}\\\\[3pt]' +
+      '&\\quad |x-2|<1 \\Rightarrow |x+2|<5, ' +
+      '\\qquad |x-2| < \\tfrac{\\varepsilon}{5} \\\\[3pt]' +
+      '&\\quad |x^2-4| = |x-2|\\,|x+2| < \\tfrac{\\varepsilon}{5}\\cdot 5 = \\varepsilon ' +
+      '\\quad\\blacksquare' +
+      '\\end{aligned}',
+    note:'Técnica de acotación: se restringe δ ≤ 1 para obtener una cota superior de |x+2| y luego se toma el mínimo entre esa restricción y ε/5.'
+  },
+  {
+    cat:'Demostración ε–δ (δ = f(ε))',
+    label:'lim (x² + x) = 2  ·  x → 1',
+    tex:'f(x) = x^2 + x',
+    limitTex:'\\lim_{x \\to 1}(x^2+x) = 2',
+    a:1, L:2, xs:2, ys:2, epsMax:2, delMax:2, hole:false,
+    f:x=>x*x+x,
+    tech:'Desigualdad del triángulo',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Análisis previo (borrador):}\\\\[3pt]' +
+      '&\\quad |(x^2+x)-2| = |x-1|\\,|x+2| < \\varepsilon \\\\[3pt]' +
+      '&\\quad \\text{Acotamos con } \\delta\\le 1:\\; |x-1|<1.\\; ' +
+      '\\text{Cero inteligente:}\\\\[3pt]' +
+      '&\\quad |x+2| = |(x-1)+3| \\le |x-1| + 3 < 1+3 = 4 \\\\[3pt]' +
+      '&\\quad \\Rightarrow |x-1|\\cdot 4 < \\varepsilon ' +
+      '\\Rightarrow |x-1| < \\tfrac{\\varepsilon}{4} \\\\[3pt]' +
+      '&\\quad \\text{Candidato: } \\delta=\\min\\!\\left(1,\\tfrac{\\varepsilon}{4}\\right) \\\\[8pt]' +
+      '&\\text{Demostración oficial:}\\\\[3pt]' +
+      '&\\quad \\text{Dado } \\varepsilon>0,\\ \\text{sea } \\delta=\\min\\!\\left(1,\\tfrac{\\varepsilon}{4}\\right). ' +
+      '\\text{Si } 0<|x-1|<\\delta\\text{:}\\\\[3pt]' +
+      '&\\quad |(x^2+x)-2| = |x-1|\\,|x+2| ' +
+      '\\le |x-1|\\bigl(|x-1|+3\\bigr) \\\\[3pt]' +
+      '&\\quad < \\tfrac{\\varepsilon}{4}(1+3) = \\varepsilon \\quad\\blacksquare' +
+      '\\end{aligned}',
+    note:'La desigualdad del triángulo |a+b| ≤ |a|+|b| permite separar |x+2| = |(x−1)+3| y acotar cada término por separado.'
+  },
+  {
+    cat:'Demostración ε–δ (δ = f(ε))',
+    label:'lim √x = 2  ·  x → 4',
+    tex:'f(x) = \\sqrt{x}',
+    limitTex:'\\lim_{x \\to 4}\\sqrt{x} = 2',
+    a:4, L:2, xs:3, ys:1.5, epsMax:1.2, delMax:3, hole:false,
+    f:x=>Math.sqrt(x),
+    tech:'Racionalización · δ = min(a/2, ε√a)',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Análisis previo (borrador):}\\\\[3pt]' +
+      '&\\quad |\\sqrt{x}-\\sqrt{a}| = ' +
+      '\\left|\\frac{(\\sqrt{x}-\\sqrt{a})(\\sqrt{x}+\\sqrt{a})}{\\sqrt{x}+\\sqrt{a}}\\right| ' +
+      '= \\frac{|x-a|}{\\sqrt{x}+\\sqrt{a}} \\\\[3pt]' +
+      '&\\quad \\text{Como } \\sqrt{x}\\ge 0,' +
+      '\\;\\; \\frac{|x-a|}{\\sqrt{x}+\\sqrt{a}} \\le \\frac{|x-a|}{\\sqrt{a}} \\\\[3pt]' +
+      '&\\quad \\Rightarrow \\frac{|x-a|}{\\sqrt{a}} < \\varepsilon ' +
+      '\\Rightarrow |x-a| < \\varepsilon\\sqrt{a} \\\\[3pt]' +
+      '&\\quad \\text{Para asegurar } x>0:\\; \\delta\\le \\tfrac{a}{2} ' +
+      '\\Rightarrow \\delta = \\min\\!\\left(\\tfrac{a}{2},\\,\\varepsilon\\sqrt{a}\\right) \\\\[8pt]' +
+      '&\\text{Demostración oficial:}\\\\[3pt]' +
+      '&\\quad \\text{Dado } \\varepsilon>0,\\ \\text{sea } ' +
+      '\\delta=\\min\\!\\left(\\tfrac{a}{2},\\varepsilon\\sqrt{a}\\right). ' +
+      '\\text{Si } 0<|x-a|<\\delta\\text{:}\\\\[3pt]' +
+      '&\\quad x>a-\\delta\\ge a-\\tfrac{a}{2}=\\tfrac{a}{2}>0 ' +
+      '\\Rightarrow \\sqrt{x}+\\sqrt{a}>\\sqrt{a} \\\\[3pt]' +
+      '&\\quad |\\sqrt{x}-\\sqrt{a}| = \\frac{|x-a|}{\\sqrt{x}+\\sqrt{a}} ' +
+      '< \\frac{\\varepsilon\\sqrt{a}}{\\sqrt{a}} = \\varepsilon \\quad\\blacksquare' +
+      '\\end{aligned}',
+    note:'Truco clave: multiplicar por el conjugado √x + √a. La cota δ ≤ a/2 garantiza que x > a/2 > 0 y que el denominador no se anula.'
+  },
+
+  /* ================================================================= */
+  /*  =================  LÍMITES QUE NO EXISTEN  ==================== */
+  /* ================================================================= */
+  {
+    cat:'Límite no existente',
+    label:'f(x) = |x|/x  ·  x → 0   (salto)',
+    tex:'f(x) = \\dfrac{|x|}{x}',
+    limitTex:'\\lim_{x \\to 0} \\dfrac{|x|}{x}\\;\\;\\text{no existe}',
+    a:0, L:0, xs:1.6, ys:1.6, epsMax:1.6, delMax:1.6, hole:false, noLimit:true,
+    f:x=>Math.abs(x)/x,
+    tech:'Discontinuidad de salto',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Límites laterales en } x=0\\text{:}\\\\[4pt]' +
+      '&\\quad \\lim_{x \\to 0^-} \\frac{|x|}{x} = ' +
+      '\\lim_{x \\to 0^-} \\frac{-x}{x} = -1 \\\\[4pt]' +
+      '&\\quad \\lim_{x \\to 0^+} \\frac{|x|}{x} = ' +
+      '\\lim_{x \\to 0^+} \\frac{x}{x} = 1 \\\\[6pt]' +
+      '&\\text{Como } -1 \\neq 1,\\ \\text{el límite } ' +
+      '\\lim_{x \\to 0} \\frac{|x|}{x} \\text{ no existe.}' +
+      '\\end{aligned}',
+    note:'Discontinuidad de salto: la función signo vale −1 por la izquierda y +1 por la derecha de x = 0. Ningún L puede estar ε-cerca de ambos valores para ε < 1.'
+  },
+  {
+    cat:'Límite no existente',
+    label:'f(x) = sen(1/x)  ·  x → 0   (oscilante)',
+    tex:'f(x) = \\sin\\!\\left(\\dfrac{1}{x}\\right)',
+    limitTex:'\\lim_{x \\to 0} \\sin\\!\\left(\\tfrac{1}{x}\\right)\\;\\;\\text{no existe}',
+    a:0, L:0, xs:0.5, ys:1.4, epsMax:1.4, delMax:0.5, hole:false, noLimit:true,
+    f:x=>Math.sin(1/x),
+    tech:'Oscilación infinita',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Consideremos sucesiones } x_n, y_n \\to 0\\text{:}\\\\[4pt]' +
+      '&\\quad x_n = \\frac{1}{\\pi/2 + 2n\\pi} \\;\\xrightarrow{n\\to\\infty}\\; 0 ' +
+      '\\;\\Rightarrow\\; f(x_n) = 1 \\\\[4pt]' +
+      '&\\quad y_n = \\frac{1}{3\\pi/2 + 2n\\pi} \\;\\xrightarrow{n\\to\\infty}\\; 0 ' +
+      '\\;\\Rightarrow\\; f(y_n) = -1 \\\\[6pt]' +
+      '&\\text{Dos sucesiones }\\to 0 \\text{ con imágenes }\\to 1 \\text{ y }\\to -1. \\\\[3pt]' +
+      '&\\therefore\\; \\lim_{x\\to 0} \\sin\\!\\left(\\tfrac{1}{x}\\right) \\text{ no existe.}' +
+      '\\end{aligned}',
+    note:'La función oscila infinitamente entre −1 y 1 en cualquier vecindad de x = 0. Para ε < 1 ninguna δ funciona: siempre hay puntos que escapan de la banda.'
+  },
+  {
+    cat:'Límite no existente',
+    label:'f(x) = 1/x  ·  x → 0   (asíntota)',
+    tex:'f(x) = \\dfrac{1}{x}',
+    limitTex:'\\lim_{x \\to 0} \\dfrac{1}{x}\\;\\;\\text{no existe}',
+    a:0, L:0, xs:1.6, ys:3, epsMax:3, delMax:1.5, hole:false, noLimit:true,
+    f:x=>1/x,
+    tech:'Discontinuidad infinita',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Límites laterales en } x=0\\text{:}\\\\[4pt]' +
+      '&\\quad \\lim_{x \\to 0^+} \\frac{1}{x} = +\\infty ' +
+      '\\qquad\\qquad ' +
+      '\\lim_{x \\to 0^-} \\frac{1}{x} = -\\infty \\\\[6pt]' +
+      '&\\text{La función no está acotada en ninguna vecindad de 0:} \\\\[3pt]' +
+      '&\\quad \\forall M>0,\\ \\forall\\delta>0,\\ \\exists x:\\; ' +
+      '0<|x|<\\delta \\;\\text{ y }\\; |f(x)|>M \\\\[6pt]' +
+      '&\\therefore\\; \\lim_{x\\to 0} \\frac{1}{x} \\text{ no existe.}' +
+      '\\end{aligned}',
+    note:'Asíntota vertical: la función crece sin cota por la derecha y decrece sin cota por la izquierda. Ningún L finito puede satisfacer la definición ε–δ.'
+  },
+  {
+    cat:'Límite no existente',
+    label:'f(x) = { x+1 si x<1 ; x² si x≥1 }  ·  x → 1   (salto)',
+    tex:'f(x) = \\begin{cases} x+1 & x<1 \\\\[2pt] x^2 & x\\ge 1 \\end{cases}',
+    limitTex:'\\lim_{x \\to 1} f(x)\\;\\;\\text{no existe}',
+    a:1, L:1.5, xs:1.6, ys:1.6, epsMax:1.4, delMax:1.4, hole:false, noLimit:true,
+    f:x=>x<1 ? x+1 : x*x,
+    tech:'Discontinuidad de salto',
+    algebra:
+      '\\begin{aligned}' +
+      '&\\text{Límites laterales en } x=1\\text{:}\\\\[4pt]' +
+      '&\\quad \\lim_{x \\to 1^-} f(x) = \\lim_{x \\to 1^-}(x+1) = 2 \\\\[4pt]' +
+      '&\\quad \\lim_{x \\to 1^+} f(x) = \\lim_{x \\to 1^+} x^2 = 1 \\\\[6pt]' +
+      '&\\text{Como } 2 \\neq 1,\\ \\text{el límite } ' +
+      '\\lim_{x \\to 1} f(x) \\text{ no existe.}' +
+      '\\end{aligned}',
+    note:'Función definida a trozos: aunque cada rama por separado es continua, la función completa presenta un salto en x = 1. Los límites laterales difieren (2 vs 1).'
+  }
+];
+
+/* ===================================================================== */
+/*  Paletas                                                             */
+/* ===================================================================== */
+const PALETTES = {
+  dark: {
+    bg:'#0b1220',
+    grid:'rgba(148,163,184,0.09)',
+    axis:'rgba(148,163,184,0.28)',
+    axisText:'rgba(148,163,184,0.5)',
+    curveOut:'#8fa3c0',
+    curveIn:'#34d399',
+    curveEsc:'#fb7185',
+    epsBand:'rgba(96,165,250,0.13)',
+    delBand:'rgba(251,191,36,0.12)',
+    tubeBand:'rgba(167,139,250,0.13)',
+    epsGuide:'rgba(96,165,250,0.9)',
+    delGuide:'rgba(251,191,36,0.9)',
+    tube:'rgba(167,139,250,0.95)',
+    center:'rgba(226,232,240,0.32)',
+    pointFill:'#e6edf7',
+    pointStroke:'#0b1220',
+    pointHoleFill:'#0b1220',
+    pointHoleStroke:'#e6edf7',
+    pillBg:'rgba(9,14,26,0.92)',
+    pillBorder:'rgba(148,163,184,0.22)',
+    labelEps:'#60a5fa',
+    labelL:'#c7d2fe',
+    labelDel:'#fbbf24',
+    labelA:'#fde68a'
+  },
+  light: {
+    bg:'#ffffff',
+    grid:'rgba(15,23,42,0.07)',
+    axis:'rgba(15,23,42,0.3)',
+    axisText:'rgba(15,23,42,0.45)',
+    curveOut:'#64748b',
+    curveIn:'#059669',
+    curveEsc:'#e11d48',
+    epsBand:'rgba(37,99,235,0.13)',
+    delBand:'rgba(217,119,6,0.13)',
+    tubeBand:'rgba(124,58,237,0.10)',
+    epsGuide:'rgba(37,99,235,0.85)',
+    delGuide:'rgba(217,119,6,0.85)',
+    tube:'rgba(124,58,237,0.9)',
+    center:'rgba(15,23,42,0.28)',
+    pointFill:'#0f172a',
+    pointStroke:'#ffffff',
+    pointHoleFill:'#ffffff',
+    pointHoleStroke:'#0f172a',
+    pillBg:'rgba(255,255,255,0.96)',
+    pillBorder:'rgba(15,23,42,0.16)',
+    labelEps:'#1d4ed8',
+    labelL:'#4338ca',
+    labelDel:'#b45309',
+    labelA:'#a16207'
+  }
+};
+
+/* ===================================================================== */
+/*  Referencias DOM                                                     */
+/* ===================================================================== */
+const canvas   = document.getElementById('plot');
+const ctx      = canvas.getContext('2d');
+const plotArea = document.getElementById('plotArea');
+const fnSel    = document.getElementById('fnSel');
+const fxBox    = document.getElementById('fxBox');
+const epsRange = document.getElementById('epsRange');
+const delRange = document.getElementById('delRange');
+const epsVal   = document.getElementById('epsVal');
+const delVal   = document.getElementById('delVal');
+const btnOpt   = document.getElementById('btnOpt');
+const btnReset = document.getElementById('btnReset');
+const chkTube  = document.getElementById('chkTube');
+const statusEl = document.getElementById('status');
+const formalDefEl = document.getElementById('formalDef');
+const liveStmtEl  = document.getElementById('liveStmt');
+const algTitle = document.getElementById('algTitle');
+const algTech  = document.getElementById('algTech');
+const algBody  = document.getElementById('algBody');
+const algNote  = document.getElementById('algNote');
+const themeBtn = document.getElementById('themeToggle');
+
+let W = 800, H = 500;
+let theme = 'dark';
+let P = PALETTES.dark;
+
+const state = { fi:0, a:1, L:1, eps:0.5, del:0.5, show:true };
+const view  = { cx:0, cy:0, sx:100, sy:100 };
+
+const PX = x  => W/2 + (x - view.cx) * view.sx;
+const PY = y  => H/2 - (y - view.cy) * view.sy;
+const WX = px => view.cx + (px - W/2) / view.sx;
+
+/* ===================================================================== */
+/*  Cálculo numérico                                                    */
+/* ===================================================================== */
+function maxDelta(f, a, L, eps, span){
+  const N = 6000;
+  let best = span;
+  for (let i=0; i<=N; i++){
+    const x = a - span + (2*span)*i/N;
+    const dx = Math.abs(x - a);
+    if (dx < 1e-9) continue;
+    const y = f(x);
+    if (!isFinite(y)) continue;
+    if (Math.abs(y - L) >= eps && dx < best) best = dx;
+  }
+  return best;
+}
+function measure(f, a, L, del){
+  const N = 4000;
+  let mx = 0;
+  for (let i=0; i<=N; i++){
+    const x = a - del + 2*del*i/N;
+    if (Math.abs(x - a) < 1e-12) continue;
+    const y = f(x);
+    if (!isFinite(y)) continue;
+    const d = Math.abs(y - L);
+    if (d > mx) mx = d;
+  }
+  return mx;
+}
+
+/* ===================================================================== */
+/*  Canvas                                                              */
+/* ===================================================================== */
+function computeView(){
+  const F = FUNCS[state.fi];
+  view.cx = state.a;
+  view.cy = state.L;
+  view.sx = W / (2 * F.xs);
+  view.sy = H / (2 * F.ys);
+}
+
+function drawGrid(){
+  const x0 = WX(0), x1 = WX(W);
+  const y0 = view.cy - (H/2)/view.sy;
+  const y1 = view.cy + (H/2)/view.sy;
+
+  const stepX = niceStep(x1 - x0, 8);
+  const stepY = niceStep(y1 - y0, 6);
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = P.grid;
+  ctx.beginPath();
+  for (let i=Math.ceil(x0/stepX); i<=Math.floor(x1/stepX); i++){
+    const px = Math.round(PX(i*stepX)) + 0.5;
+    ctx.moveTo(px, 0); ctx.lineTo(px, H);
+  }
+  for (let j=Math.ceil(y0/stepY); j<=Math.floor(y1/stepY); j++){
+    const py = Math.round(PY(j*stepY)) + 0.5;
+    ctx.moveTo(0, py); ctx.lineTo(W, py);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = P.axis;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  if (y0 < 0 && y1 > 0){ const py = Math.round(PY(0)) + 0.5; ctx.moveTo(0, py); ctx.lineTo(W, py); }
+  if (x0 < 0 && x1 > 0){ const px = Math.round(PX(0)) + 0.5; ctx.moveTo(px, 0); ctx.lineTo(px, H); }
+  ctx.stroke();
+
+  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillStyle = P.axisText;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  for (let i=Math.ceil(x0/stepX); i<=Math.floor(x1/stepX); i++){
+    const v = i*stepX;
+    if (Math.abs(v) < stepX*1e-6) continue;
+    const px = PX(v);
+    if (px < 16 || px > W-16) continue;
+    ctx.fillText(fmt(v, stepX), px, H-5);
+  }
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  for (let j=Math.ceil(y0/stepY); j<=Math.floor(y1/stepY); j++){
+    const v = j*stepY;
+    if (Math.abs(v) < stepY*1e-6) continue;
+    const py = PY(v);
+    if (py < 14 || py > H-14) continue;
+    ctx.fillText(fmt(v, stepY), 6, py);
+  }
+}
+
+function drawBands(){
+  const { a, L, eps, del } = state;
+  const yT = PY(L + eps), yB = PY(L - eps);
+  const xL = PX(a - del), xR = PX(a + del);
+
+  ctx.fillStyle = P.epsBand;
+  ctx.fillRect(0, yT, W, yB - yT);
+  ctx.fillStyle = P.delBand;
+  ctx.fillRect(xL, 0, xR - xL, H);
+  ctx.fillStyle = P.tubeBand;
+  ctx.fillRect(xL, yT, xR - xL, yB - yT);
+}
+
+function drawGuides(){
+  const { a, L, eps, del } = state;
+  const xL = PX(a - del), xR = PX(a + del);
+  const yT = PY(L + eps), yB = PY(L - eps);
+
+  ctx.save();
+  ctx.setLineDash([6, 5]);
+  ctx.lineWidth = 1.5;
+
+  ctx.strokeStyle = P.epsGuide;
+  ctx.beginPath();
+  ctx.moveTo(0, yT); ctx.lineTo(W, yT);
+  ctx.moveTo(0, yB); ctx.lineTo(W, yB);
+  ctx.stroke();
+
+  ctx.strokeStyle = P.delGuide;
+  ctx.beginPath();
+  ctx.moveTo(xL, 0); ctx.lineTo(xL, H);
+  ctx.moveTo(xR, 0); ctx.lineTo(xR, H);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.strokeStyle = P.tube;
+  ctx.lineWidth = 1.7;
+  ctx.strokeRect(xL, yT, xR - xL, yB - yT);
+
+  ctx.save();
+  ctx.setLineDash([3, 4]);
+  ctx.strokeStyle = P.center;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, PY(L)); ctx.lineTo(W, PY(L));
+  ctx.moveTo(PX(a), 0); ctx.lineTo(PX(a), H);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawRun(run){
+  if (run.pts.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(run.pts[0].x, run.pts[0].y);
+  for (let i=1; i<run.pts.length; i++) ctx.lineTo(run.pts[i].x, run.pts[i].y);
+  ctx.strokeStyle = run.color;
+  ctx.lineWidth = run.width;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+}
+
+function drawCurve(F){
+  const { a, L, eps, del } = state;
+  const N = Math.max(600, Math.floor(W * 1.5));
+  const pts = [];
+
+  for (let i=0; i<=N; i++){
+    const px = (i/N) * W;
+    const wx = WX(px);
+    const wy = F.f(wx);
+    if (!isFinite(wy)){ pts.push(null); continue; }
+    let py = PY(wy);
+    if (!isFinite(py)){ pts.push(null); continue; }
+    py = clamp(py, -4000, H + 4000);
+    pts.push({ px, py, wx, wy });
+  }
+
+  let cur = null;
+  const flush = () => { if (cur) drawRun(cur); cur = null; };
+
+  for (let i=1; i<pts.length; i++){
+    const p = pts[i-1], q = pts[i];
+    if (!p || !q){ flush(); continue; }
+    const mx = (p.wx + q.wx) / 2;
+    const my = (p.wy + q.wy) / 2;
+
+    let color, width;
+    if (Math.abs(mx - a) <= del){
+      color = (Math.abs(my - L) < eps) ? P.curveIn : P.curveEsc;
+      width = 3.2;
+    } else {
+      color = P.curveOut;
+      width = 2;
+    }
+
+    if (!cur || cur.color !== color){
+      flush();
+      cur = { color, width, pts:[{ x:p.px, y:p.py }] };
+    }
+    cur.pts.push({ x:q.px, y:q.py });
+  }
+  flush();
+}
+
+function drawKeyPoint(F){
+  const { a, L } = state;
+  const px = PX(a), py = PY(L);
+  if (px < -20 || px > W+20 || py < -20 || py > H+20) return;
+
+  ctx.beginPath();
+  ctx.arc(px, py, 5.5, 0, Math.PI*2);
+  if (F.hole){
+    ctx.fillStyle = P.pointHoleFill;
+    ctx.fill();
+    ctx.strokeStyle = P.pointHoleStroke;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = P.pointFill;
+    ctx.fill();
+    ctx.strokeStyle = P.pointStroke;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+function pill(text, x, y, color, align){
+  ctx.font = '700 11.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+  const w = ctx.measureText(text).width;
+  const h = 19;
+  let bx, tx;
+  if (align === 'right')       { bx = x - w - 12; tx = x - 6; }
+  else if (align === 'center') { bx = x - w/2 - 6; tx = x; }
+  else                         { bx = x; tx = x + 6; }
+
+  ctx.fillStyle = P.pillBg;
+  rrect(ctx, bx, y - h/2, w + 12, h, 6);
+  ctx.fill();
+  ctx.strokeStyle = P.pillBorder;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  ctx.textAlign = align === 'center' ? 'center' : (align === 'right' ? 'right' : 'left');
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, tx, y + 0.5);
+}
+
+function drawLabels(){
+  const { a, L, eps, del } = state;
+  const yT = clamp(PY(L + eps), 12, H-12);
+  const yB = clamp(PY(L - eps), 12, H-12);
+  const yM = clamp(PY(L), 12, H-12);
+  pill(`L+ε = ${(L+eps).toFixed(2)}`, W-10, yT, P.labelEps, 'right');
+  pill(`L−ε = ${(L-eps).toFixed(2)}`, W-10, yB, P.labelEps, 'right');
+  pill(`L = ${L.toFixed(2)}`,         W-10, yM, P.labelL,   'right');
+
+  const xl = clamp(PX(a - del), 46, W-46);
+  const xr = clamp(PX(a + del), 46, W-46);
+  const xm = clamp(PX(a),       46, W-46);
+  pill(`a−δ = ${(a-del).toFixed(2)}`, xl, 16, P.labelDel, 'center');
+  pill(`a+δ = ${(a+del).toFixed(2)}`, xr, 16, P.labelDel, 'center');
+  pill(`a = ${a.toFixed(2)}`,         xm, 42, P.labelA,   'center');
+}
+
+function render(){
+  if (W < 10 || H < 10) return;
+  const F = FUNCS[state.fi];
+  computeView();
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = P.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  drawGrid();
+  if (state.show) drawBands();
+  if (state.show) drawGuides();
+  drawCurve(F);
+  drawKeyPoint(F);
+  if (state.show) drawLabels();
+}
+
+/* ===================================================================== */
+/*  Panel: estado y definición formal                                    */
+/* ===================================================================== */
+function updateStatus(){
+  const F = FUNCS[state.fi];
+  const { a, L, eps, del } = state;
+
+  if (F.noLimit){
+    statusEl.className = 'status bad';
+    statusEl.innerHTML =
+      `<div class="status-head">✗ El límite no existe</div>
+       <div class="status-body">
+         Ningún valor de L ni de δ > 0 puede satisfacer la definición ε–δ.<br>
+         <span style="opacity:.8">Sugerencia: baja ε por debajo del salto / rango de oscilación para ver cómo la curva escapa de la banda.</span><br>
+         <span style="opacity:.8">Ver el análisis de límites laterales en el panel inferior.</span>
+       </div>`;
+    return;
+  }
+
+  const mx = measure(F.f, a, L, del);
+  const ok = mx <= eps + 1e-9;
+  const dm = Math.min(maxDelta(F.f, a, L, eps, F.xs * 2), F.delMax);
+
+  statusEl.className = 'status ' + (ok ? 'ok' : 'bad');
+  statusEl.innerHTML =
+    `<div class="status-head">${ok ? '✓ δ es válido para este ε' : '✗ δ es demasiado grande'}</div>
+     <div class="status-body">
+       máx |f(x) − L| con 0 &lt; |x − a| &lt; δ : <b>${mx.toFixed(4)}</b><br>
+       ε = <b>${eps.toFixed(3)}</b> → ${ok ? 'la condición se cumple' : 'la condición falla'}<br>
+       δ máximo aproximado: <b>${dm.toFixed(3)}</b>
+     </div>`;
+}
+
+function updateFormal(){
+  const { a, L, eps, del } = state;
+  tex(formalDefEl,
+    '\\forall\\,\\varepsilon>0,\\;\\exists\\,\\delta>0\\;:\\;' +
+    '0<|x-a|<\\delta \\;\\Longrightarrow\\; |f(x)-L|<\\varepsilon',
+    true);
+  tex(liveStmtEl,
+    `0<|x-${a.toFixed(2)}|<${del.toFixed(2)} \\;\\Longrightarrow\\; ` +
+    `|f(x)-${L.toFixed(2)}|<${eps.toFixed(2)}`,
+    true);
+}
+
+function updateAlgebraic(){
+  const F = FUNCS[state.fi];
+  const isDemo = F.cat.indexOf('Demostración') === 0;
+  const isNoLimit = !!F.noLimit;
+
+  if (isNoLimit){
+    algTitle.textContent = 'Análisis de no existencia del límite';
+  } else if (isDemo){
+    algTitle.textContent = 'Obtención de δ en función de ε · paso a paso';
+  } else {
+    algTitle.textContent = 'Cálculo algebraico del límite';
+  }
+  algTech.textContent = F.tech;
+
+  algBody.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'alg-derivation';
+  tex(div, F.algebra, true);
+  algBody.appendChild(div);
+  algNote.textContent = F.note;
+}
+
+function updateFxBox(){
+  const F = FUNCS[state.fi];
+  fxBox.innerHTML = '';
+  const l1 = document.createElement('div');
+  tex(l1, F.tex, true);
+  fxBox.appendChild(l1);
+
+  const l2 = document.createElement('div');
+  l2.style.marginTop = '6px';
+  l2.style.fontSize = '0.92em';
+  l2.style.color = 'var(--muted)';
+  tex(l2, F.limitTex, true);
+  fxBox.appendChild(l2);
+}
+
+function update(){
+  epsVal.textContent = state.eps.toFixed(2);
+  delVal.textContent = state.del.toFixed(2);
+  render();
+  updateStatus();
+  updateFormal();
+}
+
+let rafPending = false;
+function scheduleUpdate(){
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => { rafPending = false; update(); });
+}
+
+/* ===================================================================== */
+/*  Cargar función                                                       */
+/* ===================================================================== */
+function loadFunc(i){
+  state.fi = i;
+  const F = FUNCS[i];
+
+  state.a = F.a;
+  state.L = F.L;
+  state.eps = Math.round(F.epsMax * 0.35 * 100) / 100;
+
+  const dm = maxDelta(F.f, F.a, F.L, state.eps, F.xs * 2);
+  state.del = clamp(Math.round(dm * 0.95 * 100) / 100, 0.02, F.delMax);
+
+  epsRange.min  = 0.02;
+  epsRange.max  = F.epsMax;
+  epsRange.step = 0.01;
+  epsRange.value = state.eps;
+
+  delRange.min  = 0.02;
+  delRange.max  = F.delMax;
+  delRange.step = F.delMax > 4 ? 0.05 : 0.01;
+  delRange.value = state.del;
+
+  state.eps = parseFloat(epsRange.value);
+  state.del = parseFloat(delRange.value);
+
+  updateFxBox();
+  updateAlgebraic();
+  update();
+}
+
+/* ===================================================================== */
+/*  Redimensionar                                                        */
+/* ===================================================================== */
+function resize(){
+  const rect = plotArea.getBoundingClientRect();
+  const w = Math.floor(rect.width);
+  const h = Math.floor(rect.height);
+  if (w < 10 || h < 10) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = w; H = h;
+  canvas.width  = Math.floor(W * dpr);
+  canvas.height = Math.floor(H * dpr);
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  render();
+}
+
+/* ===================================================================== */
+/*  Tema                                                                 */
+/* ===================================================================== */
+function setTheme(t){
+  theme = t;
+  document.documentElement.setAttribute('data-theme', t);
+  P = PALETTES[t];
+  try { localStorage.setItem('edl-theme', t); } catch(e){}
+  render();
+}
+
+/* ===================================================================== */
+/*  Eventos                                                              */
+/* ===================================================================== */
+epsRange.addEventListener('input', () => {
+  state.eps = parseFloat(epsRange.value);
+  scheduleUpdate();
+});
+delRange.addEventListener('input', () => {
+  state.del = parseFloat(delRange.value);
+  scheduleUpdate();
+});
+btnOpt.addEventListener('click', () => {
+  const F = FUNCS[state.fi];
+  if (F.noLimit){
+    // No hay δ óptimo cuando el límite no existe.
+    delRange.value = F.delMax;
+    state.del = parseFloat(delRange.value);
+    update();
+    return;
+  }
+  const dm = maxDelta(F.f, state.a, state.L, state.eps, F.xs * 2);
+  const v = clamp(dm * 0.99, 0.02, F.delMax);
+  delRange.value = v;
+  state.del = parseFloat(delRange.value);
+  update();
+});
+btnReset.addEventListener('click', () => loadFunc(state.fi));
+chkTube.addEventListener('change', () => { state.show = chkTube.checked; render(); });
+fnSel.addEventListener('change', () => loadFunc(parseInt(fnSel.value, 10)));
+themeBtn.addEventListener('click', () => setTheme(theme === 'dark' ? 'light' : 'dark'));
+
+/* ===================================================================== */
+/*  Inicialización                                                       */
+/* ===================================================================== */
+function buildSelector(){
+  const categories = [];
+  FUNCS.forEach(f => { if (!categories.includes(f.cat)) categories.push(f.cat); });
+  categories.forEach(cat => {
+    const og = document.createElement('optgroup');
+    og.label = cat;
+    FUNCS.forEach((f, i) => {
+      if (f.cat !== cat) return;
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = f.label;
+      og.appendChild(opt);
+    });
+    fnSel.appendChild(og);
+  });
+}
+
+function init(){
+  let saved = 'dark';
+  try { saved = localStorage.getItem('edl-theme') || 'dark'; } catch(e){}
+  if (saved !== 'dark' && saved !== 'light') saved = 'dark';
+  setTheme(saved);
+
+  buildSelector();
+
+  if (window.ResizeObserver){
+    new ResizeObserver(() => resize()).observe(plotArea);
+  } else {
+    window.addEventListener('resize', resize);
+  }
+
+  resize();
+  loadFunc(0);
+  resize();
+}
+
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+})();
+</script>
+</body>
+</html>
