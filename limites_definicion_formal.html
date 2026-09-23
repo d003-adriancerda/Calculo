@@ -57,42 +57,80 @@
     flex:0 0 auto;display:flex;align-items:center;gap:14px;
   }
 
+  /* ---------- Botón de tema: el logo actúa como botón ---------- */
   .theme-btn{
-    flex:0 0 auto;width:42px;height:42px;border-radius:12px;
-    background:var(--panel);border:1px solid var(--line);color:var(--txt);
-    cursor:pointer;display:grid;place-items:center;transition:.18s;
+    position:relative;
+    flex:0 0 auto;
+    height:56px;
+    padding:6px 12px;
+    border-radius:14px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--txt);
+    cursor:pointer;
+    display:grid;
+    place-items:center;
+    transition:.2s;
+    box-shadow:var(--shadow);
   }
-  .theme-btn:hover{background:var(--btn-hover);transform:translateY(-1px)}
-  .theme-btn svg{width:20px;height:20px}
-  :root[data-theme="dark"] .ico-moon{display:none}
-  :root[data-theme="light"] .ico-sun{display:none}
+  .theme-btn:hover{background:var(--btn-hover);transform:translateY(-2px)}
+  .theme-btn:active{transform:translateY(0) scale(.97)}
+  .theme-btn:focus-visible{outline:2px solid var(--eps);outline-offset:3px}
 
-  /* Logotipo */
-  .logo{
-    height:46px;
+  .theme-logo{
+    height:42px;
     width:auto;
-    max-width:180px;
+    max-width:170px;
     object-fit:contain;
     display:block;
     user-select:none;
     pointer-events:none;
-    filter:drop-shadow(0 4px 14px rgba(0,0,0,.35));
-    transition:filter .3s, opacity .3s;
+    filter:drop-shadow(0 3px 10px rgba(0,0,0,.35));
+    transition:filter .3s, transform .25s;
   }
-  :root[data-theme="light"] .logo{
-    filter:drop-shadow(0 4px 14px rgba(15,23,42,.18));
+  :root[data-theme="light"] .theme-logo{
+    filter:drop-shadow(0 3px 10px rgba(15,23,42,.18));
   }
-  /* Si el logo no carga, ocultar el hueco */
-  .logo[data-failed="true"]{display:none}
+  .theme-btn:hover .theme-logo{transform:scale(1.04)}
+
+  /* Indicador sol/luna en la esquina inferior derecha */
+  .theme-badge{
+    position:absolute;
+    bottom:-5px;
+    right:-5px;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    display:grid;place-items:center;
+    color:var(--eps);
+    transition:.2s;
+    pointer-events:none;
+  }
+  .theme-badge svg{width:12px;height:12px}
+  :root[data-theme="dark"] .theme-badge .ico-moon{display:none}
+  :root[data-theme="light"] .theme-badge .ico-sun{display:none}
+
+  /* Fallback si el logo no carga */
+  .theme-btn.no-logo{min-width:52px;min-height:52px}
+  .theme-btn.no-logo .theme-logo{display:none}
+  .theme-btn.no-logo::before{
+    content:"Tema";
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.06em;
+    color:var(--txt);
+    padding:0 8px;
+  }
 
   @media(max-width:640px){
-    .header-actions{gap:10px}
-    .logo{height:36px;max-width:120px}
-    .theme-btn{width:38px;height:38px}
-    .theme-btn svg{width:18px;height:18px}
+    .theme-btn{height:48px;padding:4px 9px}
+    .theme-logo{height:34px;max-width:120px}
+    .theme-badge{width:18px;height:18px;bottom:-4px;right:-4px}
+    .theme-badge svg{width:10px;height:10px}
   }
   @media(max-width:420px){
-    .logo{height:30px;max-width:100px}
+    .theme-logo{height:28px;max-width:90px}
   }
 
   /* ---------- Grid ---------- */
@@ -199,20 +237,20 @@
 
     <div class="header-actions">
       <button id="themeToggle" class="theme-btn" aria-label="Cambiar tema" title="Cambiar tema">
-        <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-        </svg>
-        <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
+        <img class="theme-logo"
+             src="LogoTransparente.png"
+             alt="Logotipo — clic para cambiar de tema"
+             onerror="this.parentElement.classList.add('no-logo'); this.remove();">
+        <span class="theme-badge" aria-hidden="true">
+          <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+          <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </span>
       </button>
-
-      <!-- Logotipo a la derecha del botón de tema -->
-      <img id="logo" class="logo"
-           src="LogoTransparente.png"
-           alt="Logotipo"
-           onerror="this.dataset.failed='true'">
     </div>
   </div>
 
@@ -1272,6 +1310,12 @@ function setTheme(t){
   theme = t;
   document.documentElement.setAttribute('data-theme', t);
   P = PALETTES[t];
+
+  // Texto de ayuda dinámico en el botón
+  const next = (t === 'dark') ? 'claro' : 'oscuro';
+  themeBtn.setAttribute('aria-label', `Cambiar a modo ${next}`);
+  themeBtn.setAttribute('title',      `Cambiar a modo ${next}`);
+
   try { localStorage.setItem('edl-theme', t); } catch(e){}
   render();
 }
