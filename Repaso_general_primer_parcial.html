@@ -129,8 +129,8 @@
 
 <div class="container">
     <header>
-        <h1>Repaso General</h1>
-        <h2>Guía Primer Examen Parcial de Cálculo Diferencial | Funciones: concepto, lineales, polinomiales, exponenciales, logarítmicas y trigonométricas</h2>
+        <h1>Repaso Integral</h1>
+        <h2>Primer Examen Parcial | Funciones: concepto, lineales, polinomiales, exponenciales, logarítmicas y trigonométricas</h2>
         <div class="topic-bar">
             <div style="background: var(--t1);"></div>
             <div style="background: var(--t2);"></div>
@@ -153,7 +153,7 @@
             <input type="date" id="fecha">
         </div>
         <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem;">
-            <strong>Instrucciones:</strong> Esta actividad contiene <strong>24 reactivos</strong> distribuidos en 4 temas. Hay preguntas de <em>opción múltiple</em> y de <em>respuesta abierta</em> (escribe el valor numérico). Dispones de una hoja de fórmulas consultable en cualquier momento. Se permite un máximo de <strong>10 errores</strong>.
+            <strong>Instrucciones:</strong> Esta actividad contiene <strong>24 reactivos</strong> distribuidos en 4 temas. Hay preguntas de <em>opción múltiple</em> y de <em>respuesta abierta</em> (escribe el valor numérico). Dispones de una hoja de fórmulas consultable en cualquier momento. Se permite un máximo de <strong>10 errores</strong>.<br><br>🎲 <strong>Modo aleatorio:</strong> el orden de las preguntas y de las opciones de respuesta se mezcla en cada intento, así que la respuesta correcta nunca ocupa siempre la misma posición.
         </div>
         <button class="btn" onclick="startQuiz()">Comenzar Repaso</button>
     </section>
@@ -473,12 +473,26 @@
     const totalByTopic = [0, 0, 0, 0];
     questions.forEach(q => { totalByTopic[q.topic - 1]++; });
 
+    // Arreglo que contendrá las preguntas en el orden mezclado que se presentarán,
+    // cada una con sus opciones ya mezcladas y el índice `correct` recalculado.
+    let quizOrder = [];
+
+    // Función para mezclar aleatoriamente un arreglo (algoritmo Fisher-Yates)
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
     // Calcular total de preguntas por tema para las barras de progreso segmentadas
     function buildProgressSegments() {
         const container = document.getElementById('progress-segments');
         container.innerHTML = '';
         // Cada segmento representa una pregunta, coloreado según su tema
-        questions.forEach((q, i) => {
+        quizOrder.forEach((q, i) => {
             const seg = document.createElement('div');
             seg.style.background = topics[q.topic - 1].color;
             seg.dataset.idx = i;
@@ -505,6 +519,29 @@
             return;
         }
         studentName = nameInput;
+
+        // Aleatorización por intento:
+        //  1) Se mezcla el orden de las 24 preguntas.
+        //  2) Para las preguntas de opción múltiple, también se mezclan las opciones
+        //     y se recalcula el índice correcto buscando la opción originalmente correcta.
+        //  3) Las preguntas de respuesta abierta no tienen opciones que mezclar,
+        //     pero se reubican en el nuevo orden aleatorio del intento.
+        quizOrder = shuffleArray(questions).map(q => {
+            if (q.type === 'mcq') {
+                const correctText = q.options[q.correct];
+                const shuffledOptions = shuffleArray(q.options);
+                return {
+                    topic: q.topic,
+                    type: q.type,
+                    q: q.q,
+                    options: shuffledOptions,
+                    correct: shuffledOptions.indexOf(correctText),
+                    explanation: q.explanation
+                };
+            }
+            return Object.assign({}, q);
+        });
+
         document.getElementById('registro').classList.add('hidden');
         document.getElementById('actividad').classList.remove('hidden');
         buildProgressSegments();
@@ -513,12 +550,12 @@
 
     function loadQuestion() {
         answered = false;
-        const q = questions[currentQ];
+        const q = quizOrder[currentQ];
         const topic = topics.find(t => t.id === q.topic);
         
         document.getElementById('q-text').innerHTML = 
             `<span class="topic-badge" style="background: ${topic.color};">${topic.name}</span><br>` +
-            `<strong>Pregunta ${currentQ + 1} de ${questions.length}</strong><br>` +
+            `<strong>Pregunta ${currentQ + 1} de ${quizOrder.length}</strong><br>` +
             `${q.q}`;
         
         const container = document.getElementById('options-container');
@@ -578,7 +615,7 @@
 
     function nextQuestion() {
         if(!answered) {
-            const q = questions[currentQ];
+            const q = quizOrder[currentQ];
             let selectedIndex = -1;
             
             if (q.type === 'mcq') {
@@ -598,13 +635,13 @@
             
             checkAnswer(selectedIndex);
             answered = true;
-            document.getElementById('btn-next').innerText = (currentQ < questions.length - 1) ? "Siguiente pregunta" : "Finalizar";
+            document.getElementById('btn-next').innerText = (currentQ < quizOrder.length - 1) ? "Siguiente pregunta" : "Finalizar";
             if (window.MathJax && MathJax.typesetPromise) {
                 MathJax.typesetPromise();
             }
         } else {
             currentQ++;
-            if(currentQ < questions.length) {
+            if(currentQ < quizOrder.length) {
                 loadQuestion();
             } else {
                 showResults();
@@ -622,7 +659,7 @@
     }
 
     function checkAnswer(selectedIdx) {
-        const q = questions[currentQ];
+        const q = quizOrder[currentQ];
         let isCorrect = false;
         let userAnswerStr = "";
         
