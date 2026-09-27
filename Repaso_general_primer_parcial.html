@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repaso Primer Examen Parcial</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #1a2a4f;
+            --secondary: #c0392b;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --gray: #95a5a6;
+            --t1: #16a085;
+            --t2: #27ae60;
+            --t3: #8e44ad;
+            --t4: #2980b9;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        header { background: var(--primary); color: #fff; padding: 25px; text-align: center; position: relative; }
+        header h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        header h2 { font-size: 1rem; font-weight: 400; opacity: 0.9; margin-bottom: 15px; }
+        .topic-bar { display: flex; height: 6px; width: 100%; margin-top: 15px; border-radius: 3px; overflow: hidden; }
+        .topic-bar > div { flex: 1; }
+        .topic-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 12px; font-size: 0.8rem; }
+        .topic-legend span { display: flex; align-items: center; gap: 5px; }
+        .topic-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+        
+        section { padding: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input[type="text"], input[type="date"] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { display: inline-block; background: var(--secondary); color: #fff; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: background 0.3s; width: 100%; margin-top: 10px; }
+        .btn:hover { background: #922b21; }
+        .btn:disabled { background: var(--gray); cursor: not-allowed; }
+        .btn-next { background: var(--primary); }
+        .btn-next:hover { background: #0d1a36; }
+        .btn-ref { background: #fff; color: var(--primary); border: 2px solid var(--primary); width: auto; padding: 8px 15px; font-size: 0.9rem; margin: 0; }
+        .btn-ref:hover { background: var(--primary); color: #fff; }
+        
+        .stats-bar { display: flex; justify-content: space-between; background: #f8f9fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .stat-item span { color: var(--secondary); }
+        .progress-container { height: 10px; background: #e0e0e0; border-radius: 5px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.4s ease; }
+        .progress-segments { display: flex; height: 100%; }
+        .progress-segments > div { flex: 1; transition: all 0.4s; opacity: 0.25; }
+        .progress-segments > div.active { opacity: 1; }
+        
+        .question-box { margin-bottom: 20px; }
+        .topic-badge { display: inline-block; padding: 4px 12px; border-radius: 15px; color: #fff; font-size: 0.8rem; font-weight: 600; margin-bottom: 10px; }
+        .question-text { font-size: 1.15rem; margin-bottom: 20px; font-weight: 500; background: #fdfefe; padding: 15px; border-radius: 8px; border-left: 5px solid var(--secondary); }
+        .options { display: grid; gap: 10px; }
+        .option-btn { padding: 12px; background: #fff; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s; font-size: 1.1rem; width: 100%; }
+        .option-btn:hover:not(.disabled) { border-color: var(--secondary); background: #fef5e7; }
+        .option-btn.selected { border-color: var(--secondary); background: #fdebd0; font-weight: 600; }
+        .option-btn.correct { border-color: var(--success); background: #d5f5e3; }
+        .option-btn.incorrect { border-color: var(--danger); background: #fadbd8; }
+        .option-btn.disabled { pointer-events: none; opacity: 0.7; }
+        
+        .text-input-container { margin-top: 10px; }
+        .text-input { width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.2rem; font-weight: 600; text-align: center; transition: all 0.2s; }
+        .text-input:focus { outline: none; border-color: var(--secondary); background: #fef9f0; }
+        .text-input.correct { border-color: var(--success); background: #d5f5e3; }
+        .text-input.incorrect { border-color: var(--danger); background: #fadbd8; }
+        .text-hint { font-size: 0.85rem; color: #7f8c8d; margin-top: 8px; font-style: italic; }
+        
+        .feedback { margin-top: 15px; padding: 12px; border-radius: 6px; display: none; }
+        .feedback.correct { background: #d5f5e3; color: #145a32; border: 1px solid #27ae60; }
+        .feedback.incorrect { background: #fadbd8; color: #7b241c; border: 1px solid #e74c3c; }
+        
+        .results-box { text-align: center; }
+        .score-circle { width: 130px; height: 130px; background: var(--secondary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; margin: 20px auto; }
+        .hidden { display: none !important; }
+        
+        .topic-breakdown { margin: 25px 0; text-align: left; }
+        .topic-breakdown h3 { text-align: center; margin-bottom: 15px; font-size: 1.1rem; color: var(--primary); }
+        .topic-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
+        .topic-color { width: 24px; height: 24px; border-radius: 4px; flex-shrink: 0; }
+        .topic-info { flex: 1; }
+        .topic-info-name { font-weight: 600; font-size: 0.95rem; }
+        .topic-info-score { font-size: 0.85rem; color: #666; }
+        .topic-mini-bar { flex: 1; max-width: 200px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+        .topic-mini-fill { height: 100%; transition: width 0.6s ease; }
+        
+        .ref-panel { position: fixed; top: 0; right: -400px; width: 380px; max-width: 90vw; height: 100%; background: #fff; box-shadow: -4px 0 15px rgba(0,0,0,0.2); transition: right 0.3s; z-index: 1000; padding: 20px; overflow-y: auto; }
+        .ref-panel.open { right: 0; }
+        .ref-panel h2 { color: var(--primary); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+        .ref-section { margin-bottom: 20px; }
+        .ref-section h3 { color: var(--secondary); font-size: 0.95rem; margin-bottom: 8px; }
+        .ref-section ul { padding-left: 20px; }
+        .ref-section li { margin-bottom: 5px; font-size: 0.9rem; }
+        .ref-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .ref-table th, .ref-table td { border: 1px solid #ddd; padding: 5px; text-align: center; }
+        .ref-table th { background: #f0f0f0; }
+        .ref-close { position: absolute; top: 15px; right: 15px; background: var(--danger); color: #fff; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        .ref-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; display: none; }
+        .ref-overlay.open { display: block; }
+        
+        .top-bar-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            section { padding: 15px; }
+            .option-btn { font-size: 1rem; padding: 10px; }
+            .stats-bar { font-size: 0.9rem; }
+            .topic-legend { font-size: 0.7rem; }
+            .topic-legend span { gap: 3px; }
+            .topic-legend i { width: 10px; height: 10px; }
+            header h1 { font-size: 1.4rem; }
+            header h2 { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Repaso Integral</h1>
+        <h2>Primer Examen Parcial | Funciones: concepto, lineales, polinomiales, exponenciales, logarítmicas y trigonométricas</h2>
+        <div class="topic-bar">
+            <div style="background: var(--t1);"></div>
+            <div style="background: var(--t2);"></div>
+            <div style="background: var(--t3);"></div>
+            <div style="background: var(--t4);"></div>
+        </div>
+        <div class="topic-legend">
+            <span><i style="background: var(--t1);"></i>Funciones</span>
+            <span><i style="background: var(--t2);"></i>Lineales/Polinomiales</span>
+            <span><i style="background: var(--t3);"></i>Exponenciales/Log.</span>
+            <span><i style="background: var(--t4);"></i>Trigonométricas</span>
+        </div>
+    </header>
+
+    <section id="registro">
+        <div class="form-group">
+            <label for="nombre">Nombre del Estudiante</label>
+            <input type="text" id="nombre" placeholder="Tu nombre completo">
+            <label for="fecha">Fecha de Realización</label>
+            <input type="date" id="fecha">
+        </div>
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem;">
+            <strong>Instrucciones:</strong> Esta actividad contiene <strong>24 reactivos</strong> distribuidos en 4 temas. Hay preguntas de <em>opción múltiple</em> y de <em>respuesta abierta</em> (escribe el valor numérico). Dispones de una hoja de fórmulas consultable en cualquier momento. Se permite un máximo de <strong>10 errores</strong>.
+        </div>
+        <button class="btn" onclick="startQuiz()">Comenzar Repaso</button>
+    </section>
+
+    <section id="actividad" class="hidden">
+        <div class="top-bar-actions">
+            <div class="stats-bar" style="flex: 1; margin-bottom: 0;">
+                <div class="stat-item">✅ <span id="correct-count">0</span></div>
+                <div class="stat-item">❌ <span id="error-count">0</span>/10</div>
+                <div class="stat-item">📊 <span id="progress-pct">0%</span></div>
+            </div>
+            <button class="btn btn-ref" onclick="toggleRef()">📐 Fórmulas</button>
+        </div>
+        <div class="progress-container">
+            <div class="progress-segments" id="progress-segments"></div>
+        </div>
+
+        <div id="question-container">
+            <div class="question-box">
+                <p class="question-text" id="q-text"></p>
+                <div id="options-container"></div>
+                <div id="feedback" class="feedback"></div>
+            </div>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()" disabled>Siguiente</button>
+        </div>
+    </section>
+
+    <section id="resultados" class="hidden">
+        <div class="results-box">
+            <h2>Resultado para <span id="student-name-display"></span></h2>
+            <div class="score-circle" id="final-score">0%</div>
+            <div id="personal-message" style="margin: 20px 0; font-size: 1.05rem;"></div>
+            <div class="topic-breakdown">
+                <h3>📊 Desglose por tema</h3>
+                <div id="topic-results"></div>
+            </div>
+            <button class="btn" onclick="location.reload()">Reiniciar Actividad</button>
+        </div>
+    </section>
+</div>
+
+<div class="ref-overlay" id="ref-overlay" onclick="toggleRef()"></div>
+<div class="ref-panel" id="ref-panel">
+    <button class="ref-close" onclick="toggleRef()">×</button>
+    <h2>📐 Hoja de Fórmulas</h2>
+    
+    <div class="ref-section">
+        <h3>Conversión de ángulos</h3>
+        <ul>
+            <li>Grados → radianes: $\text{rad} = \text{grados} \cdot \dfrac{\pi}{180°}$</li>
+            <li>Radianes → grados: $\text{grados} = \text{rad} \cdot \dfrac{180°}{\pi}$</li>
+        </ul>
+    </div>
+    
+    <div class="ref-section">
+        <h3>Razones trigonométricas notables</h3>
+        <table class="ref-table">
+            <tr><th>$\theta$</th><th>$\sin$</th><th>$\cos$</th><th>$\tan$</th></tr>
+            <tr><td>$0°$</td><td>$0$</td><td>$1$</td><td>$0$</td></tr>
+            <tr><td>$30°$</td><td>$\frac{1}{2}$</td><td>$\frac{\sqrt{3}}{2}$</td><td>$\frac{1}{\sqrt{3}}$</td></tr>
+            <tr><td>$45°$</td><td>$\frac{\sqrt{2}}{2}$</td><td>$\frac{\sqrt{2}}{2}$</td><td>$1$</td></tr>
+            <tr><td>$60°$</td><td>$\frac{\sqrt{3}}{2}$</td><td>$\frac{1}{2}$</td><td>$\sqrt{3}$</td></tr>
+            <tr><td>$90°$</td><td>$1$</td><td>$0$</td><td>—</td></tr>
+        </table>
+    </div>
+    
+    <div class="ref-section">
+        <h3>Identidad pitagórica</h3>
+        <ul>
+            <li>$\sin^2\theta + \cos^2\theta = 1$</li>
+            <li>$1 + \tan^2\theta = \sec^2\theta$</li>
+        </ul>
+    </div>
+    
+    <div class="ref-section">
+        <h3>Funciones exponenciales y logaritmos</h3>
+        <ul>
+            <li>$a^m \cdot a^n = a^{m+n}$</li>
+            <li>$\frac{a^m}{a^n} = a^{m-n}$</li>
+            <li>$(a^m)^n = a^{mn}$</li>
+            <li>$a^0 = 1$ (con $a \neq 0$)</li>
+            <li>$a^{-n} = \frac{1}{a^n}$</li>
+            <li>$\log_b(b^x) = x$</li>
+            <li>$\log_b(AC) = \log_b A + \log_b C$</li>
+            <li>$\log_b\!\left(\frac{A}{C}\right) = \log_b A - \log_b C$</li>
+            <li>$\log_b(A^n) = n \cdot \log_b A$</li>
+            <li>$\ln(e) = 1$, $\ln(1) = 0$, $e^0 = 1$</li>
+        </ul>
+    </div>
+    
+    <div class="ref-section">
+        <h3>Rectas y polinomios</h3>
+        <ul>
+            <li>Pendiente-ordenada: $y = mx + b$</li>
+            <li>Pendiente entre dos puntos: $m = \frac{y_2 - y_1}{x_2 - x_1}$</li>
+            <li>Grado de un polinomio: mayor exponente de $x$</li>
+        </ul>
+    </div>
+    
+    <div class="ref-section">
+        <h3>Operaciones con funciones</h3>
+        <ul>
+            <li>$(f + g)(x) = f(x) + g(x)$</li>
+            <li>$(f - g)(x) = f(x) - g(x)$</li>
+            <li>$(f \cdot g)(x) = f(x) \cdot g(x)$</li>
+            <li>$(f \circ g)(x) = f(g(x))$</li>
+        </ul>
+    </div>
+    
+    <div class="ref-section">
+        <h3>Gráficas trigonométricas</h3>
+        <ul>
+            <li>$f(x) = A\sin(Bx)$: amplitud $= |A|$, periodo $= \frac{2\pi}{|B|}$</li>
+            <li>Periodo de $\sin(x)$ y $\cos(x)$: $2\pi$</li>
+            <li>Signos por cuadrante (ASTC): I Todo, II Seno, III Tangente, IV Coseno</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Definición de los 4 temas
+    const topics = [
+        { id: 1, name: "Funciones", fullName: "Concepto de función, dominio y rango", color: "#16a085" },
+        { id: 2, name: "Lineales/Polinomiales", fullName: "Funciones lineales, polinomiales y operaciones", color: "#27ae60" },
+        { id: 3, name: "Exponenciales/Log.", fullName: "Funciones exponenciales y logarítmicas", color: "#8e44ad" },
+        { id: 4, name: "Trigonométricas", fullName: "Funciones trigonométricas: razones, ángulos y gráficas", color: "#2980b9" }
+    ];
+
+    // 24 reactivos distribuidos en los 4 temas (6 por tema)
+    // Tipos de pregunta: 'mcq' (opción múltiple) y 'text' (respuesta abierta)
+    const questions = [
+        // ===== TEMA 1: Concepto de función, dominio y rango =====
+        {
+            topic: 1, type: 'mcq',
+            q: "¿Cuál de los siguientes conjuntos de pares ordenados representa una función?",
+            options: [
+                "$\\{(1,2),\\ (2,3),\\ (3,4)\\}$",
+                "$\\{(1,2),\\ (1,3),\\ (2,4)\\}$",
+                "$\\{(1,2),\\ (2,3),\\ (1,4)\\}$",
+                "$\\{(0,0),\\ (0,1),\\ (0,2)\\}$"
+            ],
+            correct: 0,
+            explanation: "Una función asigna a cada valor de $x$ exactamente un valor de $y$. Solo el primer conjunto cumple esta condición."
+        },
+        {
+            topic: 1, type: 'mcq',
+            q: "¿Cuál es el dominio de $f(x) = \\sqrt{x - 2}$?",
+            options: ["$[2, \\infty)$", "$(-\\infty, \\infty)$", "$(2, \\infty)$", "$[0, \\infty)$"],
+            correct: 0,
+            explanation: "El radicando debe ser no negativo: $x - 2 \\geq 0 \\Rightarrow x \\geq 2$. Por tanto, $\\text{Dom}(f) = [2, \\infty)$."
+        },
+        {
+            topic: 1, type: 'mcq',
+            q: "¿Cuál es el rango de $f(x) = x^2$?",
+            options: ["$[0, \\infty)$", "$(-\\infty, \\infty)$", "$(-\\infty, 0]$", "$(0, \\infty)$"],
+            correct: 0,
+            explanation: "Como $x^2 \\geq 0$ para todo $x$ real y $f(0) = 0$, el rango es $[0, \\infty)$."
+        },
+        {
+            topic: 1, type: 'mcq',
+            q: "¿Cuál es el dominio de $f(x) = \\dfrac{1}{x - 3}$?",
+            options: ["$x \\neq 3$", "$x \\neq 0$", "$x \\geq 3$", "$(-\\infty, \\infty)$"],
+            correct: 0,
+            explanation: "El denominador no puede ser cero: $x - 3 \\neq 0 \\Rightarrow x \\neq 3$. Por tanto, $\\text{Dom}(f) = \\mathbb{R} - \\{3\\}$."
+        },
+        {
+            topic: 1, type: 'text',
+            q: "Dada $f(x) = 2x + 1$, calcula $f(5)$.",
+            answer: ["11", "+11"],
+            explanation: "Sustitución directa: $f(5) = 2(5) + 1 = 10 + 1 = 11$."
+        },
+        {
+            topic: 1, type: 'text',
+            q: "Dada $g(x) = x^2 - 3$, calcula $g(-2)$.",
+            answer: ["1", "+1"],
+            explanation: "Sustitución directa: $g(-2) = (-2)^2 - 3 = 4 - 3 = 1$."
+        },
+
+        // ===== TEMA 2: Funciones lineales, polinomiales y operaciones con funciones =====
+        {
+            topic: 2, type: 'mcq',
+            q: "¿Cuál es la pendiente de la recta $y = 3x + 2$?",
+            options: ["$3$", "$2$", "$1$", "$-3$"],
+            correct: 0,
+            explanation: "En la forma $y = mx + b$, $m$ es la pendiente. Aquí $m = 3$."
+        },
+        {
+            topic: 2, type: 'mcq',
+            q: "¿Cuál es la pendiente de la recta que pasa por $(1, 2)$ y $(3, 6)$?",
+            options: ["$2$", "$4$", "$3$", "$1$"],
+            correct: 0,
+            explanation: "$m = \\dfrac{y_2 - y_1}{x_2 - x_1} = \\dfrac{6 - 2}{3 - 1} = \\dfrac{4}{2} = 2$."
+        },
+        {
+            topic: 2, type: 'mcq',
+            q: "Si $f(x) = 2x + 1$ y $g(x) = x - 3$, calcula $(f + g)(x)$.",
+            options: ["$3x - 2$", "$2x^2 - 5x - 3$", "$x + 4$", "$3x + 4$"],
+            correct: 0,
+            explanation: "$(f + g)(x) = f(x) + g(x) = (2x + 1) + (x - 3) = 3x - 2$."
+        },
+        {
+            topic: 2, type: 'mcq',
+            q: "Con $f(x) = 2x + 1$ y $g(x) = x - 3$, calcula $(f \\circ g)(x)$.",
+            options: ["$2x - 5$", "$x + 4$", "$3x - 2$", "$2x^2 - 5x - 3$"],
+            correct: 0,
+            explanation: "$(f \\circ g)(x) = f(g(x)) = f(x - 3) = 2(x - 3) + 1 = 2x - 6 + 1 = 2x - 5$."
+        },
+        {
+            topic: 2, type: 'mcq',
+            q: "¿Cuál es el grado del polinomio $P(x) = 3x^4 - 2x^2 + 5x - 1$?",
+            options: ["$4$", "$3$", "$2$", "$1$"],
+            correct: 0,
+            explanation: "El grado de un polinomio es el mayor exponente de $x$ con coeficiente distinto de cero. Aquí es $4$."
+        },
+        {
+            topic: 2, type: 'text',
+            q: "Si $f(x) = 2x$ y $g(x) = x + 1$, calcula $(f \\cdot g)(3)$.",
+            answer: ["24", "+24"],
+            explanation: "$(f \\cdot g)(3) = f(3) \\cdot g(3) = (2 \\cdot 3) \\cdot (3 + 1) = 6 \\cdot 4 = 24$."
+        },
+
+        // ===== TEMA 3: Funciones exponenciales y logarítmicas =====
+        {
+            topic: 3, type: 'text',
+            q: "Calcula: $2^5$",
+            answer: ["32", "+32"],
+            explanation: "$2^5 = 2 \\cdot 2 \\cdot 2 \\cdot 2 \\cdot 2 = 32$."
+        },
+        {
+            topic: 3, type: 'mcq',
+            q: "Resuelve: $3^x = 81$",
+            options: ["$x = 4$", "$x = 3$", "$x = 9$", "$x = 81$"],
+            correct: 0,
+            explanation: "Como $81 = 3^4$, entonces $3^x = 3^4 \\Rightarrow x = 4$."
+        },
+        {
+            topic: 3, type: 'mcq',
+            q: "Calcula: $\\ln(e)$",
+            options: ["$1$", "$0$", "$e$", "$\\ln(1)$"],
+            correct: 0,
+            explanation: "$\\ln(e) = 1$ porque $e^1 = e$. El logaritmo natural es el logaritmo en base $e$."
+        },
+        {
+            topic: 3, type: 'mcq',
+            q: "Calcula: $\\log_{10}(1000)$",
+            options: ["$3$", "$1000$", "$10$", "$1$"],
+            correct: 0,
+            explanation: "$\\log_{10}(1000) = 3$ porque $10^3 = 1000$."
+        },
+        {
+            topic: 3, type: 'mcq',
+            q: "Aplica propiedades: $\\log_2(8) + \\log_2(4)$",
+            options: ["$5$", "$4$", "$32$", "$12$"],
+            correct: 0,
+            explanation: "Por la propiedad del producto: $\\log_2(8) + \\log_2(4) = \\log_2(8 \\cdot 4) = \\log_2(32) = 5$."
+        },
+        {
+            topic: 3, type: 'mcq',
+            q: "¿Cuál es la función inversa de $f(x) = e^x$?",
+            options: ["$g(x) = \\ln(x)$", "$g(x) = e^{-x}$", "$g(x) = \\dfrac{1}{x}$", "$g(x) = x$"],
+            correct: 0,
+            explanation: "La exponencial natural y el logaritmo natural son funciones inversas: $f^{-1}(x) = \\ln(x)$."
+        },
+
+        // ===== TEMA 4: Funciones trigonométricas: razones, ángulos y gráficas =====
+        {
+            topic: 4, type: 'mcq',
+            q: "Convierte $60°$ a radianes.",
+            options: ["$\\dfrac{\\pi}{3}$", "$\\dfrac{\\pi}{6}$", "$\\dfrac{2\\pi}{3}$", "$\\pi$"],
+            correct: 0,
+            explanation: "$60° \\cdot \\dfrac{\\pi}{180°} = \\dfrac{60\\pi}{180} = \\dfrac{\\pi}{3}$ rad."
+        },
+        {
+            topic: 4, type: 'mcq',
+            q: "Calcula: $\\sin(30°)$",
+            options: ["$\\dfrac{1}{2}$", "$\\dfrac{\\sqrt{3}}{2}$", "$\\dfrac{\\sqrt{2}}{2}$", "$1$"],
+            correct: 0,
+            explanation: "De las razones trigonométricas notables: $\\sin(30°) = \\dfrac{1}{2}$."
+        },
+        {
+            topic: 4, type: 'mcq',
+            q: "Calcula: $\\tan(45°)$",
+            options: ["$1$", "$0$", "$\\sqrt{3}$", "$\\dfrac{1}{2}$"],
+            correct: 0,
+            explanation: "$\\tan(45°) = \\dfrac{\\sin(45°)}{\\cos(45°)} = \\dfrac{\\sqrt{2}/2}{\\sqrt{2}/2} = 1$."
+        },
+        {
+            topic: 4, type: 'mcq',
+            q: "Calcula: $\\cos(0°)$",
+            options: ["$1$", "$0$", "$-1$", "$\\dfrac{1}{2}$"],
+            correct: 0,
+            explanation: "En el círculo unitario, $0°$ corresponde al punto $(1, 0)$, por lo que $\\cos(0°) = 1$."
+        },
+        {
+            topic: 4, type: 'mcq',
+            q: "¿Cuál es el periodo de $f(x) = \\sin(x)$?",
+            options: ["$2\\pi$", "$\\pi$", "$\\dfrac{\\pi}{2}$", "$4\\pi$"],
+            correct: 0,
+            explanation: "Las funciones seno y coseno tienen un periodo fundamental de $2\\pi$."
+        },
+        {
+            topic: 4, type: 'text',
+            q: "¿Cuál es la amplitud de $f(x) = 3\\sin(x)$? (Escribe solo el número)",
+            answer: ["3", "+3"],
+            explanation: "Para $f(x) = A\\sin(x)$, la amplitud es $|A|$. Aquí $A = 3$, así que la amplitud es $3$."
+        }
+    ];
+
+    let currentQ = 0;
+    let correctCount = 0;
+    let errorCount = 0;
+    let studentName = "";
+    let answered = false;
+    let currentTextAnswer = "";
+    const MAX_ERRORS = 10;
+    const correctByTopic = [0, 0, 0, 0];
+    const totalByTopic = [0, 0, 0, 0];
+    questions.forEach(q => { totalByTopic[q.topic - 1]++; });
+
+    // Calcular total de preguntas por tema para las barras de progreso segmentadas
+    function buildProgressSegments() {
+        const container = document.getElementById('progress-segments');
+        container.innerHTML = '';
+        // Cada segmento representa una pregunta, coloreado según su tema
+        questions.forEach((q, i) => {
+            const seg = document.createElement('div');
+            seg.style.background = topics[q.topic - 1].color;
+            seg.dataset.idx = i;
+            if (i === 0) seg.classList.add('active');
+            container.appendChild(seg);
+        });
+    }
+
+    // Establecer fecha de hoy por defecto
+    const fechaInput = document.getElementById('fecha');
+    if (fechaInput) {
+        const hoy = new Date();
+        const año = hoy.getFullYear();
+        const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoy.getDate()).padStart(2, '0');
+        fechaInput.value = `${año}-${mes}-${dia}`;
+    }
+
+    function startQuiz() {
+        const nameInput = document.getElementById('nombre').value.trim();
+        const dateInput = document.getElementById('fecha').value;
+        if(!nameInput || !dateInput) {
+            alert("Por favor, ingresa tu nombre y la fecha.");
+            return;
+        }
+        studentName = nameInput;
+        document.getElementById('registro').classList.add('hidden');
+        document.getElementById('actividad').classList.remove('hidden');
+        buildProgressSegments();
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        answered = false;
+        const q = questions[currentQ];
+        const topic = topics.find(t => t.id === q.topic);
+        
+        document.getElementById('q-text').innerHTML = 
+            `<span class="topic-badge" style="background: ${topic.color};">${topic.name}</span><br>` +
+            `<strong>Pregunta ${currentQ + 1} de ${questions.length}</strong><br>` +
+            `${q.q}`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        if (q.type === 'mcq') {
+            container.className = 'options';
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = opt;
+                btn.onclick = () => selectOption(i, btn);
+                container.appendChild(btn);
+            });
+        } else if (q.type === 'text') {
+            container.className = 'text-input-container';
+            container.innerHTML = `
+                <input type="text" id="text-answer" class="text-input" placeholder="Escribe tu respuesta aquí" autocomplete="off">
+                <div class="text-hint">💡 Escribe solo el valor numérico (sin unidades ni explicaciones).</div>
+            `;
+            const input = document.getElementById('text-answer');
+            input.addEventListener('input', (e) => {
+                currentTextAnswer = e.target.value;
+                document.getElementById('btn-next').disabled = e.target.value.trim() === '';
+            });
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !document.getElementById('btn-next').disabled) {
+                    nextQuestion();
+                }
+            });
+            setTimeout(() => input.focus(), 100);
+        }
+        
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('btn-next').disabled = true;
+        document.getElementById('btn-next').innerText = "Verificar respuesta";
+        updateStats();
+        
+        // Actualizar segmento activo
+        document.querySelectorAll('#progress-segments > div').forEach(s => s.classList.remove('active'));
+        const activeSeg = document.querySelector(`#progress-segments > div[data-idx="${currentQ}"]`);
+        if (activeSeg) activeSeg.classList.add('active');
+        
+        // Forzar renderizado de MathJax
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function selectOption(index, btn) {
+        if(answered) return;
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('btn-next').disabled = false;
+        btn.dataset.index = index;
+    }
+
+    function nextQuestion() {
+        if(!answered) {
+            const q = questions[currentQ];
+            let selectedIndex = -1;
+            
+            if (q.type === 'mcq') {
+                const selected = document.querySelector('.option-btn.selected');
+                if(!selected) {
+                    alert("Por favor, selecciona una respuesta antes de continuar.");
+                    return;
+                }
+                selectedIndex = parseInt(selected.dataset.index);
+            } else {
+                const input = document.getElementById('text-answer');
+                if (!input.value.trim()) {
+                    alert("Por favor, escribe tu respuesta antes de continuar.");
+                    return;
+                }
+            }
+            
+            checkAnswer(selectedIndex);
+            answered = true;
+            document.getElementById('btn-next').innerText = (currentQ < questions.length - 1) ? "Siguiente pregunta" : "Finalizar";
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise();
+            }
+        } else {
+            currentQ++;
+            if(currentQ < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+    }
+
+    function normalizeText(s) {
+        return s.trim().toLowerCase().replace(/\s+/g, '');
+    }
+
+    function checkTextAnswer(input, accepted) {
+        const norm = normalizeText(input);
+        return accepted.some(a => normalizeText(a) === norm);
+    }
+
+    function checkAnswer(selectedIdx) {
+        const q = questions[currentQ];
+        let isCorrect = false;
+        let userAnswerStr = "";
+        
+        if (q.type === 'mcq') {
+            isCorrect = selectedIdx === q.correct;
+            userAnswerStr = q.options[selectedIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.classList.add('disabled'));
+            btns[q.correct].classList.add('correct');
+            if (!isCorrect) {
+                btns[selectedIdx].classList.add('incorrect');
+            }
+        } else {
+            const input = document.getElementById('text-answer');
+            userAnswerStr = input.value;
+            isCorrect = checkTextAnswer(input.value, q.answer);
+            input.disabled = true;
+            input.classList.add(isCorrect ? 'correct' : 'incorrect');
+        }
+        
+        const feedback = document.getElementById('feedback');
+        
+        if(isCorrect) {
+            correctCount++;
+            correctByTopic[q.topic - 1]++;
+            feedback.className = "feedback correct";
+            feedback.innerHTML = "<strong>¡Correcto!</strong> " + q.explanation;
+        } else {
+            errorCount++;
+            feedback.className = "feedback incorrect";
+            feedback.innerHTML = `<strong>Incorrecto.</strong> Tu respuesta: <em>${userAnswerStr}</em>. ${q.explanation}`;
+            
+            if(errorCount >= MAX_ERRORS) {
+                setTimeout(() => {
+                    alert(`Has alcanzado el límite de ${MAX_ERRORS} errores. Te recomendamos repasar los temas donde tuviste mayor dificultad (revisa el desglose por tema).`);
+                    showResults();
+                }, 1500);
+                feedback.style.display = 'block';
+                updateStats();
+                return;
+            }
+        }
+        feedback.style.display = 'block';
+        updateStats();
+    }
+
+    function updateStats() {
+        document.getElementById('correct-count').innerText = correctCount;
+        document.getElementById('error-count').innerText = errorCount;
+        const prog = Math.round((currentQ / questions.length) * 100);
+        document.getElementById('progress-pct').innerText = prog + "%";
+    }
+
+    function showResults() {
+        document.getElementById('actividad').classList.add('hidden');
+        document.getElementById('resultados').classList.remove('hidden');
+        document.getElementById('student-name-display').innerText = studentName;
+        const score = Math.round((correctCount / questions.length) * 100);
+        document.getElementById('final-score').innerText = score + "%";
+        
+        // Determinar el tema más débil
+        let weakestTopicIdx = 0;
+        let weakestPct = 100;
+        topics.forEach((t, i) => {
+            const pct = totalByTopic[i] > 0 ? (correctByTopic[i] / totalByTopic[i]) * 100 : 0;
+            if (pct < weakestPct) {
+                weakestPct = pct;
+                weakestTopicIdx = i;
+            }
+        });
+        
+        let msg;
+        if (score >= 80) {
+            msg = "¡Excelente trabajo! Estás bien preparado para el primer examen parcial. Sigue practicando para mantener el nivel.";
+        } else if (score >= 60) {
+            msg = `Buen desempeño general. Te sugerimos reforzar el tema: <strong>${topics[weakestTopicIdx].fullName}</strong>.`;
+        } else {
+            msg = `Es necesario repasar. Tu tema más débil es: <strong>${topics[weakestTopicIdx].fullName}</strong>. Revisa la hoja de fórmulas y vuelve a intentarlo.`;
+        }
+        document.getElementById('personal-message').innerHTML = msg;
+        
+        // Construir desglose por tema
+        const breakdown = document.getElementById('topic-results');
+        breakdown.innerHTML = '';
+        topics.forEach((t, i) => {
+            const pct = totalByTopic[i] > 0 ? Math.round((correctByTopic[i] / totalByTopic[i]) * 100) : 0;
+            const row = document.createElement('div');
+            row.className = 'topic-row';
+            row.innerHTML = `
+                <div class="topic-color" style="background: ${t.color};"></div>
+                <div class="topic-info">
+                    <div class="topic-info-name">${t.fullName}</div>
+                    <div class="topic-info-score">${correctByTopic[i]} de ${totalByTopic[i]} correctas</div>
+                </div>
+                <div class="topic-mini-bar">
+                    <div class="topic-mini-fill" style="width: ${pct}%; background: ${t.color};"></div>
+                </div>
+                <div style="font-weight: 600; min-width: 45px; text-align: right;">${pct}%</div>
+            `;
+            breakdown.appendChild(row);
+        });
+    }
+
+    function toggleRef() {
+        const panel = document.getElementById('ref-panel');
+        const overlay = document.getElementById('ref-overlay');
+        panel.classList.toggle('open');
+        overlay.classList.toggle('open');
+        if (panel.classList.contains('open') && window.MathJax && MathJax.typesetPromise) {
+            setTimeout(() => MathJax.typesetPromise(), 300);
+        }
+    }
+</script>
+</body>
+</html>
