@@ -76,7 +76,7 @@
 <div class="container">
     <header>
         <h1>Actividad de Reforzamiento</h1>
-        <h2>Cálculo Diferencial | Funciones Trigonométricas: razones, ángulos y gráficas</h2>
+        <h2>Matemáticas | Funciones Trigonométricas: razones, ángulos y gráficas</h2>
     </header>
 
     <section id="registro">
@@ -85,6 +85,9 @@
             <input type="text" id="nombre" placeholder="Tu nombre completo">
             <label for="fecha">Fecha de Realización</label>
             <input type="date" id="fecha">
+        </div>
+        <div style="background: #eaf2f8; border-left: 4px solid var(--secondary); padding: 10px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 0.9rem;">
+            🎲 <strong>Modo aleatorio:</strong> el orden de las preguntas y de las opciones de respuesta se mezcla en cada intento, así que la respuesta correcta nunca ocupa siempre la misma posición.
         </div>
         <button class="btn" onclick="startQuiz()">Iniciar Evaluación</button>
     </section>
@@ -281,6 +284,20 @@
     let answered = false;
     const MAX_ERRORS = 10;
 
+    // Arreglo que contendrá las preguntas en el orden mezclado que se presentarán,
+    // cada una con sus opciones ya mezcladas y el índice `correct` recalculado.
+    let quizOrder = [];
+
+    // Función para mezclar aleatoriamente un arreglo (algoritmo Fisher-Yates)
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
     // Establecer fecha de hoy por defecto
     const fechaInput = document.getElementById('fecha');
     if (fechaInput) {
@@ -299,6 +316,22 @@
             return;
         }
         studentName = nameInput;
+
+        // Aleatorización por intento:
+        //  1) Se mezcla el orden de las preguntas.
+        //  2) Para cada pregunta se mezcla el orden de sus opciones,
+        //     y se recalcula el índice correcto buscando la opción originalmente correcta.
+        quizOrder = shuffleArray(questions).map(q => {
+            const correctText = q.options[q.correct];
+            const shuffledOptions = shuffleArray(q.options);
+            return {
+                q: q.q,
+                options: shuffledOptions,
+                correct: shuffledOptions.indexOf(correctText),
+                explanation: q.explanation
+            };
+        });
+
         document.getElementById('registro').classList.add('hidden');
         document.getElementById('actividad').classList.remove('hidden');
         loadQuestion();
@@ -306,7 +339,7 @@
 
     function loadQuestion() {
         answered = false;
-        const q = questions[currentQ];
+        const q = quizOrder[currentQ];
         document.getElementById('q-text').innerHTML = `<strong>Pregunta ${currentQ + 1}:</strong><br>${q.q}`;
         const container = document.getElementById('options-container');
         container.innerHTML = '';
@@ -347,13 +380,13 @@
             const idx = parseInt(selected.dataset.index);
             checkAnswer(idx);
             answered = true;
-            document.getElementById('btn-next').innerText = (currentQ < questions.length - 1) ? "Siguiente Pregunta" : "Finalizar";
+            document.getElementById('btn-next').innerText = (currentQ < quizOrder.length - 1) ? "Siguiente Pregunta" : "Finalizar";
             if (window.MathJax && MathJax.typesetPromise) {
                 MathJax.typesetPromise();
             }
         } else {
             currentQ++;
-            if(currentQ < questions.length) {
+            if(currentQ < quizOrder.length) {
                 loadQuestion();
             } else {
                 showResults();
@@ -362,7 +395,7 @@
     }
 
     function checkAnswer(selectedIdx) {
-        const q = questions[currentQ];
+        const q = quizOrder[currentQ];
         const isCorrect = selectedIdx === q.correct;
         const feedback = document.getElementById('feedback');
         const btns = document.querySelectorAll('.option-btn');
