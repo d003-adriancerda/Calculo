@@ -125,8 +125,8 @@
         {
             q: "Si $f(x) = 5x + 2$ y $g(x) = 3x - 7$, ¿cuánto vale $(f - g)(2)$?",
             options: ["15", "9", "11", "13"],
-            correct: 2,
-            explanation: "Primero calculamos $(f - g)(x) = (5x + 2) - (3x - 7) = 2x + 9$. Luego evaluamos en $x = 2$: $(f - g)(2) = 2(2) + 9 = 13$."
+            correct: 3,
+            explanation: "Primero calculamos $(f - g)(x) = (5x + 2) - (3x - 7) = 5x + 2 - 3x + 7 = 2x + 9$. Luego evaluamos en $x = 2$: $(f - g)(2) = 2(2) + 9 = 4 + 9 = 13$."
         },
         {
             q: "Dadas $f(x) = x + 3$ y $g(x) = x - 3$, ¿cuál es el dominio de $(f \\cdot g)(x)$?",
@@ -168,7 +168,7 @@
             q: "Dadas $f(x) = 4x - 2$ y $g(x) = 5x + 1$, ¿cuánto vale $(g \\circ f)(3)$?",
             options: ["51", "50", "49", "52"],
             correct: 0,
-            explanation: "Primero evaluamos $f(3) = 4(3) - 2 = 10$. Luego $g(10) = 5(10) + 1 = 51$."
+            explanation: "Primero evaluamos $f(3) = 4(3) - 2 = 12 - 2 = 10$. Luego $g(10) = 5(10) + 1 = 51$."
         },
         {
             q: "Si $f(x) = x^2 + 1$ y $g(x) = \\dfrac{1}{x}$, ¿cuál es la expresión de $(g \\circ f)(x)$?",
@@ -225,8 +225,11 @@
         });
         document.getElementById('feedback').style.display = 'none';
         document.getElementById('btn-next').disabled = true;
+        document.getElementById('btn-next').innerText = "Verificar respuesta";
         updateStats();
-        MathJax.typesetPromise();
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise();
+        }
     }
 
     function selectOption(index, btn) {
@@ -240,16 +243,21 @@
     function nextQuestion() {
         if(!answered) {
             const selected = document.querySelector('.option-btn.selected');
+            if (!selected) {
+                alert("Por favor, selecciona una respuesta antes de continuar.");
+                return;
+            }
             const idx = parseInt(selected.dataset.index);
             checkAnswer(idx);
             answered = true;
             document.getElementById('btn-next').innerText = (currentQ < questions.length - 1) ? "Siguiente Pregunta" : "Finalizar";
-            MathJax.typesetPromise();
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise();
+            }
         } else {
             currentQ++;
             if(currentQ < questions.length) {
                 loadQuestion();
-                document.getElementById('btn-next').innerText = "Siguiente";
             } else {
                 showResults();
             }
