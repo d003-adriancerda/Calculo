@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de práctica — Cálculo en varias variables: hessiana, integrales dobles, regla de la cadena y cambio de coordenadas</title>
+<style>
+@import url("https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css");
+</style>
+<style>
+  :root{
+    --bg:#eff0f1; --card:#ffffff; --ink:#1a1b1c; --muted:#6f7378;
+    --accent:#366ea6; --accent-dark:#334250; --accent-soft:#eaf1f8;
+    --stripe:#ebedee; --border:#c7d0da; --ok:#46875c; --ok-soft:#eaf4ed;
+    --bad:#92453e; --bad-soft:#f7ecea;
+    --r:14px; --shadow:0 1px 3px rgba(26,27,28,.08),0 6px 18px rgba(26,27,28,.06);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55; font-size:16px;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:0 18px;}
+
+  /* ---------- Header ---------- */
+  header{
+    background:linear-gradient(160deg,var(--accent-dark) 0%, #3a5a7d 70%, var(--accent) 130%);
+    color:#fff; padding:34px 0 30px;
+  }
+  .kicker{
+    font-size:12px; letter-spacing:2.5px; text-transform:uppercase;
+    opacity:.75; margin-bottom:10px; font-weight:600;
+  }
+  header h1{font-size:clamp(22px,4vw,30px); line-height:1.25; font-weight:800; max-width:760px;}
+  header .sub{margin-top:10px; max-width:680px; font-size:15px; opacity:.88;}
+  .badges{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+  .badge{
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+  }
+
+  /* ---------- Teoría ---------- */
+  details.teoria{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r);
+    margin:22px 0 0; box-shadow:var(--shadow); overflow:hidden;
+  }
+  details.teoria summary{
+    cursor:pointer; padding:16px 20px; font-weight:700; font-size:15.5px;
+    color:var(--accent-dark); list-style:none; display:flex; align-items:center; gap:10px;
+    user-select:none;
+  }
+  details.teoria summary::-webkit-details-marker{display:none;}
+  details.teoria summary .chev{transition:transform .2s; color:var(--accent); font-size:13px;}
+  details.teoria[open] summary .chev{transform:rotate(90deg);}
+  .teoria-body{padding:4px 20px 22px; border-top:1px solid var(--stripe);}
+  .teoria-body p.intro{margin:14px 0 4px; font-size:14.5px; color:var(--muted);}
+  .tgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:14px;}
+  .tcard{
+    border:1px solid var(--border); border-radius:10px; padding:14px 15px;
+    background:#fbfcfd; font-size:13.8px;
+  }
+  .tcard h3{font-size:13.5px; color:var(--accent-dark); margin-bottom:7px; letter-spacing:.3px;}
+  .tcard p{margin:5px 0;}
+  .tcard b{color:var(--accent-dark);}
+
+  /* ---------- Controles ---------- */
+  .controls{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r);
+    box-shadow:var(--shadow); margin-top:18px; padding:16px 18px;
+  }
+  .ctl-row{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+  .ctl-label{font-size:12px; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); font-weight:700; margin-right:2px;}
+  .seg{display:flex; border:1.5px solid var(--accent); border-radius:10px; overflow:hidden;}
+  .seg button{
+    border:0; background:#fff; color:var(--accent); padding:9px 18px; font-size:14px; font-weight:700; cursor:pointer;
+    transition:background .15s,color .15s; font-family:inherit;
+  }
+  .seg button.on{background:var(--accent); color:#fff;}
+  .chips{display:flex; flex-wrap:wrap; gap:7px;}
+  .chip{
+    border:1.5px solid var(--border); background:#fff; color:var(--accent-dark);
+    border-radius:999px; padding:6px 13px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;
+    font-family:inherit;
+  }
+  .chip:hover{border-color:var(--accent);}
+  .chip.on{background:var(--accent-dark); border-color:var(--accent-dark); color:#fff;}
+  select.sel{
+    border:1.5px solid var(--border); border-radius:10px; padding:8px 12px; font-size:14px;
+    background:#fff; color:var(--ink); cursor:pointer; font-family:inherit;
+  }
+  .btn{
+    border:0; border-radius:10px; padding:11px 20px; font-size:14.5px; font-weight:700; cursor:pointer;
+    transition:transform .08s, box-shadow .15s; font-family:inherit;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent); color:#fff; box-shadow:0 3px 10px rgba(54,110,166,.35);}
+  .btn-primary:hover{background:#2f6096;}
+  .btn-ghost{background:#fff; color:var(--accent-dark); border:1.5px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent);}
+  .ctl-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; padding-top:14px; border-top:1px solid var(--stripe);}
+  .muted{color:var(--muted); font-size:13.5px;}
+
+  /* ---------- Sesión ---------- */
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r);
+    box-shadow:var(--shadow); margin-top:18px; padding:18px 20px;
+  }
+  .quizbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  .mini{background:var(--accent); color:#fff; border-radius:999px; padding:3px 12px; font-size:12px; font-weight:700;}
+  .mini.ctx{background:#fff; color:var(--muted); border:1.5px solid var(--border);}
+  .spacer{flex:1;}
+  .counter{font-size:13px; color:var(--muted); font-weight:700;}
+  .progress{height:8px; background:var(--stripe); border-radius:999px; overflow:hidden; margin:14px 0 4px;}
+  .progress>div{height:100%; width:0; background:linear-gradient(90deg,var(--accent-dark),var(--accent)); transition:width .3s;}
+  .statsbar{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0 4px;}
+  .stat{background:#fbfcfd; border:1px solid var(--border); border-radius:10px; padding:10px 12px; text-align:center;}
+  .stat .n{font-size:22px; font-weight:800; color:var(--accent-dark); line-height:1.1;}
+  .stat .l{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-top:3px; font-weight:600;}
+  .qtext{font-size:16.5px; margin:16px 0 4px; line-height:1.7;}
+  .opt{
+    display:block; width:100%; text-align:left; background:#fbfcfd;
+    border:1.5px solid var(--border); border-radius:12px; padding:12px 15px; margin:9px 0;
+    font-size:15px; cursor:pointer; transition:all .15s; color:var(--ink); font-family:inherit;
+    line-height:1.65;
+  }
+  .opt:hover:not(:disabled){border-color:var(--accent); background:var(--accent-soft);}
+  .opt:disabled{cursor:default;}
+  .opt .key{display:inline-block; font-weight:800; margin-right:9px; color:var(--accent);}
+  .opt.correct{border-color:var(--ok); background:var(--ok-soft);}
+  .opt.correct .key{color:var(--ok);}
+  .opt.wrong{border-color:var(--bad); background:var(--bad-soft);}
+  .opt.wrong .key{color:var(--bad);}
+  .opt.dim{opacity:.55;}
+  .opt.picked{border-color:var(--accent); background:var(--accent-soft);}
+  .exbox{
+    background:var(--accent-soft); border-left:4px solid var(--accent);
+    border-radius:0 10px 10px 0; padding:13px 16px; margin:14px 0 4px; font-size:14.3px; line-height:1.7;
+  }
+  .exbox.ok{border-color:var(--ok); background:var(--ok-soft);}
+  .exbox.bad{border-color:var(--bad); background:var(--bad-soft);}
+  .exbox h4{margin-bottom:6px; font-size:14.5px;}
+  .quiz-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px;}
+  .hint{font-size:12.5px; color:var(--muted); margin-top:12px; text-align:center;}
+
+  /* ---------- Resultados ---------- */
+  .card h2{font-size:18px; color:var(--accent-dark);}
+  .card h3{font-size:14.5px; color:var(--accent-dark); margin:16px 0 8px;}
+  .rescore{display:flex; gap:22px; align-items:center; margin:14px 0 6px;}
+  .big{font-size:52px; font-weight:800; color:var(--accent-dark); line-height:1;}
+  .score{font-size:15.5px; font-weight:700;}
+  .trow{display:flex; align-items:center; gap:12px; margin:8px 0;}
+  .tname{width:225px; font-size:13.5px; flex-shrink:0;}
+  .tbar{flex:1; height:10px; background:var(--stripe); border-radius:999px; overflow:hidden;}
+  .tbar>div{height:100%; border-radius:999px;}
+  .tnum{width:52px; text-align:right; font-size:13.5px; font-weight:800; color:var(--accent-dark);}
+  .rev{
+    border:1px solid var(--border); border-left:4px solid var(--bad); border-radius:10px;
+    padding:12px 15px; margin:10px 0; background:#fbfcfd;
+  }
+  .rev .rev-top{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px;}
+  .rev .rev-state{font-size:11.5px; font-weight:800; padding:3px 10px; border-radius:999px; background:var(--bad-soft); color:var(--bad);}
+  .rev .qq{font-size:14.5px; margin:4px 0;}
+  .rev .ans{font-size:13.8px; margin:3px 0;}
+  .rev .ans.bad{color:var(--bad);}
+  .rev .ans.good{color:var(--ok);}
+  .rev .exp{
+    font-size:13.5px; color:#3a4149; background:#fff; border:1px dashed var(--border);
+    border-radius:8px; padding:9px 12px; margin-top:8px;
+  }
+  .good-line{background:var(--ok-soft); color:var(--ok); font-weight:700; border-radius:10px; padding:12px 15px; margin-top:8px;}
+  .foot{font-size:12.5px; color:var(--muted); text-align:center; margin:26px 0 34px;}
+
+  /* ---------- KaTeX ---------- */
+  .katex{font-size:1.08em;}
+  .qtext,.opt,.exbox,.rev,.tcard{overflow-wrap:break-word;}
+  .qtext code,.rev code,.opt code{
+    background:#eef1f4; border:1px solid var(--border); border-radius:6px;
+    padding:1px 6px; font-size:.9em; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media(max-width:640px){
+    .statsbar{grid-template-columns:repeat(2,1fr);}
+    .tname{width:130px;}
+    .rescore{flex-direction:column; gap:6px; align-items:flex-start;}
+    .katex{font-size:1.02em;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">Cálculo en varias variables · Práctica interactiva</div>
+    <h1>Optimización con hessiana, integrales dobles (rectangulares y tipo I/II), regla de la cadena multivariable y cambio de coordenadas</h1>
+    <p class="sub">Ejercicios de opción múltiple con nivel de complejidad elevado, en tres grados (básico, intermedio y avanzado), con fórmulas en LaTeX renderizadas con calidad tipográfica. Las opciones se barajan en cada intento: la respuesta correcta nunca ocupa siempre el mismo inciso. Contextos: matemáticas, ingeniería en inteligencia artificial e innovación y diseño (creatividad del diseño con la capacidad analítica y técnica de la ingeniería para el desarrollo integral de productos).</p>
+    <div class="badges">
+      <span class="badge" id="badgeTotal">— ejercicios</span>
+      <span class="badge">Opciones aleatorias a) b) c) d)</span>
+      <span class="badge">Fórmulas en LaTeX (KaTeX)</span>
+      <span class="badge">Explicación paso a paso</span>
+      <span class="badge">3 niveles de dificultad</span>
+      <span class="badge">2 modos: práctica y examen</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <details class="teoria" open>
+    <summary>Repaso rápido de los temas de la sesión <span class="chev">▶</span></summary>
+    <div class="teoria-body">
+      <p class="intro">Fórmulas e ideas clave de cada tema. Consúltalos antes de practicar si necesitas recordar algo; después intenta resolver sin mirar.</p>
+      <div class="tgrid" id="theoryGrid"></div>
+    </div>
+  </details>
+
+  <section class="controls" id="controls">
+    <div class="ctl-row">
+      <span class="ctl-label">Modo</span>
+      <div class="seg" id="segMode">
+        <button type="button" data-m="study" class="on">Práctica</button>
+        <button type="button" data-m="exam">Examen</button>
+      </div>
+      <span class="ctl-label" style="margin-left:14px">Ejercicios</span>
+      <select class="sel" id="numQ">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="40">40</option>
+        <option value="all">Todos</option>
+      </select>
+      <span class="ctl-label" style="margin-left:14px">Nivel</span>
+      <select class="sel" id="lvlSel">
+        <option value="all" selected>Todos</option>
+        <option value="1">Básico</option>
+        <option value="2">Intermedio</option>
+        <option value="3">Avanzado</option>
+      </select>
+    </div>
+    <div class="ctl-row" style="margin-top:12px">
+      <span class="ctl-label">Temas</span>
+      <div class="chips" id="topicChips"></div>
+    </div>
+    <div class="ctl-row" style="margin-top:12px">
+      <span class="ctl-label">Contextos</span>
+      <div class="chips" id="ctxChips"></div>
+    </div>
+    <div class="ctl-actions">
+      <button class="btn btn-ghost" id="allT">Todos los temas</button>
+      <button class="btn btn-ghost" id="noneT">Ningún tema</button>
+      <button class="btn btn-ghost" id="allC">Todos los contextos</button>
+      <button class="btn btn-ghost" id="noneC">Ningún contexto</button>
+      <button class="btn btn-primary" id="startBtn" style="margin-left:auto">Comenzar sesión</button>
+    </div>
+    <p class="muted" id="bestLine" style="margin-top:10px"></p>
+  </section>
+
+  <section class="card" id="sessionZone" style="display:none">
+    <div class="quizbar">
+      <span class="mini" id="qTopic"></span>
+      <span class="mini ctx" id="qCtx"></span>
+      <span class="mini ctx" id="qLvl"></span>
+      <span class="spacer"></span>
+      <span class="counter" id="qCount"></span>
+    </div>
+    <div class="progress"><div id="progFill"></div></div>
+    <div class="statsbar">
+      <div class="stat"><div class="n" id="stResp">0</div><div class="l">Respondidas</div></div>
+      <div class="stat"><div class="n" id="stOk">0</div><div class="l">Correctas</div></div>
+      <div class="stat"><div class="n" id="stRacha">0</div><div class="l">Racha</div></div>
+      <div class="stat"><div class="n" id="stPrec">—</div><div class="l">Precisión</div></div>
+    </div>
+    <p class="qtext" id="qText"></p>
+    <div id="opts"></div>
+    <div class="exbox" id="exBox" style="display:none"></div>
+    <div class="quiz-actions">
+      <button class="btn btn-primary" id="nextBtn" style="display:none">Siguiente</button>
+      <button class="btn btn-ghost" id="quitBtn" style="display:none">Abandonar sesión</button>
+    </div>
+    <p class="hint">Atajos: teclas 1-4 para responder · Enter para continuar.</p>
+  </section>
+
+  <section class="card" id="resultZone" style="display:none">
+    <h2>Resultado de la sesión</h2>
+    <div class="rescore">
+      <div class="big" id="resPct">—</div>
+      <div>
+        <p id="resScore" class="score"></p>
+        <p id="resMsg"></p>
+        <p class="muted" id="resBest" style="margin-top:4px"></p>
+      </div>
+    </div>
+    <h3>Desempeño por tema</h3>
+    <div id="resTopics"></div>
+    <div id="perfectBox" style="display:none"><p class="good-line">Sin errores en esta sesión. Puedes subir la dificultad combinando más temas o usando el modo examen.</p></div>
+    <div id="wrongBox">
+      <h3>Ejercicios fallados</h3>
+      <div id="resWrong"></div>
+    </div>
+    <div class="ctl-actions">
+      <button class="btn btn-primary" id="retryBtn">Repetir las falladas</button>
+      <button class="btn btn-ghost" id="againBtn">Nueva sesión (misma configuración)</button>
+      <button class="btn btn-ghost" id="homeBtn">Volver al inicio</button>
+    </div>
+  </section>
+
+  <p class="foot">Simulador de estudio — Cálculo en varias variables · Optimización con matriz hessiana · Integrales dobles en regiones rectangulares · Regiones tipo I y tipo II · Regla de la cadena multivariable · Cambio de coordenadas y polares</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+"use strict";
+
+/* TOPICS y CTXS — teoría con LaTeX (KaTeX) */
+const TOPICS = {
+  hes:{n:"Optimización con hessiana", c:"#8b5cf6",
+    ref:String.raw`<p><b>Puntos críticos:</b> en el interior del dominio se resuelve $\nabla f = (f_{x}, f_{y}) = (0, 0)$. Ahí puede haber máximos, mínimos o nada.</p><p><b>Hessiana:</b> $H = \begin{pmatrix} f_{xx} & f_{xy} \\ f_{xy} & f_{yy} \end{pmatrix}$ y su discriminante $D = \det H = f_{xx}f_{yy} - f_{xy}^{2}$.</p><p><b>Criterio:</b> si $D > 0$ y $f_{xx} > 0$ hay mínimo local; si $D > 0$ y $f_{xx} < 0$ hay máximo local; si $D < 0$ hay punto silla; si $D = 0$ el criterio no concluye y hay que analizar a mano.</p>`},
+  rect:{n:"Integrales dobles: regiones rectangulares", c:"#0ea5e9",
+    ref:String.raw`<p><b>Definición:</b> sobre $R = [a, b] \times [c, d]$, la integral doble $\iint_{R} f\,dA$ se evalúa con Fubini como integral iterada: $\int_{a}^{b}\int_{c}^{d} f(x, y)\,dy\,dx$ (o al revés, el resultado no cambia).</p><p><b>Interpretaciones:</b> si $f \geq 0$ es el volumen bajo la superficie $z = f$; $\iint 1\,dA$ es el área de $R$; el valor promedio de f es $\frac{1}{\text{área}(R)}\iint_{R} f\,dA$.</p><p><b>Atajo:</b> si el integrando es separable, $f(x,y) = g(x)h(y)$, entonces $\iint_{R} f\,dA = \left(\int_{a}^{b} g\right)\left(\int_{c}^{d} h\right)$.</p>`},
+  tipo:{n:"Regiones tipo I y tipo II", c:"#f59e0b",
+    ref:String.raw`<p><b>Tipo I (vertical):</b> $a \leq x \leq b$ y $g_{1}(x) \leq y \leq g_{2}(x)$: el integrando se integra primero en y y los límites exteriores son constantes.</p><p><b>Tipo II (horizontal):</b> $c \leq y \leq d$ y $h_{1}(y) \leq x \leq h_{2}(y)$: primero se integra en x.</p><p><b>Invertir el orden:</b> redraw la región y re-describe los límites; a veces una de las dos órdenes es la única viable ($e^{x^{2}}$, $\sin(x^{2})$ no tienen antiderivada elemental).</p><p><b>Área:</b> $\iint_{D} 1\,dA$ da el área de cualquier región plana acotada.</p>`},
+  cad:{n:"Regla de la cadena multivariable", c:"#10b981",
+    ref:String.raw`<p><b>Una variable intermedia… no: varias:</b> si $z = f(x, y)$ con $x = g(t)$, $y = h(t)$, entonces $\frac{dz}{dt} = \frac{\partial f}{\partial x}\frac{dx}{dt} + \frac{\partial f}{\partial y}\frac{dy}{dt}$: se multiplican las derivadas de cada rama y se suman los caminos.</p><p><b>Dos independientes:</b> con $x = x(s, t)$, $y = y(s, t)$: $\frac{\partial z}{\partial s} = f_{x}x_{s} + f_{y}y_{s}$ y $\frac{\partial z}{\partial t} = f_{x}x_{t} + f_{y}y_{t}$.</p><p><b>Implícita:</b> si $F(x, y, z) = 0$ define $z(x, y)$, entonces $\frac{\partial z}{\partial x} = -\frac{F_{x}}{F_{z}}$.</p><p><b>Diagrama de árbol:</b> dibuja las dependencias; cada camino del dependiente al independiente aporta producto de derivadas.</p>`},
+  cc:{n:"Cambio de coordenadas y polares", c:"#ef4444",
+    ref:String.raw`<p><b>Polares:</b> $x = r\cos\theta$, $y = r\sin\theta$, $x^{2} + y^{2} = r^{2}$ y el elemento de área $dA = r\,dr\,d\theta$ (¡no olvidar el $r$ del jacobiano!).</p><p><b>Jacobiano:</b> para $x = x(u, v)$, $y = y(u, v)$: $dA = \left|\frac{\partial(x, y)}{\partial(u, v)}\right|du\,dv$. El valor absoluto conserva el signo del área.</p><p><b>Rectificar regiones:</b> un buen cambio convierte un paralelogramo o una elipse en un rectángulo o disco: los límites se vuelven constantes.</p><p><b>Cuándo usar polares:</b> discos/anillos/sectores circulares o integrandos con $x^{2} + y^{2}$.</p>`}
+};
+const CTXS = {
+  mat:{n:"Matemáticas"},
+  ia:{n:"Ingeniería en IA"},
+  inno:{n:"Innovación y diseño"}
+};
+
+/* BANCO — Optimización con matriz hessiana, funciones de dos variables (25) */
+const BANK_HES = [
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`Para hallar los puntos críticos de $f(x, y)$ en el interior de su dominio se resuelve el sistema:`,o:[String.raw`$f_{x}(x, y) = 0$ y $f_{y}(x, y) = 0$, es decir, $\nabla f = (0, 0)$`,String.raw`$f_{xx}(x, y) = 0$ y $f_{yy}(x, y) = 0$`,String.raw`$f_{x}(x, y) = f_{y}(x, y)$`,String.raw`$f(x, y) = 0$ y $f_{xy}(x, y) = 0$`],a:0,ex:String.raw`Un extremo local interior exige que ambas derivadas parciales se anulen simultáneamente: el gradiente $\nabla f = (f_{x}, f_{y})$ debe ser el vector cero. Las segundas derivadas no se usan para <i>hallar</i> los puntos, sino para <i>clasificarlos</i>.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`La matriz hessiana de $f(x, y) = x^{3} + 2xy + y^{2}$ es:`,o:[String.raw`$\begin{pmatrix} 6x & 2 \\ 2 & 2 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 3x^{2} & 2 \\ 2 & 2y \end{pmatrix}$`,String.raw`$\begin{pmatrix} 6x & 2x \\ 2y & 2 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 6 & 2 \\ 2 & 2 \end{pmatrix}$`],a:0,ex:String.raw`$f_{x} = 3x^{2} + 2y$ y $f_{y} = 2x + 2y$. Entonces $f_{xx} = 6x$, $f_{xy} = \frac{\partial}{\partial y}(3x^{2} + 2y) = 2$ y $f_{yy} = 2$. La hessiana agrupa las segundas derivadas: $H = \begin{pmatrix} f_{xx} & f_{xy} \\ f_{xy} & f_{yy} \end{pmatrix}$, que es simétrica por Schwarz.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`El punto crítico de $f(x, y) = x^{2} + y^{2} - 2x - 4y + 5$ es:`,o:[String.raw`$(1, 2)$`,String.raw`$(2, 1)$`,String.raw`$(-1, -2)$`,String.raw`$(1, -2)$`],a:0,ex:String.raw`$f_{x} = 2x - 2 = 0 \Rightarrow x = 1$ y $f_{y} = 2y - 4 = 0 \Rightarrow y = 2$. Cada ecuación se despeja por separado porque las variables están separadas en este caso.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Para $f(x, y) = x^{2} + y^{2} - 2x - 4y + 5$, el punto crítico $(1, 2)$ se clasifica usando $D = f_{xx}f_{yy} - f_{xy}^{2}$ como:`,o:[String.raw`Mínimo local, porque $D = 4 > 0$ y $f_{xx} = 2 > 0$`,String.raw`Máximo local, porque $D = 4 > 0$ y $f_{xx} = 2 > 0$`,String.raw`Punto silla, porque $D = -4 < 0$`,String.raw`El criterio no concluye porque $D = 0$`],a:0,ex:String.raw`$f_{xx} = 2$, $f_{yy} = 2$, $f_{xy} = 0$, así que $D = (2)(2) - 0^{2} = 4 > 0$. Como además $f_{xx} > 0$, es mínimo local (de hecho global, con valor $f(1, 2) = 0$).`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`El valor mínimo de $f(x, y) = x^{2} + y^{2} - 2x - 4y + 5$ es:`,o:[String.raw`$0$`,String.raw`$5$`,String.raw`$-5$`,String.raw`$2$`],a:0,ex:String.raw`Completando cuadrados o evaluando en $(1, 2)$: $f(1, 2) = 1 + 4 - 2 - 8 + 5 = 0$. Geométricamente es un paraboloide con vértice en $z = 0$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Para $f(x, y) = x^{2} - y^{2}$, el origen $(0, 0)$ es:`,o:[String.raw`Un punto silla, pues $D = f_{xx}f_{yy} - f_{xy}^{2} = (2)(-2) - 0 = -4 < 0$`,String.raw`Un mínimo local, pues $f_{xx} = 2 > 0$`,String.raw`Un máximo local, pues $f_{yy} = -2 < 0$`,String.raw`Nada: el origen no es punto crítico`],a:0,ex:String.raw`El origen sí es crítico ($\nabla f = (2x, -2y) = (0, 0)$ ahí). Pero $D = -4 < 0$: en la dirección x la función crece y en la dirección y decrece, como una montaña rusa: silla. Signos opuestos en las curvaturas delatan la silla.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Para $f(x, y) = xy$, la hessiana en el origen es $\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$ y $D = -1$. La clasificación correcta es:`,o:[String.raw`Punto silla: en la dirección $y = x$ se maximiza y en $y = -x$ se minimiza`,String.raw`Mínimo local: $f_{xx} = 0 \geq 0$`,String.raw`Máximo local: $f_{yy} = 0 \leq 0$`,String.raw`No se puede concluir porque $f_{xx} = 0$`],a:0,ex:String.raw`$D = (0)(0) - 1^{2} = -1 < 0$ basta para afirmar silla (el signo de $f_{xx}$ ya no importa). Sobre la recta $y = x$, $f = x^{2}$ crece; sobre $y = -x$, $f = -x^{2}$ decrece: el origen es "máximo y mínimo" a la vez.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`Si en un punto crítico se cumple $D = f_{xx}f_{yy} - f_{xy}^{2} < 0$, entonces ahí hay:`,o:[String.raw`Un punto silla, sin importar el signo de $f_{xx}$`,String.raw`Un mínimo local solo si $f_{xx} > 0$`,String.raw`Un máximo local siempre`,String.raw`Nada: la función no es diferenciable ahí`],a:0,ex:String.raw`$D < 0$ significa que las dos direcciones principales tienen curvaturas de signos opuestos: crecer en una y decrecer en la otra es exactamente la definición de punto silla. $D < 0$ basta para el diagnóstico.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`Si en un punto crítico $D > 0$ y $f_{xx} < 0$, el punto es:`,o:[String.raw`Un máximo local`,String.raw`Un mínimo local`,String.raw`Un punto silla`,String.raw`Inconcluso: hay que usar terceras derivadas`],a:0,ex:String.raw`$D > 0$ indica que ambas curvaturas principales comparten signo; como $f_{xx} < 0$ (y entonces también $f_{yy} < 0$ en promedio), la superficie se curva hacia abajo en todas las direcciones: máximo local.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Los puntos críticos de $f(x, y) = x^{3} + y^{3} - 3xy$ son:`,o:[String.raw`$(0, 0)$ y $(1, 1)$`,String.raw`Solo $(0, 0)$`,String.raw`$(1, 1)$ y $(-1, -1)$`,String.raw`$(0, 1)$ y $(1, 0)$`],a:0,ex:String.raw`$f_{x} = 3x^{2} - 3y = 0 \Rightarrow y = x^{2}$ y $f_{y} = 3y^{2} - 3x = 0 \Rightarrow x = y^{2}$. Sustituyendo: $x = x^{4} \Rightarrow x(x^{3} - 1) = 0$, de donde $x = 0$ (con $y = 0$) o $x = 1$ (con $y = 1$). Este sistema acoplado es el ejercicio clásico de la sesión.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Para $f(x, y) = x^{3} + y^{3} - 3xy$, la hessiana en $(0, 0)$ es $\begin{pmatrix} 0 & -3 \\ -3 & 0 \end{pmatrix}$, con $D = -9$. Por tanto $(0, 0)$ es:`,o:[String.raw`Un punto silla`,String.raw`Un mínimo local`,String.raw`Un máximo local`,String.raw`Nada: ahí no se anula el gradiente`],a:0,ex:String.raw`$f_{xx} = 6x = 0$, $f_{xy} = -3$, $f_{yy} = 6y = 0$; $D = (0)(0) - (-3)^{2} = -9 < 0$: silla. El otro punto crítico $(1, 1)$, en cambio, resulta mínimo.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Para $f(x, y) = x^{3} + y^{3} - 3xy$, el punto crítico $(1, 1)$ con $H = \begin{pmatrix} 6 & -3 \\ -3 & 6 \end{pmatrix}$ es:`,o:[String.raw`Mínimo local con $f(1, 1) = -1$`,String.raw`Máximo local con $f(1, 1) = 1$`,String.raw`Punto silla con $f(1, 1) = 0$`,String.raw`Inconcluso porque $f_{xy} \neq 0$`],a:0,ex:String.raw`$D = (6)(6) - (-3)^{2} = 27 > 0$ y $f_{xx} = 6 > 0$: mínimo local. Su valor es $f(1, 1) = 1 + 1 - 3 = -1$. Nótese que un término cruzado $-3xy$ no impide el mínimo: lo que importa es $D$ y $f_{xx}$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`El punto crítico de $f(x, y) = x^{2} + xy + y^{2} - 3x - 6y$ es:`,o:[String.raw`$(0, 3)$`,String.raw`$(3, 0)$`,String.raw`$(1, 2)$`,String.raw`$(2, 1)$`],a:0,ex:String.raw`$f_{x} = 2x + y - 3 = 0$ y $f_{y} = x + 2y - 6 = 0$. Doblando la primera: $4x + 2y = 6$; restándole la segunda: $3x = 0$, así que $x = 0$ y $y = 3$. El término cruzado $xy$ acopla las ecuaciones y obliga a resolver el sistema.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Para $f(x, y) = x^{2} + xy + y^{2} - 3x - 6y$ en su punto crítico, $H = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}$. La clasificación es:`,o:[String.raw`Mínimo local, con $D = 3 > 0$ y $f_{xx} = 2 > 0$`,String.raw`Máximo local, con $D = 3 > 0$ y $f_{xx} = 2 < 0$`,String.raw`Punto silla, con $D = -3 < 0$`,String.raw`Inconcluso, con $D = 0$`],a:0,ex:String.raw`$D = (2)(2) - (1)^{2} = 3 > 0$ y $f_{xx} = 2 > 0$: mínimo local, con valor $f(0, 3) = -9$. Este hessiano es positivo definido: los dos valores propios (1 y 3) son positivos, coherente con el mínimo.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`La función de activación radial de un kernel gaussiano en IA es $f(x, y) = e^{-(x^{2} + y^{2})}$; su único punto crítico es el origen, con $f_{xx}(0, 0) = f_{yy}(0, 0) = -2$ y $f_{xy}(0, 0) = 0$. La clasificación es:`,o:[String.raw`Máximo local (y global): $D = 4 > 0$ y $f_{xx} < 0$`,String.raw`Mínimo local: $D = 4 > 0$ y $f_{xx} > 0$`,String.raw`Punto silla: $D = -4 < 0$`,String.raw`No hay puntos críticos: la exponencial nunca se anula`],a:0,ex:String.raw`El gradiente $\nabla f = -2e^{-(x^{2}+y^{2})}(x, y)$ se anula solo en $(0, 0)$. Allí $D = (-2)(-2) - 0 = 4 > 0$ con $f_{xx} = -2 < 0$: máximo. Tiene sentido: $e^{-(x^{2}+y^{2})}$ vale 1 en el origen y decae en todas direcciones (la campana gaussiana 2D del kernel RBF).`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Para $f(x, y) = x^{2} + y^{3} - 6y$, el punto crítico con $y > 0$ y su clasificación son:`,o:[String.raw`$(0, \sqrt{2})$, mínimo local`,String.raw`$(0, \sqrt{2})$, máximo local`,String.raw`$(\sqrt{2}, 0)$, mínimo local`,String.raw`$(0, -\sqrt{2})$, mínimo local`],a:0,ex:String.raw`$f_{x} = 2x = 0$ y $f_{y} = 3y^{2} - 6 = 0 \Rightarrow y = \pm\sqrt{2}$. En $(0, \sqrt{2})$: $f_{xx} = 2$, $f_{yy} = 6y = 6\sqrt{2} > 0$, $f_{xy} = 0$, así que $D = 12\sqrt{2} > 0$: mínimo. En $(0, -\sqrt{2})$ resulta $f_{yy} < 0$: máximo.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`En un punto crítico la hessiana es $\begin{pmatrix} 4 & -1 \\ -1 & 4 \end{pmatrix}$. La clasificación es:`,o:[String.raw`Mínimo local, pues $D = 15 > 0$ y $f_{xx} = 4 > 0$`,String.raw`Máximo local, pues $D = 15 > 0$ y $f_{xx} = 4 < 0$`,String.raw`Punto silla, pues $D = -15 < 0$`,String.raw`Inconcluso, pues $f_{xy} \neq 0$`],a:0,ex:String.raw`$D = (4)(4) - (-1)^{2} = 16 - 1 = 15 > 0$ y $f_{xx} = 4 > 0$: mínimo. Regla práctica: si el determinante supera al producto de los signos en juego y $f_{xx}$ es positivo, hay valle.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`En un punto crítico la hessiana es $\begin{pmatrix} -3 & 2 \\ 2 & -3 \end{pmatrix}$. La clasificación es:`,o:[String.raw`Máximo local, pues $D = 5 > 0$ y $f_{xx} = -3 < 0$`,String.raw`Mínimo local, pues $D = 5 > 0$`,String.raw`Punto silla, pues $D = -5 < 0$`,String.raw`Inconcluso, pues $D = 0$`],a:0,ex:String.raw`$D = (-3)(-3) - (2)^{2} = 9 - 4 = 5 > 0$ con $f_{xx} = -3 < 0$: máximo local. Cuidado con la tentación de sumar en lugar de restar: el discriminante siempre es $f_{xx}f_{yy} - f_{xy}^{2}$.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`Durante el entrenamiento de un modelo de IA, la hessiana de la función de pérdida en un punto crítico es $\begin{pmatrix} 2 & 3 \\ 3 & 2 \end{pmatrix}$. La clasificación es:`,o:[String.raw`Punto silla, pues $D = 4 - 9 = -5 < 0$`,String.raw`Mínimo local, pues $f_{xx} = 2 > 0$`,String.raw`Máximo local, pues $D = 5 > 0$`,String.raw`Inconcluso, pues $f_{xx} \neq f_{yy}$`],a:0,ex:String.raw`Aunque $f_{xx} = 2 > 0$, el término cruzado grande ($f_{xy} = 3$) voltea el diagnóstico: $D = (2)(2) - (3)^{2} = -5 < 0$. Un $f_{xy}$ dominante produce direcciones de subida y bajada simultáneas: silla. Estos puntos silla son habituales en los paisajes de pérdida de las redes neuronales.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`En $f(x, y) = x^{4} + y^{4}$ el origen es un mínimo global evidente, pero el criterio de la hessiana falla porque:`,o:[String.raw`Todas las segundas derivadas se anulan en el origen, así que $D = 0$ y el criterio no concluye`,String.raw`La función no es diferenciable en el origen`,String.raw`La derivada mixta $f_{xy}$ no existe`,String.raw`La hessiana no está definida para polinomios de grado 4`],a:0,ex:String.raw`$f_{xx} = 12x^{2}$, $f_{yy} = 12y^{2}$, $f_{xy} = 0$: en $(0, 0)$ todo es cero y $D = 0$. El caso $D = 0$ es genuinamente inconcluso: $x^{4} + y^{4}$ (mínimo), $-x^{4}$ (máximo) y $x^{3}$ (nada) comparten esa patología. Hay que analizar con herramientas adicionales.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`Un estudio de diseño e ingeniería produce dos líneas de producto con beneficio conjunto $B(q_{1}, q_{2}) = 10q_{1} + 8q_{2} - q_{1}^{2} - q_{2}^{2} - q_{1}q_{2}$ (q en cientos de unidades). La combinación que maximiza el beneficio es:`,o:[String.raw`$q_{1} = 4$, $q_{2} = 2$`,String.raw`$q_{1} = 2$, $q_{2} = 4$`,String.raw`$q_{1} = 5$, $q_{2} = 3$`,String.raw`$q_{1} = 4$, $q_{2} = -2$`],a:0,ex:String.raw`$B_{q_{1}} = 10 - 2q_{1} - q_{2} = 0$ y $B_{q_{2}} = 8 - q_{1} - 2q_{2} = 0$. Del sistema: $2q_{1} + q_{2} = 10$, $q_{1} + 2q_{2} = 8$; resolviendo, $q_{2} = 2$ y $q_{1} = 4$. El término cruzado $-q_{1}q_{2}$ captura la canibalización entre las dos líneas de producto: vender más de una reduce el margen de la otra.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`Para el beneficio $B(q_{1}, q_{2})$ del ejercicio anterior, la hessiana en $(4, 2)$ es $\begin{pmatrix} -2 & -1 \\ -1 & -2 \end{pmatrix}$. Esto confirma que:`,o:[String.raw`Es un máximo: $D = 3 > 0$ y $U_{q_{1}q_{1}} = -2 < 0$`,String.raw`Es un mínimo: $D = 3 > 0$ y $U_{q_{1}q_{1}} = -2 > 0$`,String.raw`Es un punto silla: $D = -3 < 0$`,String.raw`El criterio no decide: $D = 0$`],a:0,ex:String.raw`$D = (-2)(-2) - (-1)^{2} = 3 > 0$ y la segunda derivada directa es negativa: máximo. Producir más allá de $(4, 2)$ reduce el beneficio conjunto: la canibalización entre líneas supera al ingreso marginal.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`En el entrenamiento de un modelo de IA, la función de pérdida $L(\theta_{1}, \theta_{2}) = \theta_{1}^{2} + 2\theta_{2}^{2} - 2\theta_{1}\theta_{2} - 4\theta_{2}$ alcanza su mínimo global en:`,o:[String.raw`$(\theta_{1}, \theta_{2}) = (2, 2)$`,String.raw`$(\theta_{1}, \theta_{2}) = (0, 2)$`,String.raw`$(\theta_{1}, \theta_{2}) = (2, 0)$`,String.raw`$(\theta_{1}, \theta_{2}) = (1, 1)$`],a:0,ex:String.raw`$\frac{\partial L}{\partial \theta_{1}} = 2\theta_{1} - 2\theta_{2} = 0 \Rightarrow \theta_{1} = \theta_{2}$; sustituyendo en $\frac{\partial L}{\partial \theta_{2}} = 4\theta_{2} - 2\theta_{1} - 4 = 0$: $2\theta_{2} = 4$, o sea $\theta_{2} = 2$ y $\theta_{1} = 2$. El gradiente cero localiza el punto; la hessiana (siguiente pregunta) confirma que es valle.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`Para la pérdida $L(\theta_{1}, \theta_{2})$ anterior, la hessiana es $H = \begin{pmatrix} 2 & -2 \\ -2 & 4 \end{pmatrix}$ en todas partes. Esto demuestra que $(2, 2)$ es mínimo global porque:`,o:[String.raw`$D = 8 - 4 = 4 > 0$ y $L_{\theta_{1}\theta_{1}} = 2 > 0$, y como H no depende del punto, es mínimo en todo el dominio`,String.raw`$D = -4 < 0$, luego hay un valle pronunciado`,String.raw`$D = 0$, luego la pérdida es plana ahí`,String.raw`La hessiana con término cruzado negativo siempre implica máximo`],a:0,ex:String.raw`$D = (2)(4) - (-2)^{2} = 4 > 0$ y $L_{\theta_{1}\theta_{1}} = 2 > 0$ en <b>cada</b> punto: la función es estrictamente convexa, así que el punto crítico es mínimo global. En IA esto garantiza que el descenso por gradiente convergerá a $(2, 2)$ desde cualquier inicio.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`El beneficio (en millones) de un proyecto de innovación con inversión $x$ en I+D y $y$ en difusión es $B(x, y) = -2x^{2} - y^{2} + 4x + 6y - 10$. El beneficio máximo es:`,o:[String.raw`$1$ millón, alcanzado en $(x, y) = (1, 3)$`,String.raw`$6$ millones, alcanzado en $(x, y) = (1, 3)$`,String.raw`$18$ millones, alcanzado en $(x, y) = (0, 3)$`,String.raw`$-2$ millones: el proyecto nunca da ganancia`],a:0,ex:String.raw`$B_{x} = -4x + 4 = 0 \Rightarrow x = 1$; $B_{y} = -2y + 6 = 0 \Rightarrow y = 3$. Como $H = \begin{pmatrix} -4 & 0 \\ 0 & -2 \end{pmatrix}$ con $D = 8 > 0$ y $B_{xx} < 0$, hay máximo. Su valor: $B(1, 3) = -2 - 9 + 4 + 18 - 10 = 1$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`La matriz hessiana de $f(x, y) = e^{x}\sin y$ en el punto $(0, \pi/2)$ es:`,o:[String.raw`$\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$, con determinante $-1$`,String.raw`$\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$, con determinante $-1$`,String.raw`$\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$, con determinante $1$`,String.raw`$\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}$, con determinante $1$`],a:0,ex:String.raw`En $(0, \pi/2)$: $f_{xx} = e^{x}\sin y = 1$, $f_{xy} = e^{x}\cos y = 0$ (pues $\cos(\pi/2) = 0$) y $f_{yy} = -e^{x}\sin y = -1$. El determinante $-1 < 0$ revela curvaturas de signo opuesto; recuerda que la etiqueta máx/mín/silla solo se declara en puntos críticos, y aquí $\nabla f = (1, 0) \neq (0, 0)$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Si $f_{xx}(a, b) = 4$, $f_{yy}(a, b) = 9$ y $f_{xy}(a, b) = 6$ en el punto crítico $(a, b)$, entonces:`,o:[String.raw`$D = 36 - 36 = 0$: el criterio de la hessiana no concluye`,String.raw`$D = 36 + 36 = 72 > 0$: hay mínimo`,String.raw`$D = -9 < 0$: hay punto silla`,String.raw`$D = 13 > 0$: hay máximo`],a:0,ex:String.raw`$D = f_{xx}f_{yy} - f_{xy}^{2} = (4)(9) - 6^{2} = 36 - 36 = 0$. Cuando $|f_{xy}| = \sqrt{f_{xx}f_{yy}}$ justo, el discriminante se anula y hay que analizar la función directamente (por ejemplo con derivadas de orden superior o acotando).`}
+];
+
+/* BANCO — Integrales dobles sobre regiones rectangulares (25) */
+const BANK_RECT = [
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`Si $f(x, y) \geq 0$ sobre el rectángulo $R$, la integral doble $\iint_{R} f(x, y)\,dA$ representa:`,o:[String.raw`El volumen del sólido comprendido entre la superficie $z = f(x, y)$ y el rectángulo $R$`,String.raw`El área de la superficie $z = f(x, y)$`,String.raw`La pendiente promedio de $f$ sobre $R$`,String.raw`La longitud de la curva de intersección de $z = f$ con el plano $y = 0$`],a:0,ex:String.raw`En dos variables, la integral doble generaliza el área bajo la curva: ahora se suman volúmenes de columnitas de base $dA = dx\,dy$ y altura $f(x, y)$. El área de la superficie es otra cosa (una integral de línea/superficie), y la pendiente es una derivada.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`El valor de $\iint_{R} 1\,dA$ con $R = [-1, 3] \times [0, 5]$ es:`,o:[String.raw`$20$`,String.raw`$15$`,String.raw`$8$`,String.raw`$4$`],a:0,ex:String.raw`La integral de la constante 1 es el área de la región: $(3 - (-1))(5 - 0) = 4 \cdot 5 = 20$. Este hecho básico se usa siempre para calcular promedios: valor medio $= \frac{1}{\text{área}}\iint f\,dA$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\int_{0}^{1}\int_{0}^{2} (x + y)\,dy\,dx$ es:`,o:[String.raw`$3$`,String.raw`$2$`,String.raw`$\frac{3}{2}$`,String.raw`$1$`],a:0,ex:String.raw`Integrando primero en y: $\int_{0}^{2}(x + y)\,dy = \left[xy + \frac{y^{2}}{2}\right]_{0}^{2} = 2x + 2$. Luego $\int_{0}^{1}(2x + 2)\,dx = 1 + 2 = 3$. Por Fubini, integrando primero en x se obtiene el mismo valor.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{[0,1]\times[0,1]} xy\,dA$ es:`,o:[String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{3}$`,String.raw`$1$`],a:0,ex:String.raw`El integrando es separable: $\left(\int_{0}^{1} x\,dx\right)\left(\int_{0}^{1} y\,dy\right) = \frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}$. En el cuadrado unitario, xy promedia $\frac{1}{4}$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{[0,2]\times[0,3]} x^{2}y^{2}\,dA$ es:`,o:[String.raw`$24$`,String.raw`$\frac{8}{3}$`,String.raw`$9$`,String.raw`$72$`],a:0,ex:String.raw`Separable: $\left(\int_{0}^{2} x^{2}\,dx\right)\left(\int_{0}^{3} y^{2}\,dy\right) = \frac{8}{3} \cdot 9 = 24$. Siempre que el integrando factorice en $g(x)h(y)$ y la región sea rectangular, la doble integral es producto de dos simples.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{[0,1]\times[0,1]} e^{x+y}\,dA$ es:`,o:[String.raw`$(e - 1)^{2}$`,String.raw`$e^{2} - 1$`,String.raw`$2(e - 1)$`,String.raw`$e - 1$`],a:0,ex:String.raw`Como $e^{x+y} = e^{x}e^{y}$: $\left(\int_{0}^{1} e^{x}\,dx\right)\left(\int_{0}^{1} e^{y}\,dy\right) = (e - 1)(e - 1) = (e - 1)^{2}$. Reconocer separabilidad ahorra la mitad del trabajo.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`En un módulo de procesamiento de señales de un sistema de IA, la energía cruzada de dos componentes ortogonales es $\iint_{[0,\pi]\times[0,\pi]} \sin x \cos y\,dA$. Su valor es:`,o:[String.raw`$0$`,String.raw`$2$`,String.raw`$\pi$`,String.raw`$4$`],a:0,ex:String.raw`Separable: $\left(\int_{0}^{\pi} \sin x\,dx\right)\left(\int_{0}^{\pi} \cos y\,dy\right) = 2 \cdot 0 = 0$. El factor $\cos y$ se anula al integrar en $[0, \pi]$: la energía positiva y negativa se compensa exactamente (ortogonalidad de seno y coseno, la base de la transformada de Fourier).`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`Para $f$ continua sobre el rectángulo $[a, b] \times [c, d]$, el teorema de Fubini garantiza que:`,o:[String.raw`$\int_{a}^{b}\int_{c}^{d} f\,dy\,dx = \int_{c}^{d}\int_{a}^{b} f\,dx\,dy$: el orden de integración no cambia el valor`,String.raw`Solo se puede integrar primero respecto a $x$`,String.raw`Las dos integrales iteradas difieren exactamente en el área del rectángulo`,String.raw`Es necesario partir la región en regiones tipo I y tipo II antes de integrar`],a:0,ex:String.raw`Sobre un rectángulo y con f continua, ambas órdenes están siempre disponibles y coinciden. La posibilidad de cambiar el orden es una ventaja operativa: se elige el que hace los cálculos más simples.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`El valor de $\iint_{[0,2]\times[0,3]} 6\,dA$ es:`,o:[String.raw`$36$`,String.raw`$11$`,String.raw`$6$`,String.raw`$18$`],a:0,ex:String.raw`La integral de una constante $k$ sobre una región es $k \times$ (área de la región): $6 \cdot (2 \cdot 3) = 36$. Piénsalo como el volumen de un prisma de base rectangular y altura constante 6.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`Una pieza en cuña diseñada por el equipo de producto tiene altura $z = xy$ sobre la base rectangular $[0, 1] \times [0, 2]$ (en dm). El volumen de material de la pieza es:`,o:[String.raw`$1$`,String.raw`$2$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`$V = \left(\int_{0}^{1} x\,dx\right)\left(\int_{0}^{2} y\,dy\right) = \frac{1}{2} \cdot 2 = 1$ (dm$^{3}$). Como $xy \geq 0$ en ese rectángulo, la integral coincide con el volumen geométrico de la pieza, dato que alimenta el cálculo de material del prototipo.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\int_{1}^{2}\int_{0}^{1} x^{2}y\,dy\,dx$ es:`,o:[String.raw`$\frac{7}{6}$`,String.raw`$\frac{5}{6}$`,String.raw`$\frac{3}{2}$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`Interno: $\int_{0}^{1} x^{2}y\,dy = \frac{x^{2}}{2}$. Externo: $\int_{1}^{2} \frac{x^{2}}{2}\,dx = \left[\frac{x^{3}}{6}\right]_{1}^{2} = \frac{8 - 1}{6} = \frac{7}{6}$. Fíjate cómo el límite externo $[1, 2]$ actúa solo al final.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`Un modelo de IA comete el error instantáneo $e(x, y) = x^{2} + y^{2}$ al procesar la entrada $(x, y)$ del cuadrado unitario $[0, 1] \times [0, 1]$. El error promedio por entrada es:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{3}$`],a:0,ex:String.raw`$\iint_{R} e\,dA = \frac{1}{3} + \frac{1}{3} = \frac{2}{3}$ y el área de $R$ es 1, así que el error promedio es $\frac{2}{3}$. El promedio general es $\frac{1}{\text{área}(R)}\iint_{R} f\,dA$: divide siempre entre el área; aquí coincide con la media de evaluación del modelo.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`Usando linealidad, $\iint_{[0,1]\times[0,1]} (3x^{2} + 2y)\,dA$ vale:`,o:[String.raw`$2$`,String.raw`$3$`,String.raw`$\frac{5}{3}$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$\iint 3x^{2} = 3 \cdot \frac{1}{3} = 1$ y $\iint 2y = 2 \cdot \frac{1}{2} = 1$; en total $2$. La linealidad permite partir el integrando: $\iint (f + g) = \iint f + \iint g$ y las constantes salen.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`El valor de $\iint_{[0,1]\times[0,1]} x\,e^{xy}\,dA$ es:`,o:[String.raw`$e - 2$`,String.raw`$e - 1$`,String.raw`$\frac{e - 1}{2}$`,String.raw`$1$`],a:0,ex:String.raw`Primero en y (x actúa como constante): $\int_{0}^{1} x e^{xy}\,dy = \left[e^{xy}\right]_{y=0}^{y=1} = e^{x} - 1$. Luego: $\int_{0}^{1}(e^{x} - 1)\,dx = (e - 1) - 1 = e - 2$. Aquí el orden importa: integrar primero en x requiere integración por partes.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{[0,2]\times[0,1]} xy^{3}\,dA$ es:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$2$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{4}{5}$`],a:0,ex:String.raw`Separable: $\left(\int_{0}^{2} x\,dx\right)\left(\int_{0}^{1} y^{3}\,dy\right) = 2 \cdot \frac{1}{4} = \frac{1}{2}$. Verifica siempre que la región es rectangular antes de usar este atajo: si los límites dependen de la otra variable, no aplica.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{[0,1]\times[0,\pi/2]} \cos y\,dA$ es:`,o:[String.raw`$1$`,String.raw`$\frac{\pi}{2}$`,String.raw`$0$`,String.raw`$2$`],a:0,ex:String.raw`$\left(\int_{0}^{1} dx\right)\left(\int_{0}^{\pi/2} \cos y\,dy\right) = 1 \cdot 1 = 1$. El integrando ni siquiera depende de x: la integral en x solo aporta la longitud del intervalo.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`El valor de $\iint_{[0,2]\times[0,2]} (x - y)\,dA$ es:`,o:[String.raw`$0$, por simetría: al intercambiar $x$ y $y$ el integrando cambia de signo y la región no cambia`,String.raw`$4$`,String.raw`$2$`,String.raw`$\frac{16}{3}$`],a:0,ex:String.raw`El cuadrado $[0, 2]^{2}$ es simétrico respecto a la diagonal $y = x$, y $f(y, x) = -(f(x, y))$. Por cada columna positiva de volumen hay una negativa gemela: la integral es 0. También se comprueba a mano: $\int_{0}^{2}(2x - 2)\,dx = 4 - 4 = 0$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{[0,\pi]\times[0,1]} y\sin x\,dA$ es:`,o:[String.raw`$1$`,String.raw`$\pi$`,String.raw`$\frac{1}{2}$`,String.raw`$2$`],a:0,ex:String.raw`Separable: $\left(\int_{0}^{\pi} \sin x\,dx\right)\left(\int_{0}^{1} y\,dy\right) = 2 \cdot \frac{1}{2} = 1$. Otra vez, productos de integrales simples por separabilidad.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`El valor de $\iint_{[0,\ln 2]\times[0,1]} e^{2x}\,dA$ es:`,o:[String.raw`$\frac{3}{2}$`,String.raw`$\frac{1}{2}$`,String.raw`$3$`,String.raw`$2$`],a:0,ex:String.raw`$\int_{0}^{\ln 2} e^{2x}\,dx = \frac{1}{2}\left(e^{2\ln 2} - 1\right) = \frac{1}{2}(4 - 1) = \frac{3}{2}$; multiplicando por $\int_{0}^{1} dy = 1$: $\frac{3}{2}$. Ojo con $e^{2\ln 2} = e^{\ln 4} = 4$, el paso que más falla en examen.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`El mismo modelo de IA del ejercicio anterior evalúa ahora el error total $e(x, y) = x^{2} + y^{2}$ sobre la ventana simétrica $[-1, 1] \times [-1, 1]$. El error acumulado $\iint e\,dA$ es:`,o:[String.raw`$\frac{8}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$4$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`Separando: $\left(\int_{-1}^{1} x^{2}\,dx\right)\left(\int_{-1}^{1} dy\right) + \left(\int_{-1}^{1} dx\right)\left(\int_{-1}^{1} y^{2}\,dy\right) = \frac{2}{3} \cdot 2 + 2 \cdot \frac{2}{3} = \frac{8}{3}$. Por la simetría del cuadrado, ambas partes aportan lo mismo.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`En un método de Monte Carlo de un sistema de IA, $(X, Y)$ es un punto aleatorio uniforme sobre el cuadrado $[0, 1] \times [0, 1]$ (densidad 1). La probabilidad de que $X + Y \leq 1$ es:`,o:[String.raw`$\frac{1}{2}$: es el área del triángulo bajo la recta $x + y = 1$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{3}{4}$`],a:0,ex:String.raw`Con densidad uniforme 1, la probabilidad es $\iint_{D} 1\,dA$ sobre la subregión $D = \{x + y \leq 1\}$: el triángulo de vértices $(0, 0)$, $(1, 0)$, $(0, 1)$, con área $\frac{1}{2}$. La probabilidad continua es una integral doble de región.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`Una red de sensores IoT con analítica de IA tiene densidad de dispositivos activos $w(x, y) = 2x + 3y$ por kilómetro cuadrado (x: distancia al este, y: al norte). El total de sensores en el bloque $[0, 2] \times [0, 1]$ es:`,o:[String.raw`$7$`,String.raw`$10$`,String.raw`$14$`,String.raw`$5$`],a:0,ex:String.raw`$\int_{0}^{1}\int_{0}^{2} (2x + 3y)\,dx\,dy$: interno $\int_{0}^{2}(2x + 3y)\,dx = 4 + 6y$; externo $\int_{0}^{1}(4 + 6y)\,dy = 4 + 3 = 7$. Integrar una densidad espacial da el total de dispositivos en la zona: es el dato con el que el sistema balancea la carga de la red.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{[0,4]\times[0,1]} \sqrt{y}\,dA$ es:`,o:[String.raw`$\frac{8}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$2$`,String.raw`$\frac{16}{3}$`],a:0,ex:String.raw`$\left(\int_{0}^{4} dx\right)\left(\int_{0}^{1} y^{1/2}\,dy\right) = 4 \cdot \frac{2}{3} = \frac{8}{3}$, usando $\int y^{1/2}dy = \frac{y^{3/2}}{3/2}$. La x no aparece en el integrando: solo suma la longitud 4.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`El valor de $\int_{0}^{2}\int_{0}^{1} (x^{2}y + y^{3})\,dy\,dx$ es:`,o:[String.raw`$\frac{11}{6}$`,String.raw`$\frac{5}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$\frac{3}{2}$`],a:0,ex:String.raw`Interno: $\int_{0}^{1}(x^{2}y + y^{3})\,dy = \frac{x^{2}}{2} + \frac{1}{4}$. Externo: $\int_{0}^{2}\left(\frac{x^{2}}{2} + \frac{1}{4}\right)dx = \frac{8}{6} + \frac{1}{2} = \frac{4}{3} + \frac{1}{2} = \frac{11}{6}$. Ejercicio de dos etapas: acumular término a término.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`Si $R = R_{1} \cup R_{2}$, donde $R_{1}$ y $R_{2}$ son rectángulos que solo comparten un borde, entonces para f continua:`,o:[String.raw`$\iint_{R} f\,dA = \iint_{R_{1}} f\,dA + \iint_{R_{2}} f\,dA$ (aditividad sobre regiones disjuntas salvo frontera)`,String.raw`$\iint_{R} f\,dA = 2\iint_{R_{1}} f\,dA$ siempre`,String.raw`La integral sobre $R$ es el promedio de las dos integrales`,String.raw`Se deben usar coordenadas polares para sumar las piezas`],a:0,ex:String.raw`La aditividad permite trocear regiones: la frontera compartida tiene área cero y no aporta. Es la misma idea que en una variable con $\int_{a}^{b} = \int_{a}^{c} + \int_{c}^{b}$, y será clave con regiones tipo I y II.`}
+];
+
+/* BANCO — Integrales dobles sobre regiones tipo I y tipo II (25) */
+const BANK_TIPO = [
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`Una región de <b>tipo I</b> (verticalmente simple) queda descrita por:`,o:[String.raw`$a \leq x \leq b$ y $g_{1}(x) \leq y \leq g_{2}(x)$: los límites internos de $y$ dependen de $x$`,String.raw`$c \leq y \leq d$ y $h_{1}(y) \leq x \leq h_{2}(y)$: los límites internos de $x$ dependen de $y$`,String.raw`$a \leq x \leq b$ y $c \leq y \leq d$, con las cuatro constantes`,String.raw`$x^{2} + y^{2} \leq R^{2}$ únicamente`],a:0,ex:String.raw`Tipo I = "cortes verticales": para cada x fijo, y recorre de la curva de abajo a la de arriba, y ambas curvas se escriben como funciones de x. La descripción con límites de x dependiendo de y es tipo II.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`Una región de <b>tipo II</b> (horizontalmente simple) se integra con la estructura:`,o:[String.raw`$\int_{c}^{d}\int_{h_{1}(y)}^{h_{2}(y)} f\,dx\,dy$: primero $x$ entre curvas que dependen de $y$`,String.raw`$\int_{a}^{b}\int_{g_{1}(x)}^{g_{2}(x)} f\,dy\,dx$: primero $y$ entre curvas que dependen de $x$`,String.raw`$\int_{a}^{b}\int_{c}^{d} f\,dy\,dx$ con límites constantes`,String.raw`Siempre requiere cambiar a coordenadas polares`],a:0,ex:String.raw`Tipo II = "cortes horizontales": para cada y fijo, x va de la curva izquierda a la derecha, ambas en función de y. El nombre del orden externo dice el tipo: dx dy externo en y = tipo II; dy dx externo en x = tipo I.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`El valor de $\int_{0}^{1}\int_{0}^{x} xy\,dy\,dx$ (triángulo bajo $y = x$) es:`,o:[String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{12}$`],a:0,ex:String.raw`Interno: $\int_{0}^{x} xy\,dy = x \cdot \frac{x^{2}}{2} = \frac{x^{3}}{2}$. Externo: $\int_{0}^{1} \frac{x^{3}}{2}\,dx = \frac{1}{8}$. Nótese cómo el límite interno $y = x$ genera la potencia extra al integrar.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`El valor de $\int_{0}^{1}\int_{x^{2}}^{x} x\,dy\,dx$ (región entre $y = x^{2}$ y $y = x$) es:`,o:[String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{20}$`],a:0,ex:String.raw`Interno: $\int_{x^{2}}^{x} x\,dy = x(x - x^{2}) = x^{2} - x^{3}$. Externo: $\int_{0}^{1}(x^{2} - x^{3})\,dx = \frac{1}{3} - \frac{1}{4} = \frac{1}{12}$. Las curvas se cortan en $x = 0$ y $x = 1$: esos son los límites externos.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`La región entre $y = x^{2}$ y $y = x$ ($0 \leq x \leq 1$), escrita como <b>tipo II</b>, tiene límites:`,o:[String.raw`$0 \leq y \leq 1$ y $y \leq x \leq \sqrt{y}$`,String.raw`$0 \leq y \leq 1$ y $\sqrt{y} \leq x \leq y$`,String.raw`$0 \leq x \leq 1$ y $y \leq x \leq \sqrt{y}$`,String.raw`$0 \leq y \leq 1$ y $y^{2} \leq x \leq y$`],a:0,ex:String.raw`Reescribiendo las curvas como x en función de y: $y = x^{2} \Rightarrow x = \sqrt{y}$ (derecha) y $y = x \Rightarrow x = y$ (izquierda). En $[0, 1]$ se cumple $y \leq \sqrt{y}$, así que el corte horizontal va de $x = y$ a $x = \sqrt{y}$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`Cambiando el orden de integración, el valor de $\int_{0}^{1}\int_{x}^{1} e^{y^{2}}\,dy\,dx$ es:`,o:[String.raw`$\frac{e - 1}{2}$`,String.raw`$e - 1$`,String.raw`$\frac{e^{2} - 1}{2}$`,String.raw`No tiene solución: $e^{y^{2}}$ no tiene antiderivada elemental`],a:0,ex:String.raw`La región es $0 \leq x \leq y \leq 1$; como tipo II: $\int_{0}^{1}\int_{0}^{y} e^{y^{2}}\,dx\,dy = \int_{0}^{1} y\,e^{y^{2}}\,dy = \left[\frac{e^{y^{2}}}{2}\right]_{0}^{1} = \frac{e - 1}{2}$. El cambio de orden hace aparecer el factor $y$ (derivada interna de $y^{2}$) que resuelve la integral.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`El valor de $\int_{0}^{1}\int_{y}^{1} \sin(x^{2})\,dx\,dy$, tras invertir el orden, es:`,o:[String.raw`$\frac{1 - \cos 1}{2}$`,String.raw`$\sin 1$`,String.raw`$\frac{\cos 1 - 1}{2}$`,String.raw`$1 - \cos 1$`],a:0,ex:String.raw`La región $y \leq x \leq 1$, $0 \leq y \leq 1$ se re-describe como $0 \leq y \leq x$, $0 \leq x \leq 1$: $\int_{0}^{1}\int_{0}^{x} \sin(x^{2})\,dy\,dx = \int_{0}^{1} x\sin(x^{2})\,dx = \left[-\frac{\cos(x^{2})}{2}\right]_{0}^{1} = \frac{1 - \cos 1}{2}$. Integrar primero en y convierte la imposible $\int \sin(x^{2})dx$ en $x\sin(x^{2})$, que es inmediata.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`La silueta lateral de un producto diseñado por el equipo está acotada entre las curvas $y = x$ y $y = x^{2}$ (con $0 \leq x \leq 1$, en dm). El área de la silueta es:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{12}$`],a:0,ex:String.raw`$\iint_{D} 1\,dA = \int_{0}^{1}\int_{x^{2}}^{x} dy\,dx = \int_{0}^{1}(x - x^{2})\,dx = \frac{1}{2} - \frac{1}{3} = \frac{1}{6}$. El área es un caso particular de integral doble: el integrando es 1.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`El área de la región acotada por $x = y^{2}$ y $x = y + 2$ es:`,o:[String.raw`$\frac{9}{2}$`,String.raw`$\frac{7}{2}$`,String.raw`$\frac{16}{3}$`,String.raw`$4$`],a:0,ex:String.raw`Intersección: $y^{2} = y + 2 \Rightarrow (y - 2)(y + 1) = 0$, o sea $y = -1$ y $y = 2$. Como tipo II (una sola pieza): $\int_{-1}^{2}\int_{y^{2}}^{y+2} dx\,dy = \int_{-1}^{2}(y + 2 - y^{2})\,dy = \frac{9}{2}$. Como tipo I habría que trocear en dos tramos de x.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`Para la región entre $x = y^{2}$ y $x = y + 2$ conviene la descripción tipo II porque:`,o:[String.raw`Como tipo I, la región habría que partirla en dos: el límite inferior de y cambia de $-\sqrt{x}$ a $x - 2$ según el tramo de x`,String.raw`Como tipo I las integrales dobles no están definidas`,String.raw`El integrando depende solo de y`,String.raw`Tipo II siempre produce resultados exactos y tipo I, aproximados`],a:0,ex:String.raw`Para $x$ entre 0 y 1 la parábola da dos ramas ($y = \pm\sqrt{x}$) y para $x$ entre 1 y 4 el techo es la recta: la descripción tipo I necesita dos integrales. Elegir bien el tipo es elegir menos trabajo, no solo "otro camino".`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`El valor de $\int_{0}^{4}\int_{0}^{\sqrt{x}} y\,dy\,dx$ es:`,o:[String.raw`$4$`,String.raw`$8$`,String.raw`$2$`,String.raw`$\frac{16}{3}$`],a:0,ex:String.raw`Interno: $\int_{0}^{\sqrt{x}} y\,dy = \frac{x}{2}$. Externo: $\int_{0}^{4} \frac{x}{2}\,dx = 4$. La región es el "paraboloide plano" bajo $y = \sqrt{x}$, un tipo I con límite interno que crece como raíz.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`El valor de $\int_{0}^{1}\int_{0}^{1-x} (x + y)\,dy\,dx$ sobre el triángulo de vértices $(0, 0)$, $(1, 0)$ y $(0, 1)$ es:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`Interno: $\int_{0}^{1-x}(x + y)\,dy = x(1 - x) + \frac{(1 - x)^{2}}{2}$. Externo: $\int_{0}^{1}\left[x - x^{2} + \frac{(1 - x)^{2}}{2}\right]dx = \frac{1}{6} + \frac{1}{6} = \frac{1}{3}$. El triángulo es tipo I y tipo II a la vez (es simétrico), así que ambos órdenes cuestan lo mismo.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`El volumen bajo $z = 1 - x - y$ y sobre el triángulo con vértices $(0, 0)$, $(1, 0)$, $(0, 1)$ es:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$\int_{0}^{1}\int_{0}^{1-x}(1 - x - y)\,dy\,dx = \int_{0}^{1}\frac{(1 - x)^{2}}{2}\,dx = \frac{1}{6}$. Es el volumen del tetraedro con vértices en el origen y los ejes: la integral doble confirma el resultado geométrico clásico.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`La integral $\int_{0}^{2}\int_{x^{2}}^{4} f(x, y)\,dy\,dx$, escrita como <b>tipo II</b>, es:`,o:[String.raw`$\int_{0}^{4}\int_{0}^{\sqrt{y}} f\,dx\,dy$`,String.raw`$\int_{0}^{4}\int_{\sqrt{y}}^{0} f\,dx\,dy$`,String.raw`$\int_{0}^{2}\int_{0}^{x^{2}} f\,dx\,dy$`,String.raw`$\int_{0}^{4}\int_{y^{2}}^{2} f\,dx\,dy$`],a:0,ex:String.raw`La región es $x^{2} \leq y \leq 4$ con $0 \leq x \leq 2$. Re-dibujándola horizontalmente: para cada $y \in [0, 4]$, $x$ va de la izquierda ($x = 0$) a la parábola $x = \sqrt{y}$. El techo $y = 4$ constante y la raíz $x = \sqrt{y}$ definen el nuevo par de límites.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`El valor de $\int_{0}^{1}\int_{x^{2}}^{\sqrt{x}} xy\,dy\,dx$ es:`,o:[String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{24}$`],a:0,ex:String.raw`Interno: $\int_{x^{2}}^{\sqrt{x}} xy\,dy = x \cdot \frac{x - x^{4}}{2} = \frac{x^{2} - x^{5}}{2}$. Externo: $\frac{1}{2}\left(\frac{1}{3} - \frac{1}{6}\right) = \frac{1}{12}$. La región entre $y = x^{2}$ y $y = \sqrt{x}$ es simétrica respecto a $y = x$: ambas curvas se cruzan en 0 y 1.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`El valor de $\int_{0}^{1}\int_{0}^{x} 12xy\,dy\,dx$ sobre el triángulo de vértices $(0, 0)$, $(1, 0)$, $(1, 1)$ es:`,o:[String.raw`$\frac{3}{2}$`,String.raw`$3$`,String.raw`$\frac{3}{4}$`,String.raw`$\frac{6}{5}$`],a:0,ex:String.raw`Interno: $\int_{0}^{x} 12xy\,dy = 6x^{3}$. Externo: $\int_{0}^{1} 6x^{3}\,dx = \frac{3}{2}$. Con un integrando no separable sobre región no rectangular, la integral iterada hace todo el trabajo en cadena.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`El triángulo de vértices $(0, 0)$, $(1, 0)$ y $(1, 1)$, descrito como <b>tipo II</b>, tiene límites:`,o:[String.raw`$0 \leq y \leq 1$ y $y \leq x \leq 1$`,String.raw`$0 \leq x \leq 1$ y $0 \leq y \leq x$`,String.raw`$0 \leq y \leq 1$ y $0 \leq x \leq y$`,String.raw`$0 \leq y \leq x$ y $0 \leq x \leq 1$`],a:0,ex:String.raw`Corte horizontal en altura y: x arranca en la hipotenusa $x = y$ y termina en el borde vertical $x = 1$. (La opción b) es la misma región pero descrita como tipo I: $0 \leq y \leq x$.)`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`En $\iint_{D} f\,dA$ con $dA = dy\,dx$, el elemento de área representa:`,o:[String.raw`El área de un rectangulito de lados $dy$ y $dx$ que, sumado en el límite, barre toda la región $D$`,String.raw`La derivada del área de $D$ respecto a x`,String.raw`El perímetro de $D$ dividido entre dos`,String.raw`La distancia entre las curvas que acotan $D$`],a:0,ex:String.raw`Las sumas de Riemann dobles parten $D$ en celdas de área $\Delta A = \Delta x\,\Delta y$; en el límite sobrevive el "rectangulito infinitesimal" $dA$. En cambio de variables, este elemento se escala por el jacobiano: por eso en polares $dA = r\,dr\,d\theta$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`El valor de $\int_{-2}^{2}\int_{x^{2}}^{4} 2y\,dy\,dx$ es:`,o:[String.raw`$\frac{256}{5}$`,String.raw`$\frac{128}{5}$`,String.raw`$32$`,String.raw`$\frac{64}{3}$`],a:0,ex:String.raw`Interno: $\int_{x^{2}}^{4} 2y\,dy = 16 - x^{4}$. Externo: $\int_{-2}^{2}(16 - x^{4})\,dx = 64 - \frac{2 \cdot 32}{5} = 64 - \frac{64}{5} = \frac{256}{5}$. Aprovecha la paridad: $x^{4}$ es par, así que se puede doblar $\int_{0}^{2}$.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`En un modelo probabilístico de IA, una variable aleatoria conjunta tiene densidad $f(x, y) = 60xy^{2}$ sobre el triángulo $x \geq 0$, $y \geq 0$, $x + y \leq 1$ (en efecto, integra 1 en total). La probabilidad $P(X + Y \leq 1/2)$ es:`,o:[String.raw`$\frac{1}{32}$`,String.raw`$\frac{1}{16}$`,String.raw`$\frac{1}{64}$`,String.raw`$\frac{1}{8}$`],a:0,ex:String.raw`$P = \int_{0}^{1/2}\int_{0}^{1/2-x} 60xy^{2}\,dy\,dx = 20\int_{0}^{1/2} x\left(\frac{1}{2} - x\right)^{3}dx$. Con $u = \frac{1}{2} - x$: $20\int_{0}^{1/2}\left(\frac{1}{2} - u\right)u^{3}du = 20\left(\frac{1}{128} - \frac{1}{160}\right) = 20 \cdot \frac{1}{640} = \frac{1}{32}$. En probabilidad continua, $P$ es una integral doble sobre la subregión de interés.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Un prototipo de panel solar triangular con vértices $(0, 0)$, $(2, 0)$, $(0, 2)$ (en metros) tiene densidad de eficiencia de captación $\rho(x, y) = xy$ por metro cuadrado. La eficiencia total del panel es:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$1$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$m = \int_{0}^{2}\int_{0}^{2-x} xy\,dy\,dx = \int_{0}^{2} \frac{x(2 - x)^{2}}{2}\,dx = \frac{1}{2} \cdot \frac{4}{3} = \frac{2}{3}$, usando $\int_{0}^{2} x(2 - x)^{2}dx = \frac{4}{3}$ (sustitución $u = 2 - x$). La cantidad total es la integral de la densidad sobre la superficie del prototipo.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`La región de integración de $\int_{-1}^{1}\int_{x^{2}}^{1} f(x, y)\,dy\,dx$ está acotada:`,o:[String.raw`Por debajo por la parábola $y = x^{2}$ y por arriba por la recta $y = 1$`,String.raw`Por debajo por la recta $y = 1$ y por arriba por la parábola $y = x^{2}$`,String.raw`Únicamente por las rectas verticales $x = -1$ y $x = 1$`,String.raw`Por la circunferencia $x^{2} + y^{2} = 1$`],a:0,ex:String.raw`El límite interno dice $x^{2} \leq y \leq 1$: la parábola es el piso y la recta el techo. Leer los límites "dibujando" la región es la habilidad central para invertir órdenes.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`El área de la región acotada por las curvas $y = x^{2}$ y $y = 4x$ es:`,o:[String.raw`$\frac{32}{3}$`,String.raw`$\frac{16}{3}$`,String.raw`$8$`,String.raw`$\frac{64}{3}$`],a:0,ex:String.raw`Intersección: $x^{2} = 4x \Rightarrow x = 0$ y $x = 4$. Área $= \int_{0}^{4}\int_{x^{2}}^{4x} dy\,dx = \int_{0}^{4}(4x - x^{2})\,dx = 32 - \frac{64}{3} = \frac{32}{3}$. La recta queda por encima de la parábola en $(0, 4)$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`El valor de $\int_{0}^{1}\int_{x}^{2x} y\,dy\,dx$ (región entre $y = x$ y $y = 2x$) es:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{3}{4}$`],a:0,ex:String.raw`Interno: $\int_{x}^{2x} y\,dy = \frac{(2x)^{2} - x^{2}}{2} = \frac{3x^{2}}{2}$. Externo: $\int_{0}^{1} \frac{3x^{2}}{2}\,dx = \frac{1}{2}$. El truco $\int y\,dy$ entre dos límites que dependen de x se resuelve con $\frac{(\text{arriba})^{2} - (\text{abajo})^{2}}{2}$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`Al evaluar $\int_{0}^{1}\int_{y}^{1} e^{x^{2}}\,dx\,dy$, invertir el orden es imprescindible porque:`,o:[String.raw`$e^{x^{2}}$ no tiene antiderivada elemental en x, pero tras invertir aparece el factor $x$ que la vuelve inmediata: $\int_{0}^{1} x\,e^{x^{2}}\,dx$`,String.raw`El cambio de orden siempre simplifica cualquier integral doble`,String.raw`La región no está bien definida como tipo II`,String.raw`$e^{x^{2}}$ solo se puede integrar con coordenadas polares`],a:0,ex:String.raw`Invertida: $\int_{0}^{1}\int_{0}^{x} e^{x^{2}}\,dy\,dx = \int_{0}^{1} x\,e^{x^{2}}\,dx = \frac{e - 1}{2}$. El factor x que "aparece" al integrar en y es justo la derivada interna de $x^{2}$. Es el ejemplo bandera de que elegir el orden no es cosmética: puede ser la diferencia entre imposible y trivial.`}
+];
+
+/* BANCO — Regla de la cadena multivariable (25) */
+const BANK_CAD = [
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`Si $z = f(x, y)$ con $x = g(t)$ y $y = h(t)$ funciones derivables, entonces $\frac{dz}{dt} =$`,o:[String.raw`$\frac{\partial f}{\partial x}\frac{dx}{dt} + \frac{\partial f}{\partial y}\frac{dy}{dt}$`,String.raw`$\frac{\partial f}{\partial x} + \frac{\partial f}{\partial y}$`,String.raw`$\frac{\partial f}{\partial x}\frac{dx}{dt} - \frac{\partial f}{\partial y}\frac{dy}{dt}$`,String.raw`$f\left(\frac{dx}{dt} + \frac{dy}{dt}\right)$`],a:0,ex:String.raw`Se multiplican las derivadas a lo largo de cada rama del árbol y se suman las contribuciones de todos los caminos de $z$ hasta $t$. Omitir cualquiera de los dos productos es el error más común.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $w = x^{2} + y^{2}$ con $x = \cos t$ e $y = \sin t$, entonces $\frac{dw}{dt} =$`,o:[String.raw`$0$`,String.raw`$2\cos t$`,String.raw`$2\sin t$`,String.raw`$2$`],a:0,ex:String.raw`$\frac{dw}{dt} = 2x(-\sin t) + 2y(\cos t) = -2\sin t\cos t + 2\sin t\cos t = 0$. Tiene perfecto sentido: $w = \cos^{2}t + \sin^{2}t = 1$ es constante, y la constante tiene derivada 0. La regla de la cadena "descubre" la identidad pitagórica.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $w = xy$ con $x = e^{t}$ e $y = e^{-t}$, entonces $\frac{dw}{dt} =$`,o:[String.raw`$0$, porque $w = 1$ para todo $t$`,String.raw`$e^{t}$`,String.raw`$1$`,String.raw`$e^{2t}$`],a:0,ex:String.raw`$\frac{dw}{dt} = y\,e^{t} + x(-e^{-t}) = e^{t}e^{-t} - e^{t}e^{-t} = 0$. Efectivamente $w = e^{t} \cdot e^{-t} = 1$: el punto viaja sobre la hipérbola de nivel $w = 1$, así que w no puede cambiar.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $z = x^{2} + 3y^{2}$ con $x = t^{2}$ e $y = t$, entonces $\frac{dz}{dt} =$`,o:[String.raw`$4t^{3} + 6t$`,String.raw`$2t + 6$`,String.raw`$4t^{2} + 6t$`,String.raw`$t^{4} + 3t^{2}$`],a:0,ex:String.raw`$\frac{dz}{dt} = 2x(2t) + 6y(1) = 4t^{3} + 6t$. Comprobación directa: $z = (t^{2})^{2} + 3t^{2} = t^{4} + 3t^{2}$, que deriva a $4t^{3} + 6t$. Derivar primero y sustituir después (o al revés) debe coincidir.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`Si $z = x^{2}y$ con $x = \cos t$ e $y = \sin t$, el valor de $\frac{dz}{dt}$ en $t = \pi/2$ es:`,o:[String.raw`$0$`,String.raw`$-1$`,String.raw`$1$`,String.raw`$2$`],a:0,ex:String.raw`$\frac{dz}{dt} = 2xy(-\sin t) + x^{2}\cos t$. En $t = \pi/2$: $x = \cos(\pi/2) = 0$, $y = 1$, $-\sin t = -1$, $\cos t = 0$. Todo se anula: $\frac{dz}{dt} = 0$. Evaluar las intermedias antes de derivar (¡no!) o después (sí) marca la diferencia; aquí se deriva primero y se evalúa al final.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`Si $z = f(u, v)$ con $u = x + y$ y $v = x - y$, entonces $\frac{\partial z}{\partial x} =$`,o:[String.raw`$\frac{\partial z}{\partial u}\cdot 1 + \frac{\partial z}{\partial v}\cdot 1$`,String.raw`$\frac{\partial z}{\partial u} - \frac{\partial z}{\partial v}$`,String.raw`$\frac{\partial z}{\partial u} \cdot \frac{\partial z}{\partial v}$`,String.raw`$\frac{\partial z}{\partial u}$ únicamente`],a:0,ex:String.raw`Ambas intermedias dependen de x (con coeficiente 1 y 1): hay dos caminos de z a x y ambos aportan. El diagrama de árbol evita olvidar ramas: $z \to u \to x$ y $z \to v \to x$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $z = f(u, v)$ con $u = xy$ y $v = x + y$, entonces $\frac{\partial z}{\partial x} =$`,o:[String.raw`$y\,\frac{\partial z}{\partial u} + \frac{\partial z}{\partial v}$`,String.raw`$x\,\frac{\partial z}{\partial u} + \frac{\partial z}{\partial v}$`,String.raw`$y\,\frac{\partial z}{\partial u} - \frac{\partial z}{\partial v}$`,String.raw`$\frac{\partial z}{\partial u} + \frac{\partial z}{\partial v}$`],a:0,ex:String.raw`$\frac{\partial u}{\partial x} = y$ y $\frac{\partial v}{\partial x} = 1$: los coeficientes del árbol son las derivadas parciales de las intermedias respecto a la independiente. Para $\frac{\partial z}{\partial y}$ serían $x$ y 1.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`Si $w = f(x, y, t)$ con $x = x(t)$ e $y = y(t)$, la derivada total $\frac{dw}{dt}$ correcta es:`,o:[String.raw`$\frac{\partial w}{\partial x}\frac{dx}{dt} + \frac{\partial w}{\partial y}\frac{dy}{dt} + \frac{\partial w}{\partial t}$: hay un tercer camino directo de $w$ a $t$`,String.raw`$\frac{\partial w}{\partial x}\frac{dx}{dt} + \frac{\partial w}{\partial y}\frac{dy}{dt}$, sin término adicional`,String.raw`$\frac{\partial w}{\partial t}$ únicamente`,String.raw`$\frac{\partial w}{\partial x} + \frac{\partial w}{\partial y} + \frac{\partial w}{\partial t}$`],a:0,ex:String.raw`Cuando t aparece como independiente <i>y</i> dentro de f, hay tres caminos: vía x, vía y y el directo. La notación distingue $\frac{dw}{dt}$ (total, con todo) de $\frac{\partial w}{\partial t}$ (solo el camino directo). Es la situación típica de campos que evolucionan con el tiempo.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $z = x^{2} + y^{2}$ con $x = 2t$ e $y = 3t$, entonces $\frac{dz}{dt} =$`,o:[String.raw`$26t$`,String.raw`$13t$`,String.raw`$10t$`,String.raw`$26$`],a:0,ex:String.raw`$\frac{dz}{dt} = 2x(2) + 2y(3) = 4x + 6y = 4(2t) + 6(3t) = 26t$. Comprobación: $z = 4t^{2} + 9t^{2} = 13t^{2}$, que deriva a $26t$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $z = xy$ con $x = s + t$ e $y = s - t$, entonces $\frac{\partial z}{\partial s} =$`,o:[String.raw`$2s$`,String.raw`$2t$`,String.raw`$s - t$`,String.raw`$s + t$`],a:0,ex:String.raw`$\frac{\partial z}{\partial s} = y(1) + x(1) = (s - t) + (s + t) = 2s$. Comprobación: $z = (s + t)(s - t) = s^{2} - t^{2}$, con $\partial z/\partial s = 2s$. Las contribuciones cruzadas se cancelan elegantemente.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Con los mismos datos ($z = xy$, $x = s + t$, $y = s - t$), $\frac{\partial z}{\partial t} =$`,o:[String.raw`$-2t$`,String.raw`$2t$`,String.raw`$2s$`,String.raw`$0$`],a:0,ex:String.raw`$\frac{\partial z}{\partial t} = y(1) + x(-1) = (s - t) - (s + t) = -2t$. Coincide con derivar $z = s^{2} - t^{2}$ respecto a t. La regla de la cadena y la sustitución previa deben dar siempre lo mismo.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si la ecuación $x^{2} + y^{2} = 1$ define a $y$ como función implícita de $x$, entonces $\frac{dy}{dx} =$`,o:[String.raw`$-\frac{x}{y}$`,String.raw`$\frac{x}{y}$`,String.raw`$-\frac{y}{x}$`,String.raw`$2x + 2y$`],a:0,ex:String.raw`Derivando ambos lados respecto a x: $2x + 2y\frac{dy}{dx} = 0 \Rightarrow \frac{dy}{dx} = -\frac{x}{y}$. La diferenciación implícita ES la regla de la cadena aplicada a una variable intermedia desconocida.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`Si $z = f(x^{2} + y^{2})$ para una función derivable $f$ de una variable, entonces $\frac{\partial z}{\partial x} =$`,o:[String.raw`$2x\,f'\!\left(x^{2} + y^{2}\right)$`,String.raw`$f'\!\left(x^{2} + y^{2}\right)$`,String.raw`$2x + 2y$`,String.raw`$2y\,f'\!\left(x^{2} + y^{2}\right)$`],a:0,ex:String.raw`Aquí hay una sola intermedia $u = x^{2} + y^{2}$: $\frac{\partial z}{\partial x} = f'(u)\frac{\partial u}{\partial x} = 2x f'(u)$. Reconocer la composición "una intermedia" simplifica mucho: la función externa solo se deriva una vez y se multiplica por la derivada parcial de u.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`En el entrenamiento de un modelo de IA, la pérdida es $L = p^{2} + q^{2}$ con parámetros reparametrizados $p = \theta^{2}$ y $q = 2\theta$. La razón de cambio $\frac{dL}{d\theta}$ es:`,o:[String.raw`$4\theta^{3} + 8\theta$`,String.raw`$2\theta + 4$`,String.raw`$4\theta^{2} + 8$`,String.raw`$\theta^{4} + 4\theta^{2}$`],a:0,ex:String.raw`$\frac{dL}{d\theta} = 2p(2\theta) + 2q(2) = 4\theta^{3} + 8\theta$. Comprobación: $L = \theta^{4} + 4\theta^{2}$. En gradient descent, esta derivada total es exactamente la componente del gradiente que el optimizador usa para actualizar $\theta$.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`Un dron de un sistema de navegación con IA sigue la trayectoria $x = \cos t$, $y = \sin t$ y $z = t$, y su distancia al origen al cuadrado es $w = x^{2} + y^{2} + z^{2}$. La razón de cambio $\frac{dw}{dt}$ es`,o:[String.raw`$2t$`,String.raw`$2$`,String.raw`$0$`,String.raw`$2t + 2$`],a:0,ex:String.raw`$\frac{dw}{dt} = 2x(-\sin t) + 2y\cos t + 2z(1) = -2\sin t\cos t + 2\sin t\cos t + 2t = 2t$. Las dos primeras ramas se cancelan (x e y viven en la esfera de radio 1) y sobrevive el camino de z. En efecto $w = 1 + t^{2}$: el dron asciende en hélice y su distancia al origen crece.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`Si $z = \frac{x}{y}$ con $x = t^{2}$ e $y = t^{3}$, entonces $\frac{dz}{dt} =$`,o:[String.raw`$-\frac{1}{t^{2}}$`,String.raw`$\frac{1}{t^{2}}$`,String.raw`$-\frac{2}{t^{3}}$`,String.raw`$\frac{2}{t}$`],a:0,ex:String.raw`$\frac{dz}{dt} = \frac{1}{y}(2t) - \frac{x}{y^{2}}(3t^{2}) = \frac{2}{t^{2}} - \frac{3t^{4}}{t^{6}} = \frac{2}{t^{2}} - \frac{3}{t^{2}} = -\frac{1}{t^{2}}$. Comprobación: $z = \frac{t^{2}}{t^{3}} = \frac{1}{t}$, cuya derivada es $-\frac{1}{t^{2}}$. Las dos contribuciones casi se cancelan: un error de signo las distinguiría.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`La producción de un laboratorio abierto es $P = f(L, K)$, donde la mano de obra $L(t)$ y el capital $K(t)$ crecen con el tiempo. La razón de cambio de la producción es:`,o:[String.raw`$\frac{dP}{dt} = f_{L}\,L'(t) + f_{K}\,K'(t)$`,String.raw`$\frac{dP}{dt} = f_{L} + f_{K}$`,String.raw`$\frac{dP}{dt} = f_{L}\,L'(t) \cdot f_{K}\,K'(t)$`,String.raw`$\frac{dP}{dt} = f(L'(t), K'(t))$`],a:0,ex:String.raw`Cada insumo contribuye con su productividad marginal ($f_{L}$, $f_{K}$) multiplicada por su ritmo de crecimiento. Es la regla de la cadena en análisis económico: el crecimiento total descompone en aportación del empleo más aportación del capital.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $z = f(x, y)$ con $x = r\cos\theta$ e $y = r\sin\theta$, entonces $\frac{\partial z}{\partial r} =$`,o:[String.raw`$\frac{\partial f}{\partial x}\cos\theta + \frac{\partial f}{\partial y}\sin\theta$`,String.raw`$-\frac{\partial f}{\partial x}\sin\theta + \frac{\partial f}{\partial y}\cos\theta$`,String.raw`$r\frac{\partial f}{\partial x}\cos\theta + r\frac{\partial f}{\partial y}\sin\theta$`,String.raw`$\frac{\partial f}{\partial x} + \frac{\partial f}{\partial y}$`],a:0,ex:String.raw`$\frac{\partial x}{\partial r} = \cos\theta$ y $\frac{\partial y}{\partial r} = \sin\theta$: la derivada radial es la proyección del gradiente sobre la dirección radial $(\cos\theta, \sin\theta)$. Este cálculo es el puente entre la regla de la cadena y las coordenadas polares del siguiente tema.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Con los mismos datos ($z = f(x, y)$, $x = r\cos\theta$, $y = r\sin\theta$), $\frac{\partial z}{\partial \theta} =$`,o:[String.raw`$-r\,\frac{\partial f}{\partial x}\sin\theta + r\,\frac{\partial f}{\partial y}\cos\theta$`,String.raw`$\frac{\partial f}{\partial x}\cos\theta + \frac{\partial f}{\partial y}\sin\theta$`,String.raw`$-r\,\frac{\partial f}{\partial x}\cos\theta + r\,\frac{\partial f}{\partial y}\sin\theta$`,String.raw`$0$`],a:0,ex:String.raw`$\frac{\partial x}{\partial \theta} = -r\sin\theta$ y $\frac{\partial y}{\partial \theta} = r\cos\theta$: la derivada angular mide cómo cambia f al girar, proyectando el gradiente sobre la dirección tangencial $(-\sin\theta, \cos\theta)$. Si f es radial ($f = g(r)$), esta derivada da 0.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $w = xyz$ con $x = t$, $y = t^{2}$ y $z = t^{3}$, entonces $\frac{dw}{dt} =$`,o:[String.raw`$6t^{5}$`,String.raw`$3t^{5}$`,String.raw`$t^{5}$`,String.raw`$6t^{6}$`],a:0,ex:String.raw`$\frac{dw}{dt} = yz(1) + xz(2t) + xy(3t^{2}) = t^{5} + 2t^{5} + 3t^{5} = 6t^{5}$. Comprobación: $w = t \cdot t^{2} \cdot t^{3} = t^{6}$. Con tres intermedias hay tres caminos y las tres contribuciones son proporcionales (1:2:3).`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`Si $z = f(x, y)$ con $x = x(s, t)$ e $y = y(s, t)$, entonces $\frac{\partial z}{\partial s} =$`,o:[String.raw`$\frac{\partial f}{\partial x}\frac{\partial x}{\partial s} + \frac{\partial f}{\partial y}\frac{\partial y}{\partial s}$`,String.raw`$\frac{\partial f}{\partial x} + \frac{\partial f}{\partial y}$`,String.raw`$\frac{\partial f}{\partial x}\frac{\partial x}{\partial t} + \frac{\partial f}{\partial y}\frac{\partial y}{\partial t}$`,String.raw`$\frac{\partial z}{\partial s} \cdot \frac{\partial z}{\partial t}$`],a:0,ex:String.raw`Al derivar respecto a s, la otra variable independiente t se mantiene constante y solo se recorren los caminos que terminan en s. La estructura es idéntica a la de una variable intermedia, pero sumando sobre las intermedias.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`Si $z = xy$ con $x = s + t^{2}$ e $y = s - t^{2}$, entonces $\frac{\partial z}{\partial t} =$`,o:[String.raw`$-4t^{3}$`,String.raw`$4t^{3}$`,String.raw`$-2t^{2}$`,String.raw`$2t$`],a:0,ex:String.raw`$\frac{\partial z}{\partial t} = y(2t) + x(-2t) = 2t(y - x) = 2t(-2t^{2}) = -4t^{3}$. Comprobación: $z = (s + t^{2})(s - t^{2}) = s^{2} - t^{4}$, con $\partial z/\partial t = -4t^{3}$. El signo negativo proviene de que x crece con t mientras y decrece.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`Si $F(x, y, z) = 0$ define a $z$ como función de $x$ y $y$ (con $F_{z} \neq 0$), entonces $\frac{\partial z}{\partial x} =$`,o:[String.raw`$-\frac{F_{x}}{F_{z}}$`,String.raw`$\frac{F_{x}}{F_{z}}$`,String.raw`$-\frac{F_{z}}{F_{x}}$`,String.raw`$F_{x} - F_{z}$`],a:0,ex:String.raw`Derivando $F(x, y, z(x, y)) = 0$ respecto a x con la regla de la cadena: $F_{x} + F_{z}\frac{\partial z}{\partial x} = 0$, de donde el fórmula implícita. El signo negativo viene de despejar; se olvida con frecuencia.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`El prototipo de dispensador cilíndrico diseñado por el equipo de producto se llena con $V = \pi r^{2}h$. Si $r$ crece a razón de 2 cm/s y $h$ decrece a razón de 1 cm/s, entonces en el instante con $r = 2$ y $h = 3$ (cm), $\frac{dV}{dt}$ vale:`,o:[String.raw`$20\pi\ \text{cm}^{3}/\text{s}$`,String.raw`$24\pi\ \text{cm}^{3}/\text{s}$`,String.raw`$4\pi\ \text{cm}^{3}/\text{s}$`,String.raw`$-4\pi\ \text{cm}^{3}/\text{s}$`],a:0,ex:String.raw`$\frac{dV}{dt} = 2\pi rh\,\frac{dr}{dt} + \pi r^{2}\frac{dh}{dt} = 2\pi(2)(3)(2) + \pi(4)(-1) = 24\pi - 4\pi = 20\pi$ cm cúbicos por segundo. Los problemas de razones relacionadas son la regla de la cadena con datos numéricos: cada tasa va con su factor parcial.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`En el diagrama de árbol para $z = f(x, y)$ con $x = g(s, t)$ e $y = h(s, t)$, para hallar $\frac{\partial z}{\partial t}$ se:`,o:[String.raw`Multiplican las derivadas de cada rama y se suman las contribuciones de todos los caminos que terminan en $t$`,String.raw`Multiplican las derivadas de todos los caminos entre sí`,String.raw`Suman las derivadas de las ramas y se multiplica por $t$`,String.raw`Derivan solo los caminos que pasan por $x$`],a:0,ex:String.raw`La lectura del árbol: $\frac{\partial z}{\partial t} = \frac{\partial z}{\partial x}\frac{\partial x}{\partial t} + \frac{\partial z}{\partial y}\frac{\partial y}{\partial t}$. Dos caminos ($z \to x \to t$ y $z \to y \to t$), dos productos, una suma. Dibujarlo antes de calcular previene olvidos y signos erróneos.`}
+];
+
+/* BANCO — Cambio de coordenadas: rectificación de regiones y polares (25) */
+const BANK_CC = [
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Al usar coordenadas polares ($x = r\cos\theta$, $y = r\sin\theta$), el elemento de área se transforma en:`,o:[String.raw`$dA = r\,dr\,d\theta$`,String.raw`$dA = dr\,d\theta$`,String.raw`$dA = r^{2}\,dr\,d\theta$`,String.raw`$dA = \theta\,dr\,d\theta$`],a:0,ex:String.raw`El jacobiano del cambio polar es $r$: $\left|\frac{\partial(x, y)}{\partial(r, \theta)}\right| = \left|\begin{vmatrix} \cos\theta & -r\sin\theta \\ \sin\theta & r\cos\theta \end{vmatrix}\right| = r\cos^{2}\theta + r\sin^{2}\theta = r$. Olvidar este factor es el error nº 1 del tema.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`El jacobiano del cambio a coordenadas polares, $\frac{\partial(x, y)}{\partial(r, \theta)}$, vale:`,o:[String.raw`$r$`,String.raw`$1$`,String.raw`$r^{2}$`,String.raw`$\theta$`],a:0,ex:String.raw`Calculando: $\frac{\partial x}{\partial r} = \cos\theta$, $\frac{\partial x}{\partial \theta} = -r\sin\theta$, $\frac{\partial y}{\partial r} = \sin\theta$, $\frac{\partial y}{\partial \theta} = r\cos\theta$. El determinante es $r\cos^{2}\theta + r\sin^{2}\theta = r$, siempre no negativo.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`El valor de $\iint_{D} e^{x^{2} + y^{2}}\,dA$ sobre el disco $D = \{x^{2} + y^{2} \leq 1\}$ es:`,o:[String.raw`$\pi(e - 1)$`,String.raw`$e - 1$`,String.raw`$\frac{\pi(e - 1)}{2}$`,String.raw`$2\pi e$`],a:0,ex:String.raw`En polares: $\int_{0}^{2\pi}\int_{0}^{1} e^{r^{2}}\,r\,dr\,d\theta$. El interno vale $\frac{e^{r^{2}}}{2}\Big|_{0}^{1} = \frac{e - 1}{2}$ (el factor $r$ es la derivada interna que lo hace posible); multiplicando por $2\pi$: $\pi(e - 1)$. En cartesianas esta integral es imparable; en polares, trivial.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`El área del disco de radio 2, calculada como $\int_{0}^{2\pi}\int_{0}^{2} r\,dr\,d\theta$, es:`,o:[String.raw`$4\pi$`,String.raw`$2\pi$`,String.raw`$8\pi$`,String.raw`$\frac{8\pi}{3}$`],a:0,ex:String.raw`Interno: $\int_{0}^{2} r\,dr = 2$. Externo: $2\pi \cdot 2 = 4\pi$. Coincide con $\pi R^{2} = 4\pi$: la integral polar del área reproduce la fórmula geométrica.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Un sensor de distancia de un robot con IA registra en cada punto el valor $\sqrt{x^{2} + y^{2}}$. La integral acumulada $\iint_{D} \sqrt{x^{2} + y^{2}}\,dA$ sobre el disco $D = \{x^{2} + y^{2} \leq 4\}$ es:`,o:[String.raw`$\frac{16\pi}{3}$`,String.raw`$\frac{8\pi}{3}$`,String.raw`$8\pi$`,String.raw`$4\pi$`],a:0,ex:String.raw`Como $\sqrt{x^{2} + y^{2}} = r$: $\int_{0}^{2\pi}\int_{0}^{2} r \cdot r\,dr\,d\theta = 2\pi \cdot \frac{8}{3} = \frac{16\pi}{3}$. El integrando se convierte en r y el elemento de área aporta otro r: quedan dos factores.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Para el semicírculo superior $D = \{x^{2} + y^{2} \leq 4,\ y \geq 0\}$, la descripción polar correcta es:`,o:[String.raw`$0 \leq r \leq 2$ y $0 \leq \theta \leq \pi$`,String.raw`$0 \leq r \leq 2$ y $0 \leq \theta \leq 2\pi$`,String.raw`$0 \leq r \leq 4$ y $0 \leq \theta \leq \pi$`,String.raw`$0 \leq r \leq 2$ y $-\pi \leq \theta \leq 0$`],a:0,ex:String.raw`El radio máximo es 2 (no $2^{2}$: r es la distancia, no el cuadrado) y el semicírculo superior barre ángulos de 0 a $\pi$. Dibujar la región y "barrerla" con un radio desde el origen da ambos límites.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Una arandela del chasis de un producto diseñado por el equipo ocupa la corona circular entre las circunferencias $r = 1$ y $r = 3$ (en cm). El área de material de la arandela es:`,o:[String.raw`$8\pi$`,String.raw`$9\pi$`,String.raw`$4\pi$`,String.raw`$6\pi$`],a:0,ex:String.raw`$\int_{0}^{2\pi}\int_{1}^{3} r\,dr\,d\theta = 2\pi \cdot \frac{9 - 1}{2} = 8\pi$. Coincide con $\pi(3^{2} - 1^{2}) = 8\pi$ cm$^{2}$: el dato que el equipo usa para estimar el corte del material. El anillo es la región polar por excelencia: límites constantes en ambos ángulos y radios.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{D} (x^{2} + y^{2})\,dA$ sobre el disco $D = \{x^{2} + y^{2} \leq 9\}$ es:`,o:[String.raw`$\frac{81\pi}{2}$`,String.raw`$27\pi$`,String.raw`$\frac{27\pi}{2}$`,String.raw`$81\pi$`],a:0,ex:String.raw`$\int_{0}^{2\pi}\int_{0}^{3} r^{2} \cdot r\,dr\,d\theta = 2\pi \cdot \frac{3^{4}}{4} = 2\pi \cdot \frac{81}{4} = \frac{81\pi}{2}$. Patrón útil: $\iint_{r \leq R} (x^{2} + y^{2})\,dA = \frac{\pi R^{4}}{2}$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`El dial de un dispositivo diseñado por el equipo ocupa el cuarto de disco $D = \{x^{2} + y^{2} \leq 4,\ x \geq 0,\ y \geq 0\}$ (en cm). Su área es:`,o:[String.raw`$\int_{0}^{\pi/2}\int_{0}^{2} r\,dr\,d\theta = \pi$`,String.raw`$\int_{0}^{2\pi}\int_{0}^{2} r\,dr\,d\theta = 4\pi$`,String.raw`$\int_{0}^{\pi}\int_{0}^{2} r\,dr\,d\theta = 2\pi$`,String.raw`$\int_{0}^{\pi/2}\int_{0}^{4} r\,dr\,d\theta = 2\pi$`],a:0,ex:String.raw`El primer cuadrante barre $\theta \in [0, \pi/2]$ y el radio llega a 2: el área es $\frac{\pi}{2} \cdot 2 = \pi$, un cuarto del disco completo ($4\pi$). Los límites angulares codifican el "sector" de la región.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`El valor de $\iint_{D} (x^{2} + y^{2})\,dA$ sobre el semicírculo superior $D = \{x^{2} + y^{2} \leq 4,\ y \geq 0\}$ es:`,o:[String.raw`$4\pi$`,String.raw`$8\pi$`,String.raw`$2\pi$`,String.raw`$\frac{16\pi}{3}$`],a:0,ex:String.raw`$\int_{0}^{\pi}\int_{0}^{2} r^{3}\,dr\,d\theta = \pi \cdot \left[\frac{r^{4}}{4}\right]_{0}^{2} = \pi \cdot 4 = 4\pi$. El disco completo de radio 2 daría $2\pi \cdot 4 = 8\pi$; como el integrando no depende de $\theta$ y el semicírculo barre la mitad del ángulo, el resultado es exactamente la mitad: $4\pi$.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`Para el cambio lineal $x = u + v$, $y = u - v$, el jacobiano absoluto vale:`,o:[String.raw`$\left|\begin{vmatrix} 1 & 1 \\ 1 & -1 \end{vmatrix}\right| = 2$`,String.raw`$\left|\begin{vmatrix} 1 & 1 \\ 1 & -1 \end{vmatrix}\right| = 0$`,String.raw`$\left|\begin{vmatrix} 1 & 1 \\ 1 & -1 \end{vmatrix}\right| = 1$`,String.raw`$\left|\begin{vmatrix} 1 & 1 \\ 1 & -1 \end{vmatrix}\right| = \frac{1}{2}$`],a:0,ex:String.raw`$\frac{\partial(x, y)}{\partial(u, v)} = (1)(-1) - (1)(1) = -2$, y con valor absoluto: 2. Ojo: al usar $u, v$ como variables de integración se puede necesitar el jacobiano inverso ($\frac{1}{2}$); identifica siempre quién es "entrada" y quién "salida".`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`En visión computacional, un sistema de IA registra el paralelogramo acotado por $x + y = 1$, $x + y = 4$, $x - y = 0$ y $x - y = 2$, y lo "rectifica" con el cambio $u = x + y$, $v = x - y$. Su área es:`,o:[String.raw`$3$: el rectángulo $[1, 4] \times [0, 2]$ pesado por el jacobiano $\frac{1}{2}$`,String.raw`$6$: el área del rectángulo $[1, 4] \times [0, 2]$ sin jacobiano`,String.raw`$1.5$: el área del rectángulo dividida entre 4`,String.raw`$12$: el área del rectángulo multiplicada por 2`],a:0,ex:String.raw`Con $x = \frac{u + v}{2}$, $y = \frac{u - v}{2}$: $\left|\frac{\partial(x, y)}{\partial(u, v)}\right| = \frac{1}{2}$. Área $= \int_{1}^{4}\int_{0}^{2} \frac{1}{2}\,dv\,du = \frac{1}{2} \cdot 3 \cdot 2 = 3$. El cambio convierte el paralelogramo en un rectángulo: eso es "rectificar" una región.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`¿Por qué aparece el factor $r$ en $dA = r\,dr\,d\theta$?`,o:[String.raw`Porque una celda polar pequeña tiene lados $dr$ y $r\,d\theta$: al alejarse del origen, las rebanadas angulares son más anchas`,String.raw`Porque $r$ vale $\sqrt{2}$ en promedio sobre el disco`,String.raw`Para garantizar que la integral dé positiva`,String.raw`Es una convención de notación sin efecto geométrico`],a:0,ex:String.raw`Un "rectangulito polar" en $(r, \theta)$ tiene un lado radial $dr$ y un lado arco de longitud $r\,\Delta\theta$: su área es aproximadamente $r\,dr\,d\theta$. Cerca del origen las celdas son pequeñas (r chico), lejos son grandes: el factor r mide ese estiramiento.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`La región interior a la curva polar $r = 2\cos\theta$ (el círculo de radio 1 centrado en $(1, 0)$) se describe como:`,o:[String.raw`$0 \leq r \leq 2\cos\theta$ con $-\frac{\pi}{2} \leq \theta \leq \frac{\pi}{2}$`,String.raw`$0 \leq r \leq 2$ con $0 \leq \theta \leq 2\pi$`,String.raw`$0 \leq r \leq 2\cos\theta$ con $0 \leq \theta \leq \pi$`,String.raw`$0 \leq r \leq 1$ con $-\frac{\pi}{2} \leq \theta \leq \frac{\pi}{2}$`],a:0,ex:String.raw`El círculo $(x - 1)^{2} + y^{2} = 1$ pasa por el origen y su ecuación polar es $r = 2\cos\theta$ (usando $x^{2} + y^{2} = 2x$). El barrido válido exige $\cos\theta \geq 0$: $\theta \in [-\pi/2, \pi/2]$. Curvas $r = f(\theta)$ generan límites radiales que dependen del ángulo.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Un difusor parabólico diseñado para un producto tiene superficie $z = 9 - x^{2} - y^{2}$ y se apoya sobre el disco $x^{2} + y^{2} \leq 9$ (en cm). El volumen interior del difusor es:`,o:[String.raw`$\frac{81\pi}{2}$`,String.raw`$81\pi$`,String.raw`$\frac{27\pi}{2}$`,String.raw`$27\pi$`],a:0,ex:String.raw`$\int_{0}^{2\pi}\int_{0}^{3} (9 - r^{2})\,r\,dr\,d\theta = 2\pi\left[\frac{9r^{2}}{2} - \frac{r^{4}}{4}\right]_{0}^{3} = 2\pi\left(\frac{81}{2} - \frac{81}{4}\right) = \frac{81\pi}{2}$. El paraboloide truncado sobre su disco base: la simetría circular hace que polar sea la única elección razonable para dimensionar el diseño.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`La integral impropia $\iint_{\mathbb{R}^{2}} e^{-x^{2} - y^{2}}\,dA$ normaliza a la gaussiana 2D, base de muchos modelos generativos de IA. Su valor es:`,o:[String.raw`$\pi$`,String.raw`$\sqrt{\pi}$`,String.raw`$2\pi$`,String.raw`Diverge`],a:0,ex:String.raw`En polares: $\int_{0}^{2\pi}\int_{0}^{\infty} e^{-r^{2}}\,r\,dr\,d\theta = 2\pi \cdot \frac{1}{2} = \pi$. Este cálculo (convergente gracias al factor $r$ y al decaimiento exponencial) es la base de la integral de Gauss $\int_{-\infty}^{\infty} e^{-x^{2}}dx = \frac{\sqrt{\pi}}{2}$ y de la normalización de la campana normal que usan los modelos probabilísticos de IA.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Para el semiplano circular $D = \{x^{2} + y^{2} \leq 9,\ x \leq 0\}$, el intervalo angular correcto es:`,o:[String.raw`$\frac{\pi}{2} \leq \theta \leq \frac{3\pi}{2}$`,String.raw`$0 \leq \theta \leq \pi$`,String.raw`$\pi \leq \theta \leq 2\pi$`,String.raw`$-\frac{\pi}{2} \leq \theta \leq \frac{\pi}{2}$`],a:0,ex:String.raw`La mitad izquierda del plano barre desde el ángulo recto superior ($\pi/2$) pasando por $\pi$ hasta $3\pi/2$. Dibujar y verificar con un punto de prueba (por ejemplo $\theta = \pi$, que sí está en x < 0) confirma el rango.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`La tapa ovalada de un producto diseñado ocupa la elipse $\frac{x^{2}}{4} + \frac{y^{2}}{9} \leq 1$ (en dm). Con el cambio $x = 2u$, $y = 3v$ la elipse se vuelve el disco unitario $u^{2} + v^{2} \leq 1$. El área de la tapa es:`,o:[String.raw`$6\pi$: jacobiano 6 por el área del disco $\pi$`,String.raw`$\pi$: la elipse y el disco tienen la misma área`,String.raw`$12\pi$: el jacobiano se aplica dos veces`,String.raw`$3\pi$: la mitad del producto de semiejes`],a:0,ex:String.raw`$J = \begin{vmatrix} 2 & 0 \\ 0 & 3 \end{vmatrix} = 6$, así que $\text{Área} = \iint_{u^{2}+v^{2}\le1} 6\,du\,dv = 6\pi$. Coincide con la fórmula $\pi ab = \pi(2)(3)$. El cambio lineal "endereza" la elipse en un disco y el jacobiano paga la deformación.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`En un cambio de variables $x = x(u, v)$, $y = y(u, v)$, se integra con $\left|\frac{\partial(x, y)}{\partial(u, v)}\right|$ en valor absoluto porque:`,o:[String.raw`El área de cada celda es una cantidad positiva, aunque la transformación invierta la orientación (determinante negativo)`,String.raw`El determinante siempre es negativo en la práctica`,String.raw`El valor absoluto convierte la integral simple en doble`,String.raw`Es solo una convención sin efecto en el resultado`],a:0,ex:String.raw`El jacobiano mide cuánto se estira o comprime el área localmente; una reflexión lo hace negativo (orientación invertida) pero el tamaño de las celdas sigue siendo positivo. Por eso se toma $|J|$ y las áreas salen positivas.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`El valor de $\iint_{D} xy\,dA$ sobre el cuarto de disco $D = \{x^{2} + y^{2} \leq 1,\ x \geq 0,\ y \geq 0\}$ es:`,o:[String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{16}$`,String.raw`$0$`],a:0,ex:String.raw`En polares: $\int_{0}^{\pi/2}\int_{0}^{1} (r\cos\theta)(r\sin\theta)\,r\,dr\,d\theta = \left(\int_{0}^{\pi/2} \sin\theta\cos\theta\,d\theta\right)\left(\int_{0}^{1} r^{3}\,dr\right) = \frac{1}{2} \cdot \frac{1}{4} = \frac{1}{8}$. El producto angular por radial se separa cuando la región es un sector estándar.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`El cambio a coordenadas polares es especialmente conveniente cuando:`,o:[String.raw`La región es un disco, anillo o sector circular, o el integrando contiene $x^{2} + y^{2}$ (o su raíz)`,String.raw`La región es un rectángulo alineado a los ejes`,String.raw`El integrando es un polinomio lineal en x y y`,String.raw`La función toma valores negativos en parte de la región`],a:0,ex:String.raw`Polares convierte discos y anillos en rectángulos de límites constantes ($0 \le r \le R$, ángulos fijos) y convierte $x^{2} + y^{2}$ en $r^{2}$. Si ni la región ni el integrando son "circulares", polar normalmente complica en vez de simplificar.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`El valor de $\iint_{D} (x + y)\,dA$ sobre el disco $D = \{x^{2} + y^{2} \leq 1\}$ es:`,o:[String.raw`$0$, por simetría: el disco es simétrico y los integrandos $x$ y $y$ son impares`,String.raw`$\pi$`,String.raw`$\frac{\pi}{2}$`,String.raw`$2$`],a:0,ex:String.raw`$\iint x\,dA = \iint y\,dA = 0$ sobre el disco (por cada punto (x, y) está su reflejo con signo opuesto). En polares también se ve: $\int_{0}^{2\pi}(\cos\theta + \sin\theta)\,d\theta = 0$. La simetría puede ahorrar toda la cuenta.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`Con $u = x + y$ y $v = y$, la región acotada por $x + y = 2$, $x + y = 5$, $y = 0$ y $y = 1$ se transforma en:`,o:[String.raw`El rectángulo $2 \leq u \leq 5$, $0 \leq v \leq 1$`,String.raw`El rectángulo $2 \leq v \leq 5$, $0 \leq u \leq 1$`,String.raw`El triángulo con vértices $(2, 0)$, $(5, 0)$ y $(5, 1)$`,String.raw`El disco $u^{2} + v^{2} \leq 1$`],a:0,ex:String.raw`Las rectas $x + y = c$ son líneas de nivel $u = c$ y las horizontales $y = d$ son $v = d$: la banda inclinada entre dos paralelas queda rectificada a un rectángulo. El jacobiano aquí es $\left|\frac{\partial(x,y)}{\partial(u,v)}\right| = 1$ (despejando $y = v$, $x = u - v$).`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`El perfil del botón de un producto conceptual, propuesto por el equipo de diseño, sigue la cardioide $r = 1 + \cos\theta$ (en cm). El área del perfil es:`,o:[String.raw`$\frac{3\pi}{2}$`,String.raw`$\pi$`,String.raw`$2\pi$`,String.raw`$\frac{\pi}{2}$`],a:0,ex:String.raw`$\int_{0}^{2\pi}\int_{0}^{1+\cos\theta} r\,dr\,d\theta = \frac{1}{2}\int_{0}^{2\pi} (1 + \cos\theta)^{2}d\theta = \frac{1}{2}\int_{0}^{2\pi}\left(1 + 2\cos\theta + \cos^{2}\theta\right)d\theta$. Con $\int \cos = 0$ y $\int \cos^{2} = \pi$ sobre $[0, 2\pi]$: $\frac{1}{2}(2\pi + \pi) = \frac{3\pi}{2}$. El límite radial dependiente de $\theta$ se "cuadra" con la media cuadrática del coseno.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Una antena de un sistema inteligente de ciudad cubre un disco de radio 3 km con densidad de dispositivos conectados $\rho(x, y) = 10\left(3 - \sqrt{x^{2} + y^{2}}\right)$ por kilómetro cuadrado. El número total de dispositivos es:`,o:[String.raw`$90\pi \approx 283$`,String.raw`$270$`,String.raw`$30\pi \approx 94$`,String.raw`$180\pi \approx 565$`],a:0,ex:String.raw`En polares: $\int_{0}^{2\pi}\int_{0}^{3} 10(3 - r)\,r\,dr\,d\theta = 20\pi\int_{0}^{3} (3r - r^{2})\,dr = 20\pi\left(\frac{27}{2} - 9\right) = 90\pi$. La densidad decrece linealmente con la distancia a la antena: integrarla en polares toma dos líneas.`}
+];
+
+const QUESTIONS = [...BANK_HES, ...BANK_RECT, ...BANK_TIPO, ...BANK_CAD, ...BANK_CC];
+
+/* ===================== ESTADO Y UTILIDADES ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const LS_KEY = "cvv_calculo_best";
+const LVLNAMES = {1: "Básico", 2: "Intermedio", 3: "Avanzado"};
+let S = null;
+
+/* Render matemático KaTeX: se llama tras cada actualización del DOM. */
+function typeset(root){
+  try{
+    if(window.renderMathInElement){
+      renderMathInElement(root || document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$",  right: "$",  display: false}
+        ],
+        throwOnError: false,
+        strict: "ignore"
+      });
+    }
+  }catch(e){ /* si KaTeX falla, la app sigue funcionando con el texto plano */ }
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function getBest(){ try{ return parseInt(localStorage.getItem(LS_KEY) || "0", 10) || 0; }catch(e){ return 0; } }
+function setBest(v){ try{ localStorage.setItem(LS_KEY, String(v)); }catch(e){} }
+function getMode(){
+  const b = document.querySelector("#segMode button.on");
+  return b ? b.dataset.m : "study";
+}
+function showZone(id){
+  ["controls", "sessionZone", "resultZone"].forEach(z => {
+    const el = document.getElementById(z);
+    if(el) el.style.display = (z === id) ? "" : "none";
+  });
+  window.scrollTo(0, 0);
+}
+
+/* ===================== PANTALLA DE INICIO ===================== */
+function buildSetup(){
+  const counts = {};
+  QUESTIONS.forEach(q => { counts[q.t] = (counts[q.t] || 0) + 1; });
+
+  const tc = $("#topicChips"); tc.innerHTML = "";
+  Object.keys(TOPICS).forEach(k => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip on"; b.dataset.k = k;
+    b.innerHTML = '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:' + TOPICS[k].c + ';margin-right:6px;vertical-align:middle;"></span>'
+      + TOPICS[k].n + " <b>(" + (counts[k] || 0) + ")</b>";
+    b.onclick = () => b.classList.toggle("on");
+    tc.appendChild(b);
+  });
+
+  const cc = $("#ctxChips"); cc.innerHTML = "";
+  Object.keys(CTXS).forEach(k => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip on"; b.dataset.k = k;
+    b.textContent = CTXS[k].n;
+    b.onclick = () => b.classList.toggle("on");
+    cc.appendChild(b);
+  });
+
+  const th = $("#theoryGrid"); th.innerHTML = "";
+  Object.keys(TOPICS).forEach(k => {
+    const d = document.createElement("div");
+    d.className = "tcard";
+    d.innerHTML = "<h3>" + TOPICS[k].n + "</h3>" + TOPICS[k].ref;
+    th.appendChild(d);
+  });
+
+  $("#badgeTotal").textContent = QUESTIONS.length + " ejercicios";
+  const best = getBest();
+  $("#bestLine").textContent = best
+    ? "Mejor resultado registrado en este dispositivo: " + best + "%."
+    : "Aún no hay resultados registrados en este dispositivo.";
+  typeset(th);
+}
+
+/* ===================== SESIÓN ===================== */
+function prepQ(q){
+  const perm = shuffle(q.o.map((txt, i) => ({txt: txt, orig: i})));
+  return {t:q.t, ctx:q.ctx, lvl:q.lvl || 2, q:q.q, ex:q.ex, o:q.o, a:q.a, perm:perm, ci:perm.findIndex(p => p.orig === q.a)};
+}
+
+function startQuiz(){
+  const ts = $$("#topicChips .chip.on").map(b => b.dataset.k);
+  const cs = $$("#ctxChips .chip.on").map(b => b.dataset.k);
+  if(!ts.length || !cs.length){
+    alert("Selecciona al menos un tema y un contexto.");
+    return;
+  }
+  let pool = QUESTIONS.filter(q => ts.includes(q.t) && cs.includes(q.ctx));
+  const lv = $("#lvlSel").value;
+  if(lv !== "all") pool = pool.filter(q => String(q.lvl || 2) === lv);
+  if(pool.length === 0){
+    alert("No hay ejercicios con esa combinación de tema, contexto y nivel. Amplía la selección.");
+    return;
+  }
+  pool = shuffle(pool);
+  const nSel = $("#numQ").value;
+  const n = nSel === "all" ? pool.length : Math.min(parseInt(nSel, 10), pool.length);
+  S = {
+    qs: pool.slice(0, n).map(prepQ),
+    i: 0,
+    mode: getMode(),
+    stats: {resp:0, ok:0, racha:0},
+    answered: false,
+    results: []
+  };
+  showZone("sessionZone");
+  $("#quitBtn").style.display = "";
+  renderQ();
+}
+
+function renderQ(){
+  const q = S.qs[S.i];
+  S.answered = false;
+  $("#qTopic").textContent = TOPICS[q.t].n;
+  $("#qTopic").style.background = TOPICS[q.t].c;
+  $("#qCtx").textContent = CTXS[q.ctx].n;
+  $("#qLvl").textContent = "Nivel: " + LVLNAMES[q.lvl || 2];
+  $("#qCount").textContent = "Pregunta " + (S.i + 1) + " de " + S.qs.length + (S.mode === "exam" ? " · Modo examen" : "");
+  $("#progFill").style.width = (100 * S.i / S.qs.length) + "%";
+  updStats();
+  $("#qText").innerHTML = q.q;
+  const box = $("#opts"); box.innerHTML = "";
+  q.perm.forEach((p, idx) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "opt";
+    b.innerHTML = '<span class="key">' + "abcd"[idx] + ')</span> ' + p.txt;
+    b.onclick = () => pick(idx);
+    box.appendChild(b);
+  });
+  $("#exBox").style.display = "none";
+  $("#exBox").innerHTML = "";
+  $("#nextBtn").style.display = "none";
+  $("#nextBtn").textContent = (S.i === S.qs.length - 1) ? "Ver resultados" : "Siguiente pregunta";
+  typeset($("#sessionZone"));
+}
+
+function updStats(){
+  $("#stResp").textContent = S.stats.resp;
+  const hide = (S.mode === "exam");
+  $("#stOk").textContent = hide ? "—" : S.stats.ok;
+  $("#stRacha").textContent = hide ? "—" : S.stats.racha;
+  $("#stPrec").textContent = (!hide && S.stats.resp) ? Math.round(100 * S.stats.ok / S.stats.resp) + "%" : "—";
+}
+
+function pick(idx){
+  if(!S || S.answered) return;
+  S.answered = true;
+  const q = S.qs[S.i];
+  const ok = (idx === q.ci);
+  const btns = $$("#opts .opt");
+  btns.forEach(b => { b.disabled = true; });
+  if(S.mode === "study"){
+    btns.forEach((b, i) => {
+      if(i === q.ci) b.classList.add("correct");
+      else if(i === idx) b.classList.add("wrong");
+      else b.classList.add("dim");
+    });
+    const exb = $("#exBox");
+    exb.className = "exbox " + (ok ? "ok" : "bad");
+    exb.innerHTML = "<h4>" + (ok ? "Correcto." : "Incorrecto. La respuesta correcta es " + "abcd"[q.ci] + ").") + "</h4><p>" + q.ex + "</p>";
+    exb.style.display = "";
+    S.stats.ok += ok ? 1 : 0;
+    S.stats.racha = ok ? S.stats.racha + 1 : 0;
+    typeset(exb);
+  } else {
+    btns[idx].classList.add("picked");
+  }
+  S.stats.resp++;
+  S.results.push({q:q, picked:idx, ok:ok});
+  updStats();
+  $("#nextBtn").style.display = "";
+}
+
+function next(){
+  if(!S) return;
+  if(S.i < S.qs.length - 1){
+    S.i++;
+    renderQ();
+  } else {
+    finish();
+  }
+}
+
+/* ===================== RESULTADOS ===================== */
+function finish(){
+  const total = S.qs.length;
+  const okc = S.results.filter(r => r.ok).length;
+  const pct = total ? Math.round(100 * okc / total) : 0;
+  const best = getBest();
+  if(pct > best) setBest(pct);
+
+  $("#resPct").textContent = pct + "%";
+  $("#resScore").textContent = okc + " de " + total + " respuestas correctas";
+  let msg;
+  if(pct === 100)     msg = "Dominio total. Combina todos los temas en modo examen para consolidar.";
+  else if(pct >= 80)  msg = "Excelente dominio. Repasa solo los temas con errores y reintenta.";
+  else if(pct >= 60)  msg = "Buen avance. Consulta el repaso rápido de los temas con errores y vuelve a intentarlo.";
+  else if(pct >= 40)  msg = "Vas por buen camino. Estudia el repaso rápido y practica tema por tema antes de combinar.";
+  else                msg = "Conviene estudiar de nuevo el repaso rápido y practicar cada tema por separado.";
+  $("#resMsg").textContent = msg;
+  $("#resBest").textContent = "Mejor resultado registrado en este dispositivo: " + Math.max(pct, best) + "%.";
+
+  const stats = {};
+  S.results.forEach(r => {
+    const k = r.q.t;
+    stats[k] = stats[k] || {ok:0, t:0};
+    stats[k].t++; if(r.ok) stats[k].ok++;
+  });
+  const tb = $("#resTopics"); tb.innerHTML = "";
+  Object.keys(TOPICS).forEach(k => {
+    if(!stats[k]) return;
+    const st = stats[k], p = Math.round(100 * st.ok / st.t);
+    const row = document.createElement("div");
+    row.className = "trow";
+    row.innerHTML = '<div class="tname">' + TOPICS[k].n + '</div>'
+      + '<div class="tbar"><div style="width:' + p + '%;background:' + TOPICS[k].c + '"></div></div>'
+      + '<div class="tnum">' + st.ok + '/' + st.t + '</div>';
+    tb.appendChild(row);
+  });
+
+  const wrong = S.results.filter(r => !r.ok);
+  $("#perfectBox").style.display = wrong.length ? "none" : "";
+  $("#wrongBox").style.display = wrong.length ? "" : "none";
+  const wr = $("#resWrong"); wr.innerHTML = "";
+  wrong.forEach(r => {
+    const d = document.createElement("div");
+    d.className = "rev";
+    const pickTxt = (r.picked != null && r.q.perm[r.picked]) ? r.q.perm[r.picked].txt : "—";
+    d.innerHTML = '<div class="rev-top">'
+      + '<span class="mini" style="background:' + TOPICS[r.q.t].c + '">' + TOPICS[r.q.t].n + '</span>'
+      + '<span class="mini ctx">' + CTXS[r.q.ctx].n + '</span>'
+      + '<span class="mini ctx">Nivel: ' + LVLNAMES[r.q.lvl || 2] + '</span>'
+      + '<span class="rev-state">Incorrecta</span></div>'
+      + '<p class="qq">' + r.q.q + '</p>'
+      + '<p class="ans bad">Tu respuesta: ' + pickTxt + '</p>'
+      + '<p class="ans good">Respuesta correcta: ' + r.q.perm[r.q.ci].txt + '</p>'
+      + '<p class="exp"><b>Explicación:</b> ' + r.q.ex + '</p>';
+    wr.appendChild(d);
+  });
+  typeset($("#resultZone"));
+  $("#retryBtn").textContent = "Repetir las " + wrong.length + " falladas";
+  $("#retryBtn").style.display = wrong.length ? "" : "none";
+  showZone("resultZone");
+}
+
+function retryWrong(){
+  const wrongQs = S.results.filter(r => !r.ok).map(r => r.q);
+  if(!wrongQs.length) return;
+  S = {
+    qs: shuffle(wrongQs).map(prepQ),
+    i: 0,
+    mode: S.mode,
+    stats: {resp:0, ok:0, racha:0},
+    answered: false,
+    results: []
+  };
+  showZone("sessionZone");
+  $("#quitBtn").style.display = "";
+  renderQ();
+}
+
+/* ===================== EVENTOS ===================== */
+$$("#segMode button").forEach(b => {
+  b.onclick = () => {
+    $$("#segMode button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+  };
+});
+$("#allT").onclick = () => $$("#topicChips .chip").forEach(b => b.classList.add("on"));
+$("#noneT").onclick = () => $$("#topicChips .chip").forEach(b => b.classList.remove("on"));
+$("#allC").onclick = () => $$("#ctxChips .chip").forEach(b => b.classList.add("on"));
+$("#noneC").onclick = () => $$("#ctxChips .chip").forEach(b => b.classList.remove("on"));
+$("#startBtn").onclick = startQuiz;
+$("#nextBtn").onclick = next;
+$("#retryBtn").onclick = retryWrong;
+$("#againBtn").onclick = startQuiz;
+$("#homeBtn").onclick = () => { buildSetup(); showZone("controls"); };
+$("#quitBtn").onclick = () => {
+  if(confirm("¿Abandonar la sesión actual? El progreso no respondido se perderá.")){
+    S = null;
+    buildSetup();
+    showZone("controls");
+  }
+};
+document.addEventListener("keydown", e => {
+  if(!S || $("#sessionZone").style.display === "none") return;
+  if(["1","2","3","4"].includes(e.key)){
+    const bs = $$("#opts .opt");
+    const i = parseInt(e.key, 10) - 1;
+    if(bs[i] && !S.answered) bs[i].click();
+  } else if(e.key === "Enter"){
+    if($("#nextBtn").style.display !== "none") $("#nextBtn").click();
+  }
+});
+
+buildSetup();
+showZone("controls");
+</script>
+</body>
+</html>
