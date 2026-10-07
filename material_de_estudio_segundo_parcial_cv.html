@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de práctica — Cálculo en varias variables: hessiana, integrales dobles, regla de la cadena y cambio de coordenadas</title>
+<style>
+@import url("https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css");
+</style>
+<style>
+  :root{
+    --bg:#eff0f1; --card:#ffffff; --ink:#1a1b1c; --muted:#6f7378;
+    --accent:#366ea6; --accent-dark:#334250; --accent-soft:#eaf1f8;
+    --stripe:#ebedee; --border:#c7d0da; --ok:#46875c; --ok-soft:#eaf4ed;
+    --bad:#92453e; --bad-soft:#f7ecea;
+    --r:14px; --shadow:0 1px 3px rgba(26,27,28,.08),0 6px 18px rgba(26,27,28,.06);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg); color:var(--ink); line-height:1.55; font-size:16px;}
+  .wrap{max-width:860px; margin:0 auto; padding:0 18px;}
+  header{background:linear-gradient(160deg,var(--accent-dark) 0%, #3a5a7d 70%, var(--accent) 130%);color:#fff; padding:34px 0 30px;}
+  .kicker{font-size:12px; letter-spacing:2.5px; text-transform:uppercase;opacity:.75; margin-bottom:10px; font-weight:600;}
+  header h1{font-size:clamp(22px,4vw,30px); line-height:1.25; font-weight:800; max-width:760px;}
+  header .sub{margin-top:10px; max-width:680px; font-size:15px; opacity:.88;}
+  .badges{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+  .badge{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25);padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;}
+  details.teoria{background:var(--card); border:1px solid var(--border); border-radius:var(--r);margin:22px 0 0; box-shadow:var(--shadow); overflow:hidden;}
+  details.teoria summary{cursor:pointer; padding:16px 20px; font-weight:700; font-size:15.5px;color:var(--accent-dark); list-style:none; display:flex; align-items:center; gap:10px;user-select:none;}
+  details.teoria summary::-webkit-details-marker{display:none;}
+  details.teoria summary .chev{transition:transform .2s; color:var(--accent); font-size:13px;}
+  details.teoria[open] summary .chev{transform:rotate(90deg);}
+  .teoria-body{padding:4px 20px 22px; border-top:1px solid var(--stripe);}
+  .teoria-body p.intro{margin:14px 0 4px; font-size:14.5px; color:var(--muted);}
+  .tgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:14px;}
+  .tcard{border:1px solid var(--border); border-radius:10px; padding:14px 15px;background:#fbfcfd; font-size:13.8px;}
+  .tcard h3{font-size:13.5px; color:var(--accent-dark); margin-bottom:7px; letter-spacing:.3px;}
+  .tcard p{margin:5px 0;}
+  .tcard b{color:var(--accent-dark);}
+  .controls{background:var(--card); border:1px solid var(--border); border-radius:var(--r);box-shadow:var(--shadow); margin-top:18px; padding:16px 18px;}
+  .ctl-row{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+  .ctl-label{font-size:12px; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); font-weight:700; margin-right:2px;}
+  .seg{display:flex; border:1.5px solid var(--accent); border-radius:10px; overflow:hidden;}
+  .seg button{border:0; background:#fff; color:var(--accent); padding:9px 18px; font-size:14px; font-weight:700; cursor:pointer; transition:background .15s,color .15s; font-family:inherit;}
+  .seg button.on{background:var(--accent); color:#fff;}
+  .chips{display:flex; flex-wrap:wrap; gap:7px;}
+  .chip{border:1.5px solid var(--border); background:#fff; color:var(--accent-dark);border-radius:999px; padding:6px 13px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;font-family:inherit;}
+  .chip:hover{border-color:var(--accent);}
+  .chip.on{background:var(--accent-dark); border-color:var(--accent-dark); color:#fff;}
+  select.sel{border:1.5px solid var(--border); border-radius:10px; padding:8px 12px; font-size:14px;background:#fff; color:var(--ink); cursor:pointer; font-family:inherit;}
+  .btn{border:0; border-radius:10px; padding:11px 20px; font-size:14.5px; font-weight:700; cursor:pointer;transition:transform .08s, box-shadow .15s; font-family:inherit;}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent); color:#fff; box-shadow:0 3px 10px rgba(54,110,166,.35);}
+  .btn-primary:hover{background:#2f6096;}
+  .btn-ghost{background:#fff; color:var(--accent-dark); border:1.5px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--accent); color:var(--accent);}
+  .ctl-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; padding-top:14px; border-top:1px solid var(--stripe);}
+  .muted{color:var(--muted); font-size:13.5px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--r);box-shadow:var(--shadow); margin-top:18px; padding:18px 20px;}
+  .quizbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  .mini{background:var(--accent); color:#fff; border-radius:999px; padding:3px 12px; font-size:12px; font-weight:700;}
+  .mini.ctx{background:#fff; color:var(--muted); border:1.5px solid var(--border);}
+  .spacer{flex:1;}
+  .counter{font-size:13px; color:var(--muted); font-weight:700;}
+  .progress{height:8px; background:var(--stripe); border-radius:999px; overflow:hidden; margin:14px 0 4px;}
+  .progress>div{height:100%; width:0; background:linear-gradient(90deg,var(--accent-dark),var(--accent)); transition:width .3s;}
+  .statsbar{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0 4px;}
+  .stat{background:#fbfcfd; border:1px solid var(--border); border-radius:10px; padding:10px 12px; text-align:center;}
+  .stat .n{font-size:22px; font-weight:800; color:var(--accent-dark); line-height:1.1;}
+  .stat .l{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-top:3px; font-weight:600;}
+  .qtext{font-size:16.5px; margin:16px 0 4px; line-height:1.7;}
+  .opt{display:block; width:100%; text-align:left; background:#fbfcfd;border:1.5px solid var(--border); border-radius:12px; padding:12px 15px; margin:9px 0;font-size:15px; cursor:pointer; transition:all .15s; color:var(--ink); font-family:inherit;line-height:1.65;}
+  .opt:hover:not(:disabled){border-color:var(--accent); background:var(--accent-soft);}
+  .opt:disabled{cursor:default;}
+  .opt .key{display:inline-block; font-weight:800; margin-right:9px; color:var(--accent);}
+  .opt.correct{border-color:var(--ok); background:var(--ok-soft);}
+  .opt.correct .key{color:var(--ok);}
+  .opt.wrong{border-color:var(--bad); background:var(--bad-soft);}
+  .opt.wrong .key{color:var(--bad);}
+  .opt.dim{opacity:.55;}
+  .opt.picked{border-color:var(--accent); background:var(--accent-soft);}
+  .exbox{background:var(--accent-soft); border-left:4px solid var(--accent);border-radius:0 10px 10px 0; padding:13px 16px; margin:14px 0 4px; font-size:14.3px; line-height:1.7;}
+  .exbox.ok{border-color:var(--ok); background:var(--ok-soft);}
+  .exbox.bad{border-color:var(--bad); background:var(--bad-soft);}
+  .exbox h4{margin-bottom:6px; font-size:14.5px;}
+  .quiz-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px;}
+  .hint{font-size:12.5px; color:var(--muted); margin-top:12px; text-align:center;}
+  .card h2{font-size:18px; color:var(--accent-dark);}
+  .card h3{font-size:14.5px; color:var(--accent-dark); margin:16px 0 8px;}
+  .rescore{display:flex; gap:22px; align-items:center; margin:14px 0 6px;}
+  .big{font-size:52px; font-weight:800; color:var(--accent-dark); line-height:1;}
+  .score{font-size:15.5px; font-weight:700;}
+  .trow{display:flex; align-items:center; gap:12px; margin:8px 0;}
+  .tname{width:225px; font-size:13.5px; flex-shrink:0;}
+  .tbar{flex:1; height:10px; background:var(--stripe); border-radius:999px; overflow:hidden;}
+  .tbar>div{height:100%; border-radius:999px;}
+  .tnum{width:52px; text-align:right; font-size:13.5px; font-weight:800; color:var(--accent-dark);}
+  .rev{border:1px solid var(--border); border-left:4px solid var(--bad); border-radius:10px;padding:12px 15px; margin:10px 0; background:#fbfcfd;}
+  .rev .rev-top{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px;}
+  .rev .rev-state{font-size:11.5px; font-weight:800; padding:3px 10px; border-radius:999px; background:var(--bad-soft); color:var(--bad);}
+  .rev .qq{font-size:14.5px; margin:4px 0;}
+  .rev .ans{font-size:13.8px; margin:3px 0;}
+  .rev .ans.bad{color:var(--bad);}
+  .rev .ans.good{color:var(--ok);}
+  .rev .exp{font-size:13.5px; color:#3a4149; background:#fff; border:1px dashed var(--border);border-radius:8px; padding:9px 12px; margin-top:8px;}
+  .good-line{background:var(--ok-soft); color:var(--ok); font-weight:700; border-radius:10px; padding:12px 15px; margin-top:8px;}
+  .foot{font-size:12.5px; color:var(--muted); text-align:center; margin:26px 0 34px;}
+  .katex{font-size:1.08em;}
+  .qtext,.opt,.exbox,.rev,.tcard{overflow-wrap:break-word;}
+  .qtext code,.rev code,.opt code{background:#eef1f4; border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:.9em; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  @media(max-width:640px){
+    .statsbar{grid-template-columns:repeat(2,1fr);}
+    .tname{width:130px;}
+    .rescore{flex-direction:column; gap:6px; align-items:flex-start;}
+    .katex{font-size:1.02em;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">Cálculo en varias variables · Práctica interactiva</div>
+    <h1>Optimización con hessiana, integrales dobles (rectangulares y tipo I/II), regla de la cadena multivariable y cambio de coordenadas</h1>
+    <p class="sub">Ejercicios de opción múltiple con nivel de complejidad elevado, en tres grados (básico, intermedio y avanzado), con fórmulas en LaTeX renderizadas con calidad tipográfica. Las opciones se barajan en cada intento. Contextos: matemáticas, ingeniería en inteligencia artificial e innovación y diseño.</p>
+    <div class="badges">
+      <span class="badge" id="badgeTotal">— ejercicios</span>
+      <span class="badge">Opciones aleatorias a) b) c) d)</span>
+      <span class="badge">Fórmulas en LaTeX (KaTeX)</span>
+      <span class="badge">Explicación paso a paso</span>
+      <span class="badge">3 niveles de dificultad</span>
+      <span class="badge">2 modos: práctica y examen</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <details class="teoria" open>
+    <summary>Repaso rápido de los temas de la sesión <span class="chev">▶</span></summary>
+    <div class="teoria-body">
+      <p class="intro">Fórmulas e ideas clave de cada tema. Consúltalos antes de practicar si necesitas recordar algo; después intenta resolver sin mirar.</p>
+      <div class="tgrid" id="theoryGrid"></div>
+    </div>
+  </details>
+
+  <section class="controls" id="controls">
+    <div class="ctl-row">
+      <span class="ctl-label">Modo</span>
+      <div class="seg" id="segMode">
+        <button type="button" data-m="study" class="on">Práctica</button>
+        <button type="button" data-m="exam">Examen</button>
+      </div>
+      <span class="ctl-label" style="margin-left:14px">Ejercicios</span>
+      <select class="sel" id="numQ">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="40">40</option>
+        <option value="all">Todos</option>
+      </select>
+      <span class="ctl-label" style="margin-left:14px">Nivel</span>
+      <select class="sel" id="lvlSel">
+        <option value="all" selected>Todos</option>
+        <option value="1">Básico</option>
+        <option value="2">Intermedio</option>
+        <option value="3">Avanzado</option>
+      </select>
+    </div>
+    <div class="ctl-row" style="margin-top:12px">
+      <span class="ctl-label">Temas</span>
+      <div class="chips" id="topicChips"></div>
+    </div>
+    <div class="ctl-row" style="margin-top:12px">
+      <span class="ctl-label">Contextos</span>
+      <div class="chips" id="ctxChips"></div>
+    </div>
+    <div class="ctl-actions">
+      <button class="btn btn-ghost" id="allT">Todos los temas</button>
+      <button class="btn btn-ghost" id="noneT">Ningún tema</button>
+      <button class="btn btn-ghost" id="allC">Todos los contextos</button>
+      <button class="btn btn-ghost" id="noneC">Ningún contexto</button>
+      <button class="btn btn-primary" id="startBtn" style="margin-left:auto">Comenzar sesión</button>
+    </div>
+    <p class="muted" id="bestLine" style="margin-top:10px"></p>
+  </section>
+
+  <section class="card" id="sessionZone" style="display:none">
+    <div class="quizbar">
+      <span class="mini" id="qTopic"></span>
+      <span class="mini ctx" id="qCtx"></span>
+      <span class="mini ctx" id="qLvl"></span>
+      <span class="spacer"></span>
+      <span class="counter" id="qCount"></span>
+    </div>
+    <div class="progress"><div id="progFill"></div></div>
+    <div class="statsbar">
+      <div class="stat"><div class="n" id="stResp">0</div><div class="l">Respondidas</div></div>
+      <div class="stat"><div class="n" id="stOk">0</div><div class="l">Correctas</div></div>
+      <div class="stat"><div class="n" id="stRacha">0</div><div class="l">Racha</div></div>
+      <div class="stat"><div class="n" id="stPrec">—</div><div class="l">Precisión</div></div>
+    </div>
+    <p class="qtext" id="qText"></p>
+    <div id="opts"></div>
+    <div class="exbox" id="exBox" style="display:none"></div>
+    <div class="quiz-actions">
+      <button class="btn btn-primary" id="nextBtn" style="display:none">Siguiente</button>
+      <button class="btn btn-ghost" id="quitBtn" style="display:none">Abandonar sesión</button>
+    </div>
+    <p class="hint">Atajos: teclas 1-4 para responder · Enter para continuar.</p>
+  </section>
+
+  <section class="card" id="resultZone" style="display:none">
+    <h2>Resultado de la sesión</h2>
+    <div class="rescore">
+      <div class="big" id="resPct">—</div>
+      <div>
+        <p id="resScore" class="score"></p>
+        <p id="resMsg"></p>
+        <p class="muted" id="resBest" style="margin-top:4px"></p>
+      </div>
+    </div>
+    <h3>Desempeño por tema</h3>
+    <div id="resTopics"></div>
+    <div id="perfectBox" style="display:none"><p class="good-line">Sin errores en esta sesión. Puedes subir la dificultad combinando más temas o usando el modo examen.</p></div>
+    <div id="wrongBox">
+      <h3>Ejercicios fallados</h3>
+      <div id="resWrong"></div>
+    </div>
+    <div class="ctl-actions">
+      <button class="btn btn-primary" id="retryBtn">Repetir las falladas</button>
+      <button class="btn btn-ghost" id="againBtn">Nueva sesión (misma configuración)</button>
+      <button class="btn btn-ghost" id="homeBtn">Volver al inicio</button>
+    </div>
+  </section>
+
+  <p class="foot">Simulador de estudio — Cálculo en varias variables · Optimización con matriz hessiana · Integrales dobles en regiones rectangulares · Regiones tipo I y tipo II · Regla de la cadena multivariable · Cambio de coordenadas y polares</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+"use strict";
+
+const TOPICS = {
+  hes:{n:"Optimización con hessiana", c:"#8b5cf6",
+    ref:String.raw`<p><b>Puntos críticos:</b> en el interior del dominio se resuelve $\nabla f = (f_{x}, f_{y}) = (0, 0)$. Ahí puede haber máximos, mínimos o nada.</p><p><b>Hessiana:</b> $H = \begin{pmatrix} f_{xx} & f_{xy} \\ f_{xy} & f_{yy} \end{pmatrix}$ y su discriminante $D = \det H = f_{xx}f_{yy} - f_{xy}^{2}$.</p><p><b>Criterio:</b> si $D > 0$ y $f_{xx} > 0$ hay mínimo local; si $D > 0$ y $f_{xx} < 0$ hay máximo local; si $D < 0$ hay punto silla; si $D = 0$ el criterio no concluye y hay que analizar a mano.</p>`},
+  rect:{n:"Integrales dobles: regiones rectangulares", c:"#0ea5e9",
+    ref:String.raw`<p><b>Definición:</b> sobre $R = [a, b] \times [c, d]$, la integral doble $\iint_{R} f\,dA$ se evalúa con Fubini como integral iterada: $\int_{a}^{b}\int_{c}^{d} f(x, y)\,dy\,dx$ (o al revés, el resultado no cambia).</p><p><b>Interpretaciones:</b> si $f \geq 0$ es el volumen bajo la superficie $z = f$; $\iint 1\,dA$ es el área de $R$; el valor promedio de f es $\frac{1}{\text{área}(R)}\iint_{R} f\,dA$.</p><p><b>Atajo:</b> si el integrando es separable, $f(x,y) = g(x)h(y)$, entonces $\iint_{R} f\,dA = \left(\int_{a}^{b} g\right)\left(\int_{c}^{d} h\right)$.</p>`},
+  tipo:{n:"Regiones tipo I y tipo II", c:"#f59e0b",
+    ref:String.raw`<p><b>Tipo I (vertical):</b> $a \leq x \leq b$ y $g_{1}(x) \leq y \leq g_{2}(x)$: el integrando se integra primero en y y los límites exteriores son constantes.</p><p><b>Tipo II (horizontal):</b> $c \leq y \leq d$ y $h_{1}(y) \leq x \leq h_{2}(y)$: primero se integra en x.</p><p><b>Invertir el orden:</b> redraw la región y re-describe los límites; a veces una de las dos órdenes es la única viable ($e^{x^{2}}$, $\sin(x^{2})$ no tienen antiderivada elemental).</p><p><b>Área:</b> $\iint_{D} 1\,dA$ da el área de cualquier región plana acotada.</p>`},
+  cad:{n:"Regla de la cadena multivariable", c:"#10b981",
+    ref:String.raw`<p><b>Si $z = f(x, y)$ con $x = g(t)$, $y = h(t)$:</b> $\frac{dz}{dt} = \frac{\partial f}{\partial x}\frac{dx}{dt} + \frac{\partial f}{\partial y}\frac{dy}{dt}$: se multiplican las derivadas de cada rama y se suman los caminos.</p><p><b>Dos independientes:</b> con $x = x(s, t)$, $y = y(s, t)$: $\frac{\partial z}{\partial s} = f_{x}x_{s} + f_{y}y_{s}$ y $\frac{\partial z}{\partial t} = f_{x}x_{t} + f_{y}y_{t}$.</p><p><b>Implícita:</b> si $F(x, y, z) = 0$ define $z(x, y)$, $\frac{\partial z}{\partial x} = -\frac{F_{x}}{F_{z}}$.</p><p><b>Diagrama de árbol:</b> cada camino del dependiente al independiente aporta producto de derivadas.</p>`},
+  cc:{n:"Cambio de coordenadas y polares", c:"#ef4444",
+    ref:String.raw`<p><b>Polares:</b> $x = r\cos\theta$, $y = r\sin\theta$, $x^{2} + y^{2} = r^{2}$ y $dA = r\,dr\,d\theta$ (¡no olvidar el $r$ del jacobiano!).</p><p><b>Jacobiano:</b> para $x = x(u, v)$, $y = y(u, v)$: $dA = \left|\frac{\partial(x, y)}{\partial(u, v)}\right|du\,dv$. El valor absoluto conserva el signo del área.</p><p><b>Rectificar regiones:</b> un buen cambio convierte un paralelogramo o una elipse en un rectángulo o disco.</p><p><b>Cuándo usar polares:</b> discos/anillos/sectores circulares o integrandos con $x^{2} + y^{2}$.</p>`}
+};
+const CTXS = { mat:{n:"Matemáticas"}, ia:{n:"Ingeniería en IA"}, inno:{n:"Innovación y diseño"} };
+
+/* ======================= BANCO HES (91) ======================= */
+const BANK_HES = [
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`Para hallar los puntos críticos de $f(x, y)$ en el interior de su dominio se resuelve el sistema:`,o:[String.raw`$f_{x}(x, y) = 0$ y $f_{y}(x, y) = 0$, es decir, $\nabla f = (0, 0)$`,String.raw`$f_{xx}(x, y) = 0$ y $f_{yy}(x, y) = 0$`,String.raw`$f_{x}(x, y) = f_{y}(x, y)$`,String.raw`$f(x, y) = 0$ y $f_{xy}(x, y) = 0$`],a:0,ex:String.raw`Un extremo local interior exige que ambas derivadas parciales se anulen simultáneamente: el gradiente $\nabla f = (f_{x}, f_{y})$ debe ser el vector cero. Las segundas derivadas no se usan para <i>hallar</i> los puntos, sino para <i>clasificarlos</i>.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`La matriz hessiana de $f(x, y) = x^{3} + 2xy + y^{2}$ es:`,o:[String.raw`$\begin{pmatrix} 6x & 2 \\ 2 & 2 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 3x^{2} & 2 \\ 2 & 2y \end{pmatrix}$`,String.raw`$\begin{pmatrix} 6x & 2x \\ 2y & 2 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 6 & 2 \\ 2 & 2 \end{pmatrix}$`],a:0,ex:String.raw`$f_{x} = 3x^{2} + 2y$ y $f_{y} = 2x + 2y$. Entonces $f_{xx} = 6x$, $f_{xy} = 2$ y $f_{yy} = 2$. La hessiana es simétrica por Schwarz.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`El punto crítico de $f(x, y) = x^{2} + y^{2} - 2x - 4y + 5$ es:`,o:[String.raw`$(1, 2)$`,String.raw`$(2, 1)$`,String.raw`$(-1, -2)$`,String.raw`$(1, -2)$`],a:0,ex:String.raw`$f_{x} = 2x - 2 = 0 \Rightarrow x = 1$ y $f_{y} = 2y - 4 = 0 \Rightarrow y = 2$. Cada ecuación se despeja por separado.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Para $f(x, y) = x^{2} + y^{2} - 2x - 4y + 5$, el punto crítico $(1, 2)$ se clasifica usando $D = f_{xx}f_{yy} - f_{xy}^{2}$ como:`,o:[String.raw`Mínimo local, porque $D = 4 > 0$ y $f_{xx} = 2 > 0$`,String.raw`Máximo local, porque $D = 4 > 0$ y $f_{xx} = 2 > 0$`,String.raw`Punto silla, porque $D = -4 < 0$`,String.raw`El criterio no concluye porque $D = 0$`],a:0,ex:String.raw`$f_{xx} = 2$, $f_{yy} = 2$, $f_{xy} = 0$, así que $D = (2)(2) - 0^{2} = 4 > 0$. Como $f_{xx} > 0$, es mínimo local (de hecho global, con valor $f(1, 2) = 0$).`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`El valor mínimo de $f(x, y) = x^{2} + y^{2} - 2x - 4y + 5$ es:`,o:[String.raw`$0$`,String.raw`$5$`,String.raw`$-5$`,String.raw`$2$`],a:0,ex:String.raw`Completando cuadrados: $f = (x-1)^{2} + (y-2)^{2}$, evidentemente $\geq 0$ y $= 0$ en $(1, 2)$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Para $f(x, y) = x^{2} - y^{2}$, el origen $(0, 0)$ es:`,o:[String.raw`Un punto silla, pues $D = (2)(-2) - 0 = -4 < 0$`,String.raw`Un mínimo local, pues $f_{xx} = 2 > 0$`,String.raw`Un máximo local, pues $f_{yy} = -2 < 0$`,String.raw`Nada: el origen no es punto crítico`],a:0,ex:String.raw`El origen sí es crítico. Pero $D = -4 < 0$: en la dirección x la función crece y en la dirección y decrece: silla.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Para $f(x, y) = xy$, la hessiana en el origen es $\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$ y $D = -1$. La clasificación es:`,o:[String.raw`Punto silla: en la dirección $y = x$ se maximiza y en $y = -x$ se minimiza`,String.raw`Mínimo local: $f_{xx} = 0 \geq 0$`,String.raw`Máximo local: $f_{yy} = 0 \leq 0$`,String.raw`No se puede concluir porque $f_{xx} = 0$`],a:0,ex:String.raw`$D = (0)(0) - 1^{2} = -1 < 0$ basta para afirmar silla.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`Si en un punto crítico se cumple $D = f_{xx}f_{yy} - f_{xy}^{2} < 0$, entonces ahí hay:`,o:[String.raw`Un punto silla, sin importar el signo de $f_{xx}$`,String.raw`Un mínimo local solo si $f_{xx} > 0$`,String.raw`Un máximo local siempre`,String.raw`Nada: la función no es diferenciable ahí`],a:0,ex:String.raw`$D < 0$ significa curvaturas de signos opuestos: silla.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`Si en un punto crítico $D > 0$ y $f_{xx} < 0$, el punto es:`,o:[String.raw`Un máximo local`,String.raw`Un mínimo local`,String.raw`Un punto silla`,String.raw`Inconcluso: hay que usar terceras derivadas`],a:0,ex:String.raw`Curvaturas del mismo signo y $f_{xx} < 0$: la superficie se curva hacia abajo: máximo.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Los puntos críticos de $f(x, y) = x^{3} + y^{3} - 3xy$ son:`,o:[String.raw`$(0, 0)$ y $(1, 1)$`,String.raw`Solo $(0, 0)$`,String.raw`$(1, 1)$ y $(-1, -1)$`,String.raw`$(0, 1)$ y $(1, 0)$`],a:0,ex:String.raw`$y = x^{2}$ y $x = y^{2}$; sustituyendo, $x(x^{3} - 1) = 0$.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Para $f(x, y) = x^{3} + y^{3} - 3xy$, la hessiana en $(0, 0)$ es $\begin{pmatrix} 0 & -3 \\ -3 & 0 \end{pmatrix}$, con $D = -9$. Por tanto $(0, 0)$ es:`,o:[String.raw`Un punto silla`,String.raw`Un mínimo local`,String.raw`Un máximo local`,String.raw`Nada: ahí no se anula el gradiente`],a:0,ex:String.raw`$D = -9 < 0$: silla. El otro punto crítico $(1, 1)$ resulta mínimo.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Para $f(x, y) = x^{3} + y^{3} - 3xy$, el punto crítico $(1, 1)$ con $H = \begin{pmatrix} 6 & -3 \\ -3 & 6 \end{pmatrix}$ es:`,o:[String.raw`Mínimo local con $f(1, 1) = -1$`,String.raw`Máximo local con $f(1, 1) = 1$`,String.raw`Punto silla con $f(1, 1) = 0$`,String.raw`Inconcluso porque $f_{xy} \neq 0$`],a:0,ex:String.raw`$D = 27 > 0$ y $f_{xx} = 6 > 0$: mínimo. $f(1, 1) = -1$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`El punto crítico de $f(x, y) = x^{2} + xy + y^{2} - 3x - 6y$ es:`,o:[String.raw`$(0, 3)$`,String.raw`$(3, 0)$`,String.raw`$(1, 2)$`,String.raw`$(2, 1)$`],a:0,ex:String.raw`Restando las ecuaciones: $3x = 0 \Rightarrow x = 0$, $y = 3$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Para $f(x, y) = x^{2} + xy + y^{2} - 3x - 6y$ en su punto crítico, $H = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}$. La clasificación es:`,o:[String.raw`Mínimo local, con $D = 3 > 0$ y $f_{xx} = 2 > 0$`,String.raw`Máximo local, con $D = 3 > 0$ y $f_{xx} = 2 < 0$`,String.raw`Punto silla, con $D = -3 < 0$`,String.raw`Inconcluso, con $D = 0$`],a:0,ex:String.raw`$D = 3 > 0$ y $f_{xx} = 2 > 0$: mínimo local.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`La función de activación radial gaussiana $f(x, y) = e^{-(x^{2} + y^{2})}$ tiene $f_{xx}(0, 0) = f_{yy}(0, 0) = -2$ y $f_{xy}(0, 0) = 0$. La clasificación es:`,o:[String.raw`Máximo local (y global): $D = 4 > 0$ y $f_{xx} < 0$`,String.raw`Mínimo local: $D = 4 > 0$ y $f_{xx} > 0$`,String.raw`Punto silla: $D = -4 < 0$`,String.raw`No hay puntos críticos`],a:0,ex:String.raw`$D = 4 > 0$, $f_{xx} = -2 < 0$: máximo.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Para $f(x, y) = x^{2} + y^{3} - 6y$, el punto crítico con $y > 0$ y su clasificación son:`,o:[String.raw`$(0, \sqrt{2})$, mínimo local`,String.raw`$(0, \sqrt{2})$, máximo local`,String.raw`$(\sqrt{2}, 0)$, mínimo local`,String.raw`$(0, -\sqrt{2})$, mínimo local`],a:0,ex:String.raw`En $(0, \sqrt{2})$: $f_{xx} = 2$, $f_{yy} = 6\sqrt{2} > 0$, $D > 0$: mínimo.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`En un punto crítico la hessiana es $\begin{pmatrix} 4 & -1 \\ -1 & 4 \end{pmatrix}$. La clasificación es:`,o:[String.raw`Mínimo local, pues $D = 15 > 0$ y $f_{xx} = 4 > 0$`,String.raw`Máximo local, pues $D = 15 > 0$ y $f_{xx} = 4 < 0$`,String.raw`Punto silla, pues $D = -15 < 0$`,String.raw`Inconcluso, pues $f_{xy} \neq 0$`],a:0,ex:String.raw`$D = 15 > 0$ y $f_{xx} = 4 > 0$: mínimo.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`En un punto crítico la hessiana es $\begin{pmatrix} -3 & 2 \\ 2 & -3 \end{pmatrix}$. La clasificación es:`,o:[String.raw`Máximo local, pues $D = 5 > 0$ y $f_{xx} = -3 < 0$`,String.raw`Mínimo local, pues $D = 5 > 0$`,String.raw`Punto silla, pues $D = -5 < 0$`,String.raw`Inconcluso, pues $D = 0$`],a:0,ex:String.raw`$D = 5 > 0$ con $f_{xx} < 0$: máximo.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`Durante el entrenamiento de un modelo de IA, la hessiana de la función de pérdida en un punto crítico es $\begin{pmatrix} 2 & 3 \\ 3 & 2 \end{pmatrix}$. La clasificación es:`,o:[String.raw`Punto silla, pues $D = 4 - 9 = -5 < 0$`,String.raw`Mínimo local, pues $f_{xx} = 2 > 0$`,String.raw`Máximo local, pues $D = 5 > 0$`,String.raw`Inconcluso, pues $f_{xx} \neq f_{yy}$`],a:0,ex:String.raw`$D = -5 < 0$: silla.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`En $f(x, y) = x^{4} + y^{4}$ el origen es un mínimo global evidente, pero el criterio de la hessiana falla porque:`,o:[String.raw`Todas las segundas derivadas se anulan en el origen, así que $D = 0$ y el criterio no concluye`,String.raw`La función no es diferenciable en el origen`,String.raw`La derivada mixta $f_{xy}$ no existe`,String.raw`La hessiana no está definida para polinomios de grado 4`],a:0,ex:String.raw`$D = 0$. Caso inconcluso: hay que analizar con acotación directa.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`Un estudio de diseño produce dos líneas con beneficio $B(q_{1}, q_{2}) = 10q_{1} + 8q_{2} - q_{1}^{2} - q_{2}^{2} - q_{1}q_{2}$. El máximo está en:`,o:[String.raw`$q_{1} = 4$, $q_{2} = 2$`,String.raw`$q_{1} = 2$, $q_{2} = 4$`,String.raw`$q_{1} = 5$, $q_{2} = 3$`,String.raw`$q_{1} = 4$, $q_{2} = -2$`],a:0,ex:String.raw`$q_{2} = 2$, $q_{1} = 4$. Canibalización $-q_{1}q_{2}$.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`Para el beneficio anterior, la hessiana en $(4, 2)$ es $\begin{pmatrix} -2 & -1 \\ -1 & -2 \end{pmatrix}$. Esto confirma:`,o:[String.raw`Es un máximo: $D = 3 > 0$ y $B_{q_{1}q_{1}} = -2 < 0$`,String.raw`Es un mínimo`,String.raw`Es un punto silla`,String.raw`El criterio no decide`],a:0,ex:String.raw`$D = 3 > 0$ con $B_{q_{1}q_{1}} < 0$: máximo.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`La pérdida $L(\theta_{1}, \theta_{2}) = \theta_{1}^{2} + 2\theta_{2}^{2} - 2\theta_{1}\theta_{2} - 4\theta_{2}$ alcanza su mínimo global en:`,o:[String.raw`$(\theta_{1}, \theta_{2}) = (2, 2)$`,String.raw`$(\theta_{1}, \theta_{2}) = (0, 2)$`,String.raw`$(\theta_{1}, \theta_{2}) = (2, 0)$`,String.raw`$(\theta_{1}, \theta_{2}) = (1, 1)$`],a:0,ex:String.raw`$\theta_{1} = \theta_{2}$, $2\theta_{2} = 4 \Rightarrow (2, 2)$.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`Para la pérdida anterior, $H = \begin{pmatrix} 2 & -2 \\ -2 & 4 \end{pmatrix}$ en todas partes. Esto demuestra que $(2, 2)$ es mínimo global porque:`,o:[String.raw`$D = 4 > 0$ y $L_{\theta_{1}\theta_{1}} = 2 > 0$, y como H no depende del punto, es mínimo en todo el dominio`,String.raw`$D = -4 < 0$, luego hay valle`,String.raw`$D = 0$, luego es plana`,String.raw`La hessiana con término cruzado negativo implica máximo`],a:0,ex:String.raw`$D > 0$ y $L_{\theta_{1}\theta_{1}} > 0$ en cada punto: convexa estricta.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`El beneficio $B(x, y) = -2x^{2} - y^{2} + 4x + 6y - 10$. El máximo es:`,o:[String.raw`$1$ millón, en $(1, 3)$`,String.raw`$6$ millones, en $(1, 3)$`,String.raw`$18$ millones, en $(0, 3)$`,String.raw`$-2$ millones`],a:0,ex:String.raw`$B(1, 3) = -2 - 9 + 4 + 18 - 10 = 1$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`La hessiana de $f(x, y) = e^{x}\sin y$ en $(0, \pi/2)$ es:`,o:[String.raw`$\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$, determinante $-1$`,String.raw`$\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$, determinante $-1$`,String.raw`$\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$, determinante $1$`,String.raw`$\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}$, determinante $1$`],a:0,ex:String.raw`$f_{xx} = 1$, $f_{xy} = 0$, $f_{yy} = -1$. Det $-1$.`},
+{t:"hes",ctx:"mat",lvl:2,q:String.raw`Si $f_{xx}(a, b) = 4$, $f_{yy}(a, b) = 9$ y $f_{xy}(a, b) = 6$ en un punto crítico:`,o:[String.raw`$D = 0$: el criterio no concluye`,String.raw`$D = 72 > 0$: mínimo`,String.raw`$D = -9 < 0$: silla`,String.raw`$D = 13 > 0$: máximo`],a:0,ex:String.raw`$D = (4)(9) - 36 = 0$.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`¿Qué caracteriza geométricamente a un punto silla?`,o:[String.raw`Que en una dirección la función sube y en otra perpendicular baja, aunque el gradiente se anule`,String.raw`Que es un mínimo en todas las direcciones`,String.raw`Que es un máximo en todas las direcciones`,String.raw`Que la función no es diferenciable ahí`],a:0,ex:String.raw`Ejemplo: $f(x, y) = xy$.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`El gradiente de $f(x, y) = 3x^{2} + 2xy - y^{2}$ es:`,o:[String.raw`$\nabla f = (6x + 2y,\ 2x - 2y)$`,String.raw`$\nabla f = (6x,\ -2y)$`,String.raw`$\nabla f = (3x + 2y,\ 2x - y)$`,String.raw`$\nabla f = (6x + 2y,\ 2x + 2y)$`],a:0,ex:String.raw`Término a término.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`Si $f_{xx}(a, b) > 0$ en un punto crítico, geométricamente esto significa:`,o:[String.raw`Concavidad hacia arriba en la dirección del eje $x$`,String.raw`Concavidad hacia abajo en la dirección del eje $x$`,String.raw`La función es constante`,String.raw`El punto es máximo`],a:0,ex:String.raw`Segunda derivada positiva: convexa.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`La matriz hessiana de $f(x, y) = x^{2}y^{2}$ es:`,o:[String.raw`$\begin{pmatrix} 2y^{2} & 4xy \\ 4xy & 2x^{2} \end{pmatrix}$`,String.raw`$\begin{pmatrix} 2xy & 2x^{2}y \\ 2x^{2}y & 2xy \end{pmatrix}$`,String.raw`$\begin{pmatrix} y^{2} & 4xy \\ 4xy & x^{2} \end{pmatrix}$`,String.raw`$\begin{pmatrix} 0 & 4xy \\ 4xy & 0 \end{pmatrix}$`],a:0,ex:String.raw`En el origen, $H = 0$ y $D = 0$.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`Si la hessiana de $f$ en un punto crítico es $H = \begin{pmatrix} 3 & 1 \\ 1 & 2 \end{pmatrix}$, entonces $D$ vale:`,o:[String.raw`$5$`,String.raw`$7$`,String.raw`$6$`,String.raw`$1$`],a:0,ex:String.raw`$D = 6 - 1 = 5$. Mínimo.`},
+{t:"hes",ctx:"mat",lvl:1,q:String.raw`El criterio de la segunda derivada sirve para:`,o:[String.raw`Clasificar puntos críticos ya localizados como máximo, mínimo o silla`,String.raw`Encontrar los puntos críticos`,String.raw`Calcular la derivada direccional`,String.raw`Verificar la continuidad`],a:0,ex:String.raw`Gradiente localiza; discriminante clasifica.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Los puntos críticos de $f(x, y) = x^{4} - 2x^{2} + y^{4} - 2y^{2}$ son:`,o:[String.raw`Nueve en total: $(0, 0)$, $(\pm 1, 0)$, $(0, \pm 1)$, $(\pm 1, \pm 1)$`,String.raw`Solo $(0, 0)$`,String.raw`Solo $(\pm 1, \pm 1)$`,String.raw`$(\pm 1, 0)$ y $(0, \pm 1)$`],a:0,ex:String.raw`$4x(x^{2} - 1) = 0$ e idem en y: 9 combinaciones.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Para $f(x, y) = x^{4} + y^{4}$ en el origen, $D = 0$. La clasificación correcta es:`,o:[String.raw`Mínimo global: $f \geq 0$ y $f(0, 0) = 0$`,String.raw`Máximo local`,String.raw`Punto silla`,String.raw`Indeterminado`],a:0,ex:String.raw`Acotación directa decide.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`La función $f(x, y) = \sin x \cdot \sin y$ en el origen es:`,o:[String.raw`Punto silla: $H = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$, $D = -1 < 0$`,String.raw`Mínimo local`,String.raw`Máximo local`,String.raw`No es punto crítico`],a:0,ex:String.raw`$D = -1 < 0$: silla.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`Los puntos críticos de $f(x, y) = x^{3} + y^{3} - 3xy$ son $(0, 0)$ y $(1, 1)$. Con $H(0, 0) = \begin{pmatrix} 0 & -3 \\ -3 & 0 \end{pmatrix}$ y $H(1, 1) = \begin{pmatrix} 6 & -3 \\ -3 & 6 \end{pmatrix}$, sus tipos son:`,o:[String.raw`$(0, 0)$ silla y $(1, 1)$ mínimo local`,String.raw`Ambos mínimos`,String.raw`Ambos sillas`,String.raw`$(0, 0)$ mínimo y $(1, 1)$ máximo`],a:0,ex:String.raw`$D(0,0) = -9$, $D(1,1) = 27$.`},
+{t:"hes",ctx:"mat",lvl:3,q:String.raw`La hessiana en un punto crítico tiene $f_{xx} = 4$, $f_{xy} = 2$, $f_{yy} = 1$. Entonces:`,o:[String.raw`$D = 4 - 4 = 0$: el criterio no concluye`,String.raw`$D = 4$: mínimo`,String.raw`$D = -4$: silla`,String.raw`$D = 6$: máximo`],a:0,ex:String.raw`$D = 0$.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`En un modelo con dos pesos, $L(w_{1}, w_{2}) = w_{1}^{2} + w_{2}^{2}$. El gradiente es:`,o:[String.raw`$\nabla L = (2w_{1},\ 2w_{2})$`,String.raw`$\nabla L = (w_{1},\ w_{2})$`,String.raw`$\nabla L = (2w_{1} + w_{2},\ w_{1} + 2w_{2})$`,String.raw`$\nabla L = (1,\ 1)$`],a:0,ex:String.raw`$\partial L/\partial w_{i} = 2w_{i}$.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`La hessiana de $L(w_{1}, w_{2}) = w_{1}^{2} + w_{2}^{2}$ es:`,o:[String.raw`$\begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 0 & 0 \\ 0 & 0 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 2 & 2 \\ 2 & 2 \end{pmatrix}$`],a:0,ex:String.raw`Es $2I$.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`En una red con $L = (w_{1} - 3)^{2} + 2(w_{2} - 1)^{2}$, el mínimo está en:`,o:[String.raw`$(3, 1)$`,String.raw`$(-3, -1)$`,String.raw`$(0, 0)$`,String.raw`$(1, 3)$`],a:0,ex:String.raw`Cada cuadrado se anula en su argumento cero.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`Con descenso por gradiente en $L(w) = w^{2}$ desde $w_{0} = 4$ con $\eta = 0.2$, tras un paso:`,o:[String.raw`$w_{1} = 2.4$`,String.raw`$w_{1} = 5.6$`,String.raw`$w_{1} = 3.8$`,String.raw`$w_{1} = 0$`],a:0,ex:String.raw`$4 - 0.2(8) = 2.4$.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`Si la hessiana de la pérdida es $\begin{pmatrix} 1 & 0 \\ 0 & 4 \end{pmatrix}$, el paisaje es:`,o:[String.raw`Valle elíptico, más empinado en la dirección del segundo peso`,String.raw`Valle circular`,String.raw`Silla`,String.raw`Cresta`],a:0,ex:String.raw`Relación de curvaturas 4:1.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`La hessiana de $L(w_{1}, w_{2}) = w_{1}w_{2}$ en $(0, 0)$ es:`,o:[String.raw`$\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 0 & 0 \\ 0 & 0 \end{pmatrix}$`,String.raw`$\begin{pmatrix} 1 & 1 \\ 1 & 1 \end{pmatrix}$`],a:0,ex:String.raw`$D = -1$: silla.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`La pérdida $L(w) = w^{4}$, en $w = 0$ es:`,o:[String.raw`Mínimo global: $L \geq 0$ y $L(0) = 0$`,String.raw`Máximo global`,String.raw`Punto silla`,String.raw`No es crítico`],a:0,ex:String.raw`Acotación directa.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`$L = w_{1}^{2} + w_{2}^{2} + w_{1}w_{2}$. El gradiente es:`,o:[String.raw`$(2w_{1} + w_{2},\ 2w_{2} + w_{1})$`,String.raw`$(2w_{1},\ 2w_{2})$`,String.raw`$(w_{1} + w_{2},\ w_{1} + w_{2})$`,String.raw`$(2w_{1} + w_{2},\ 2w_{1} + w_{2})$`],a:0,ex:String.raw`El cruzado aporta $w_{2}$ y $w_{1}$.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`La regularización L2 ($\lambda \sum \theta_{i}^{2}$) añade a la hessiana:`,o:[String.raw`$2\lambda$ a cada elemento de la diagonal`,String.raw`$\lambda$ a cada elemento de la diagonal`,String.raw`$2\lambda$ a los términos cruzados`,String.raw`Nada`],a:0,ex:String.raw`Añade $2\lambda I$.`},
+{t:"hes",ctx:"ia",lvl:1,q:String.raw`$L(w_{1}, w_{2}) = w_{1}^{2} + 2w_{2}^{2}$ tiene hessiana $\begin{pmatrix} 2 & 0 \\ 0 & 4 \end{pmatrix}$ y punto crítico $(0, 0)$. Ese punto es:`,o:[String.raw`Mínimo local y global`,String.raw`Máximo local`,String.raw`Silla`,String.raw`Inconcluso`],a:0,ex:String.raw`$L \geq 0$ con igualdad solo en $(0, 0)$.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`$L(\theta_{1}, \theta_{2}) = 3\theta_{1}^{2} + 3\theta_{2}^{2} - 2\theta_{1}\theta_{2}$. El punto crítico es:`,o:[String.raw`$(0, 0)$`,String.raw`$(1, 1)$`,String.raw`$(2, 2)$`,String.raw`$(-1, 1)$`],a:0,ex:String.raw`$\theta_{1} = \theta_{2} = 0$.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`Para la pérdida anterior, la hessiana es $\begin{pmatrix} 6 & -2 \\ -2 & 6 \end{pmatrix}$ y $D$ vale:`,o:[String.raw`$32$`,String.raw`$40$`,String.raw`$36$`,String.raw`$4$`],a:0,ex:String.raw`$D = 36 - 4 = 32$. Mínimo.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`$L(w, b) = w^{2} + b^{2} - 4w - 6b + 20$. El mínimo está en:`,o:[String.raw`$(2, 3)$`,String.raw`$(4, 6)$`,String.raw`$(0, 0)$`,String.raw`$(1, 1)$`],a:0,ex:String.raw`$w = 2$, $b = 3$.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`$L(w_{1}, w_{2}) = w_{1}^{2} - w_{2}^{2} + 4w_{1}w_{2}$. La hessiana es:`,o:[String.raw`$\begin{pmatrix} 2 & 4 \\ 4 & -2 \end{pmatrix}$, con $D = -20$: silla`,String.raw`$\begin{pmatrix} 2 & 0 \\ 0 & -2 \end{pmatrix}$, con $D = -4$: silla`,String.raw`$\begin{pmatrix} 2 & 4 \\ 4 & 2 \end{pmatrix}$, con $D = -12$: silla`,String.raw`$\begin{pmatrix} 0 & 4 \\ 4 & 0 \end{pmatrix}$, con $D = -16$: silla`],a:0,ex:String.raw`$D = -20$.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`$L(w_{1}, w_{2}) = 2w_{1}^{2} + 2w_{2}^{2} - 2w_{1}w_{2} - 4w_{1} - 4w_{2}$. El punto crítico es:`,o:[String.raw`$(2, 2)$, mínimo local`,String.raw`$(1, 1)$, mínimo local`,String.raw`$(0, 0)$, silla`,String.raw`$(4, 4)$, máximo`],a:0,ex:String.raw`Restando: $w_{1} = w_{2}$; $2w_{1} = 4 \Rightarrow (2, 2)$. Mínimo.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`La hessiana de un modelo en un punto crítico es $\begin{pmatrix} 0 & 3 \\ 3 & 0 \end{pmatrix}$. Clasificación:`,o:[String.raw`Punto silla: $D = -9 < 0$`,String.raw`Mínimo: $D = 9 > 0$`,String.raw`Máximo`,String.raw`Inconcluso: $f_{xx} = 0$`],a:0,ex:String.raw`$D = -9 < 0$: silla.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`$L = w_{1}^{2} w_{2}^{2}$. El origen es:`,o:[String.raw`Punto crítico degenerado ($D = 0$)`,String.raw`Mínimo con $D > 0$`,String.raw`Máximo local`,String.raw`No es crítico`],a:0,ex:String.raw`En $(0, 0)$, todas las derivadas segundas son 0.`},
+{t:"hes",ctx:"ia",lvl:2,q:String.raw`$L(w_{1}, w_{2}) = (w_{1} + w_{2} - 2)^{2} + (w_{1} - w_{2})^{2}$. El punto crítico es:`,o:[String.raw`$(1, 1)$`,String.raw`$(2, 0)$`,String.raw`$(0, 2)$`,String.raw`No tiene`],a:0,ex:String.raw`$L_{w_{1}} = 4w_{1} - 4$, $L_{w_{2}} = 4w_{2} - 4$.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`$L(w_{1}, w_{2}) = w_{1}^{4} + w_{2}^{4} - 4w_{1} - 4w_{2} + 8$. El punto crítico es:`,o:[String.raw`$(1, 1)$`,String.raw`$(0, 0)$`,String.raw`$(2, 2)$`,String.raw`$(-1, -1)$`],a:0,ex:String.raw`$w_{i}^{3} = 1 \Rightarrow w_{i} = 1$.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`$V(D, G) = -D^{2} + G^{2} - 2DG$. La hessiana es:`,o:[String.raw`$\begin{pmatrix} -2 & -2 \\ -2 & 2 \end{pmatrix}$, con $D = -8 < 0$: silla`,String.raw`$\begin{pmatrix} -2 & 0 \\ 0 & 2 \end{pmatrix}$, con $D = -4$`,String.raw`$\begin{pmatrix} 2 & -2 \\ -2 & 2 \end{pmatrix}$, con $D = 0$`,String.raw`$\begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix}$, con $D = 4 > 0$`],a:0,ex:String.raw`$D = -8$: silla (patrón GAN).`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`$L(e_{1}, e_{2}) = 4e_{1}^{2} + 4e_{2}^{2} + 2e_{1}e_{2} - 6e_{1}$. El punto crítico es:`,o:[String.raw`Aproximadamente $(0.8, -0.2)$`,String.raw`$(1, 1)$`,String.raw`$(0, 0)$`,String.raw`$(2, 2)$`],a:0,ex:String.raw`$e_{1} = -4e_{2}$, $-30e_{2} = 6 \Rightarrow e_{2} = -0.2$, $e_{1} = 0.8$.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`$L(\theta) = \theta^{4} - 2\theta^{2} + 1$. Los puntos críticos son:`,o:[String.raw`$\theta = 0$ (máximo local), $\theta = \pm 1$ (mínimos globales)`,String.raw`Solo $\theta = 0$`,String.raw`Solo $\theta = \pm 1$`,String.raw`No tiene`],a:0,ex:String.raw`$L' = 4\theta(\theta^{2} - 1)$; $L''(0) = -4$, $L''(\pm 1) = 8$.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`$L(\theta_{1}, \theta_{2}) = \theta_{1}^{3} - 3\theta_{1}\theta_{2}^{2}$ con único punto crítico $(0, 0)$, $D = 0$. La geometría es:`,o:[String.raw`Silla degenerada ("monkey saddle": tres valles)`,String.raw`Mínimo global`,String.raw`Máximo global`,String.raw`Regular sin clasificación`],a:0,ex:String.raw`En $\theta_{2} = 0$: $L = \theta_{1}^{3}$ (crece/decrece).`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`$L(w_{1}, w_{2}) = w_{1}^{2} + w_{2}^{2} - w_{1}w_{2} - w_{1} + w_{2}$. El punto crítico es:`,o:[String.raw`$(1/3, -1/3)$, mínimo local`,String.raw`$(0, 0)$, silla`,String.raw`$(1, 1)$, mínimo`,String.raw`$(-1, 1)$, máximo`],a:0,ex:String.raw`$w_{2} = 2w_{1} - 1$; $3w_{1} = 1$. Mínimo.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`$L(w_{1}, w_{2}) = 2w_{1}^{2} + 3w_{2}^{2} - 4w_{1}w_{2} - 2w_{1} - 2w_{2}$. El punto crítico es:`,o:[String.raw`Aproximadamente $(2.5, 2)$, mínimo local`,String.raw`$(0, 0)$, silla`,String.raw`$(1, 1)$, mínimo`,String.raw`$(2, 2)$, máximo`],a:0,ex:String.raw`$w_{1} = w_{2} + 0.5$; $2w_{2} = 4 \Rightarrow w_{2} = 2$, $w_{1} = 2.5$. Mínimo.`},
+{t:"hes",ctx:"ia",lvl:3,q:String.raw`$E(x, y) = x^{4} + y^{4} - 4x^{2}y^{2}$. El origen es:`,o:[String.raw`Silla degenerada: $D = 0$, crece en ejes y decrece en diagonales`,String.raw`Mínimo global`,String.raw`Máximo global`,String.raw`No es crítico`],a:0,ex:String.raw`En $y = 0$: $E = x^{4} \geq 0$; en $y = x$: $E = -2x^{4} \leq 0$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$B(x, y) = 20 - x^{2} - y^{2}$. El máximo es:`,o:[String.raw`$20$, en $(0, 0)$`,String.raw`$0$, en $(20, 20)$`,String.raw`$20$, en $(1, 1)$`,String.raw`$10$, en $(5, 5)$`],a:0,ex:String.raw`$B \leq 20$ con igualdad en $(0, 0)$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$C(x, y) = 2x^{2} + 3y^{2} - 4x - 6y + 10$. Costo mínimo:`,o:[String.raw`$5$, en $(1, 1)$`,String.raw`$10$, en $(0, 0)$`,String.raw`$3$, en $(2, 2)$`,String.raw`$0$, en $(1, 1)$`],a:0,ex:String.raw`$C(1, 1) = 2 + 3 - 4 - 6 + 10 = 5$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$G(x, y) = -x^{2} - 4y^{2} + 6x + 8y$. El punto de máximo es:`,o:[String.raw`$(3, 1)$`,String.raw`$(6, 8)$`,String.raw`$(0, 0)$`,String.raw`$(1, 3)$`],a:0,ex:String.raw`$x = 3$, $y = 1$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$C(l, w) = l^{2} + w^{2} - 2l - 4w + 6$. Costo mínimo:`,o:[String.raw`$1$, en $(1, 2)$`,String.raw`$6$, en $(0, 0)$`,String.raw`$0$`,String.raw`$4$, en $(2, 4)$`],a:0,ex:String.raw`$C(1, 2) = 1$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$S(a, b) = 100 - (a - 5)^{2} - (b - 7)^{2}$. El máximo es:`,o:[String.raw`$100$, en $(5, 7)$`,String.raw`$100$, en $(0, 0)$`,String.raw`$88$, en $(0, 0)$`,String.raw`$74$, en $(5, 7)$`],a:0,ex:String.raw`Pico en el ideal $(5, 7)$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$R(x, y) = -x^{2} - y^{2} + 4x + 6y$. Punto de máximo:`,o:[String.raw`$(2, 3)$`,String.raw`$(4, 6)$`,String.raw`$(0, 0)$`,String.raw`$(3, 2)$`],a:0,ex:String.raw`$R(2, 3) = 13$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$U(x, y) = x + 2y - x^{2} - y^{2}$. El máximo es:`,o:[String.raw`$(1/2, 1)$, con $U = 5/4$`,String.raw`$(1, 2)$, con $U = 0$`,String.raw`$(0, 0)$, con $U = 0$`,String.raw`$(1, 1)$, con $U = 1$`],a:0,ex:String.raw`$x = 1/2$, $y = 1$, $U = 5/4$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$R(a, b) = 4a + 6b - a^{2} - b^{2}$. El óptimo es:`,o:[String.raw`$(2, 3)$, con $R = 13$`,String.raw`$(4, 6)$, con $R = 0$`,String.raw`$(0, 0)$, con $R = 0$`,String.raw`$(1, 1)$, con $R = 8$`],a:0,ex:String.raw`$R(2, 3) = 13$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$B(t, p) = 10t + 8p - t^{2} - p^{2}$. Óptimo:`,o:[String.raw`$(t, p) = (5, 4)$`,String.raw`$(10, 8)$`,String.raw`$(0, 0)$`,String.raw`$(4, 5)$`],a:0,ex:String.raw`$t = 5$, $p = 4$.`},
+{t:"hes",ctx:"inno",lvl:1,q:String.raw`$C(x, y) = 3x^{2} + 2y^{2} - 6x - 4y + 20$. Costo mínimo:`,o:[String.raw`$15$, en $(1, 1)$`,String.raw`$20$, en $(0, 0)$`,String.raw`$0$`,String.raw`$18$, en $(2, 2)$`],a:0,ex:String.raw`$C(1, 1) = 15$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`$B(q_{1}, q_{2}) = 30q_{1} + 30q_{2} - q_{1}^{2} - q_{2}^{2} - q_{1}q_{2}$. El punto crítico es:`,o:[String.raw`$(10, 10)$`,String.raw`$(30, 30)$`,String.raw`$(15, 15)$`,String.raw`$(5, 5)$`],a:0,ex:String.raw`$q_{1} = q_{2}$, $30 - 3q = 0 \Rightarrow q = 10$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`Para la misma función, la clasificación de $(10, 10)$ es:`,o:[String.raw`Máximo local: $D = 3 > 0$, $B_{q_{1}q_{1}} = -2 < 0$`,String.raw`Mínimo local`,String.raw`Punto silla`,String.raw`Inconcluso`],a:0,ex:String.raw`Máximo.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`$B(x, y) = 40x + 50y - x^{2} - y^{2} - xy$. Punto crítico:`,o:[String.raw`$(10, 20)$`,String.raw`$(20, 10)$`,String.raw`$(40, 50)$`,String.raw`$(0, 0)$`],a:0,ex:String.raw`$y = 40 - 2x$; $3x = 30 \Rightarrow x = 10$, $y = 20$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`Para la misma función, la clasificación de $(10, 20)$ es:`,o:[String.raw`Máximo local: $D = 3 > 0$, $B_{xx} = -2 < 0$`,String.raw`Mínimo local`,String.raw`Punto silla`,String.raw`Inconcluso`],a:0,ex:String.raw`Máximo local con $B(10, 20) = 700$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`$B(x, y) = 20x + 16y - x^{2} - y^{2} - xy$. Punto crítico:`,o:[String.raw`$(8, 4)$`,String.raw`$(4, 8)$`,String.raw`$(20, 16)$`,String.raw`$(0, 0)$`],a:0,ex:String.raw`$y = 20 - 2x$; $3x = 24 \Rightarrow x = 8$, $y = 4$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`Para la misma función, el beneficio máximo es:`,o:[String.raw`$112$`,String.raw`$100$`,String.raw`$80$`,String.raw`$128$`],a:0,ex:String.raw`$B(8, 4) = 112$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`$B(x, y) = 100x + 80y - 2x^{2} - 2y^{2} - 2xy$. Punto crítico:`,o:[String.raw`$(20, 10)$`,String.raw`$(10, 20)$`,String.raw`$(0, 0)$`,String.raw`$(25, 15)$`],a:0,ex:String.raw`$x = 20$, $y = 10$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`Para la misma función, el beneficio máximo es:`,o:[String.raw`$1400$`,String.raw`$900$`,String.raw`$800$`,String.raw`$1000$`],a:0,ex:String.raw`$B(20, 10) = 1400$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`$B(x, y) = 50x + 40y - 5x^{2} - 5y^{2} - 5xy$. Punto crítico:`,o:[String.raw`$(4, 2)$`,String.raw`$(2, 4)$`,String.raw`$(0, 0)$`,String.raw`$(5, 5)$`],a:0,ex:String.raw`$x = 4$, $y = 2$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`Para la misma función, el beneficio máximo es:`,o:[String.raw`$140$`,String.raw`$100$`,String.raw`$80$`,String.raw`$120$`],a:0,ex:String.raw`$B(4, 2) = 140$.`},
+{t:"hes",ctx:"inno",lvl:2,q:String.raw`$B(x, y) = 30x + 24y - 3x^{2} - 4y^{2} - 4xy$. Punto crítico:`,o:[String.raw`$(4.5, 0.75)$, máximo`,String.raw`$(0, 0)$, silla`,String.raw`$(5, 5)$, mínimo`,String.raw`$(2, 5)$, silla`],a:0,ex:String.raw`$3x + 2y = 15$ y $x + 2y = 6$: $x = 4.5$, $y = 0.75$.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`$B(x, y) = 30x + 40y - x^{2} - y^{2} - xy$. Punto crítico:`,o:[String.raw`$(20/3, 50/3)$`,String.raw`$(10, 10)$`,String.raw`$(30, 40)$`,String.raw`$(5, 5)$`],a:0,ex:String.raw`$3x = 20 \Rightarrow x = 20/3$, $y = 50/3$.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`$V(t_{1}, t_{2}) = 100 - (t_{1} - 4)^{2} - (t_{2} - 6)^{2} - (t_{1} - 4)(t_{2} - 6)$. Punto crítico:`,o:[String.raw`$(4, 6)$, con $V = 100$`,String.raw`$(0, 0)$, con $V = 76$`,String.raw`$(4, 6)$, con $V = 90$`,String.raw`$(6, 4)$, con $V = 100$`],a:0,ex:String.raw`Con $u = t_{1} - 4$, $v = t_{2} - 6$: $u = v = 0$, $V = 100$.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`$B(q_{1}, q_{2}) = 20q_{1} + 28q_{2} - 2q_{1}^{2} - 2q_{2}^{2} - 2q_{1}q_{2}$. Punto crítico:`,o:[String.raw`$(2, 6)$`,String.raw`$(6, 2)$`,String.raw`$(0, 0)$`,String.raw`$(4, 4)$`],a:0,ex:String.raw`$q_{1} = 2$, $q_{2} = 6$.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`Para la misma función, el beneficio máximo es:`,o:[String.raw`$104$`,String.raw`$100$`,String.raw`$80$`,String.raw`$120$`],a:0,ex:String.raw`$B(2, 6) = 104$.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`$B(x, y) = 100 - (x - 3)^{2} - (y - 5)^{2} - 2(x - 3)(y - 5)$. El punto óptimo es:`,o:[String.raw`$(3, 5)$, con $B = 100$ (y otros sobre la recta $x + y = 8$)`,String.raw`$(0, 0)$, con $B = 66$`,String.raw`$(3, 5)$, con $B = 90$`,String.raw`$(5, 3)$, con $B = 100$`],a:0,ex:String.raw`Hessiana de determinante 0: cresta plana.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`$B(x, y) = 4xy - x^{2} - y^{2} + 2x + 2y$. Los puntos críticos son:`,o:[String.raw`Único: $(-1, -1)$, punto silla`,String.raw`$(0, 0)$, mínimo`,String.raw`$(1, 1)$, máximo`,String.raw`Infinitos sobre una recta`],a:0,ex:String.raw`$y = -1$, $x = -1$; $D = -12 < 0$: silla.`},
+{t:"hes",ctx:"inno",lvl:3,q:String.raw`$B(t_{1}, t_{2}) = 12t_{1} + 16t_{2} - 3t_{1}^{2} - 4t_{2}^{2}$. El beneficio máximo es:`,o:[String.raw`$28$, en $(2, 2)$`,String.raw`$32$, en $(0, 0)$`,String.raw`$12$, en $(2, 2)$`,String.raw`$40$, en $(4, 4)$`],a:0,ex:String.raw`$B(2, 2) = 28$.`}
+];
+
+/* ======================= BANCO RECT (91) ======================= */
+const BANK_RECT = [
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`Si $f(x, y) \geq 0$ sobre el rectángulo $R$, $\iint_{R} f\,dA$ representa:`,o:[String.raw`El volumen del sólido entre la superficie $z = f(x, y)$ y el rectángulo $R$`,String.raw`El área de la superficie $z = f$`,String.raw`La pendiente promedio de $f$`,String.raw`La longitud de la curva de corte`],a:0,ex:String.raw`La integral doble suma volúmenes de columnitas de base $dA$ y altura $f(x, y)$.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`$\iint_{R} 1\,dA$ con $R = [-1, 3] \times [0, 5]$ vale:`,o:[String.raw`$20$`,String.raw`$15$`,String.raw`$8$`,String.raw`$4$`],a:0,ex:String.raw`$(3 - (-1))(5 - 0) = 20$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\int_{0}^{1}\int_{0}^{2} (x + y)\,dy\,dx$ vale:`,o:[String.raw`$3$`,String.raw`$2$`,String.raw`$\frac{3}{2}$`,String.raw`$1$`],a:0,ex:String.raw`Interno: $2x + 2$; externo: $1 + 2 = 3$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\iint_{[0,1]\times[0,1]} xy\,dA$ vale:`,o:[String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{3}$`,String.raw`$1$`],a:0,ex:String.raw`Separable: $\frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\iint_{[0,2]\times[0,3]} x^{2}y^{2}\,dA$ vale:`,o:[String.raw`$24$`,String.raw`$\frac{8}{3}$`,String.raw`$9$`,String.raw`$72$`],a:0,ex:String.raw`Separable: $\frac{8}{3} \cdot 9 = 24$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\iint_{[0,1]\times[0,1]} e^{x+y}\,dA$ vale:`,o:[String.raw`$(e - 1)^{2}$`,String.raw`$e^{2} - 1$`,String.raw`$2(e - 1)$`,String.raw`$e - 1$`],a:0,ex:String.raw`Separable: $(e-1)^{2}$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`$\iint_{[0,\pi]\times[0,\pi]} \sin x \cos y\,dA$ vale:`,o:[String.raw`$0$`,String.raw`$2$`,String.raw`$\pi$`,String.raw`$4$`],a:0,ex:String.raw`Separable: $2 \cdot 0 = 0$ (ortogonalidad).`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`Fubini sobre un rectángulo garantiza:`,o:[String.raw`$\int_{a}^{b}\int_{c}^{d} f\,dy\,dx = \int_{c}^{d}\int_{a}^{b} f\,dx\,dy$: el orden no cambia el valor`,String.raw`Solo se puede integrar primero en $x$`,String.raw`Las dos integrales difieren en el área`,String.raw`Hay que partir la región en tipo I y II`],a:0,ex:String.raw`Ambas órdenes coinciden para $f$ continua sobre el rectángulo.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`$\iint_{[0,2]\times[0,3]} 6\,dA$ vale:`,o:[String.raw`$36$`,String.raw`$11$`,String.raw`$6$`,String.raw`$18$`],a:0,ex:String.raw`$6 \cdot 6 = 36$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`Una pieza en cuña tiene $z = xy$ sobre $[0, 1] \times [0, 2]$ (en dm). Volumen:`,o:[String.raw`$1$`,String.raw`$2$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`$V = \frac{1}{2} \cdot 2 = 1$ dm³.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\int_{1}^{2}\int_{0}^{1} x^{2}y\,dy\,dx$ vale:`,o:[String.raw`$\frac{7}{6}$`,String.raw`$\frac{5}{6}$`,String.raw`$\frac{3}{2}$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`Interno: $x^{2}/2$; externo: $7/6$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`Error instantáneo $e(x, y) = x^{2} + y^{2}$ sobre $[0,1]^{2}$. Error promedio:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{3}$`],a:0,ex:String.raw`$\iint e\,dA = \frac{2}{3}$ y el área es 1.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\iint_{[0,1]\times[0,1]} (3x^{2} + 2y)\,dA$ vale:`,o:[String.raw`$2$`,String.raw`$3$`,String.raw`$\frac{5}{3}$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$1 + 1 = 2$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,1]\times[0,1]} x\,e^{xy}\,dA$ vale:`,o:[String.raw`$e - 2$`,String.raw`$e - 1$`,String.raw`$\frac{e - 1}{2}$`,String.raw`$1$`],a:0,ex:String.raw`Primero en $y$: $e^{x} - 1$; externo da $e - 2$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\iint_{[0,2]\times[0,1]} xy^{3}\,dA$ vale:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$2$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{4}{5}$`],a:0,ex:String.raw`Separable: $2 \cdot \frac{1}{4} = \frac{1}{2}$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\iint_{[0,1]\times[0,\pi/2]} \cos y\,dA$ vale:`,o:[String.raw`$1$`,String.raw`$\frac{\pi}{2}$`,String.raw`$0$`,String.raw`$2$`],a:0,ex:String.raw`Separable: $1 \cdot 1 = 1$.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`$\iint_{[0,2]\times[0,2]} (x - y)\,dA$ vale:`,o:[String.raw`$0$, por simetría (integrando antisimétrico respecto a $y = x$)`,String.raw`$4$`,String.raw`$2$`,String.raw`$\frac{16}{3}$`],a:0,ex:String.raw`Simetría: la integral es 0.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\iint_{[0,\pi]\times[0,1]} y\sin x\,dA$ vale:`,o:[String.raw`$1$`,String.raw`$\pi$`,String.raw`$\frac{1}{2}$`,String.raw`$2$`],a:0,ex:String.raw`Separable: $2 \cdot \frac{1}{2} = 1$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,\ln 2]\times[0,1]} e^{2x}\,dA$ vale:`,o:[String.raw`$\frac{3}{2}$`,String.raw`$\frac{1}{2}$`,String.raw`$3$`,String.raw`$2$`],a:0,ex:String.raw`$\frac{1}{2}(4 - 1) = \frac{3}{2}$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`$e(x, y) = x^{2} + y^{2}$ sobre $[-1, 1]^{2}$. Error acumulado:`,o:[String.raw`$\frac{8}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$4$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`$\frac{2}{3} \cdot 2 + 2 \cdot \frac{2}{3} = \frac{8}{3}$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`$(X, Y)$ uniforme sobre $[0,1]^{2}$: $P(X + Y \leq 1)$ es:`,o:[String.raw`$\frac{1}{2}$: área del triángulo bajo $x + y = 1$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{3}{4}$`],a:0,ex:String.raw`Triángulo de área $\frac{1}{2}$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$w(x, y) = 2x + 3y$ por km² de dispositivos. Total en $[0, 2] \times [0, 1]$:`,o:[String.raw`$7$`,String.raw`$10$`,String.raw`$14$`,String.raw`$5$`],a:0,ex:String.raw`$\int_{0}^{1}(4 + 6y)dy = 7$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`$\iint_{[0,4]\times[0,1]} \sqrt{y}\,dA$ vale:`,o:[String.raw`$\frac{8}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$2$`,String.raw`$\frac{16}{3}$`],a:0,ex:String.raw`$4 \cdot \frac{2}{3} = \frac{8}{3}$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\int_{0}^{2}\int_{0}^{1} (x^{2}y + y^{3})\,dy\,dx$ vale:`,o:[String.raw`$\frac{11}{6}$`,String.raw`$\frac{5}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$\frac{3}{2}$`],a:0,ex:String.raw`Interno: $x^{2}/2 + 1/4$; externo: $\frac{4}{3} + \frac{1}{2} = \frac{11}{6}$.`},
+{t:"rect",ctx:"mat",lvl:2,q:String.raw`Si $R = R_{1} \cup R_{2}$ (disjuntos salvo frontera), para $f$ continua:`,o:[String.raw`$\iint_{R} f\,dA = \iint_{R_{1}} f\,dA + \iint_{R_{2}} f\,dA$ (aditividad)`,String.raw`$\iint_{R} f\,dA = 2\iint_{R_{1}} f\,dA$`,String.raw`Es el promedio de las dos`,String.raw`Se necesitan polares`],a:0,ex:String.raw`Aditividad sobre regiones disjuntas.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`$\iint_{[0,1]\times[0,1]} (x + y)\,dA$ vale:`,o:[String.raw`$1$`,String.raw`$2$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{3}{2}$`],a:0,ex:String.raw`Linealidad: $\frac{1}{2} + \frac{1}{2} = 1$.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`Sobre rectángulo, ¿cuándo se puede cambiar el orden sin alterar el valor?`,o:[String.raw`Siempre: Fubini garantiza que coinciden para $f$ continua sobre rectángulo`,String.raw`Solo si $f \geq 0$`,String.raw`Solo si $f$ es separable`,String.raw`Solo en cuadrados`],a:0,ex:String.raw`Fubini no requiere positividad ni separabilidad.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`$\iint_{[0,2]\times[0,2]} 3\,dA$ vale:`,o:[String.raw`$12$`,String.raw`$6$`,String.raw`$3$`,String.raw`$9$`],a:0,ex:String.raw`$3 \cdot 4 = 12$.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`$\iint_{[0,1]\times[0,1]} (x + y)^{2}\,dA$ vale:`,o:[String.raw`$\frac{7}{6}$`,String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`$\frac{1}{3} + \frac{1}{2} + \frac{1}{3} = \frac{7}{6}$.`},
+{t:"rect",ctx:"mat",lvl:1,q:String.raw`Si $f$ cambia de signo sobre $R$, $\iint_{R} f\,dA$ representa:`,o:[String.raw`Suma algebraica de volúmenes: las regiones negativas restan`,String.raw`Volumen absoluto`,String.raw`Solo el volumen positivo`,String.raw`Máximo de $f$`],a:0,ex:String.raw`Respeta el signo. Para el absoluto hay que integrar $|f|$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,1]\times[0,1]} \frac{x}{1 + xy}\,dA$ vale:`,o:[String.raw`$2\ln 2 - 1$`,String.raw`$\ln 2$`,String.raw`$1 - \ln 2$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`En $y$: $\ln(1+x)$; en $x$: $2\ln 2 - 1$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,\pi/2]\times[0,\pi/2]} \sin(x + y)\,dA$ vale:`,o:[String.raw`$2$`,String.raw`$1$`,String.raw`$\pi$`,String.raw`$0$`],a:0,ex:String.raw`Interno: $\sin x + \cos x$; externo: $2$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,1]\times[0,1]} y\,e^{xy}\,dA$ vale:`,o:[String.raw`$e - 2$`,String.raw`$e - 1$`,String.raw`$\frac{e - 1}{2}$`,String.raw`$1$`],a:0,ex:String.raw`Simétrico al de $xe^{xy}$; resultado $e - 2$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,1]\times[0,1]} (x + y)^{3}\,dA$ vale:`,o:[String.raw`$\frac{3}{2}$`,String.raw`$1$`,String.raw`$\frac{5}{2}$`,String.raw`$2$`],a:0,ex:String.raw`Expansión y término a término: $\frac{3}{2}$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,1]\times[0,1]} \frac{1}{1 + x + y}\,dA$ vale:`,o:[String.raw`$\ln\frac{27}{16}$`,String.raw`$\ln 2$`,String.raw`$\ln\frac{3}{2}$`,String.raw`$1$`],a:0,ex:String.raw`$3\ln 3 - 4\ln 2 = \ln\frac{27}{16}$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,1]\times[0,2]} (x + y)^{2}\,dA$ vale:`,o:[String.raw`$\frac{16}{3}$`,String.raw`$\frac{8}{3}$`,String.raw`$\frac{10}{3}$`,String.raw`$\frac{7}{3}$`],a:0,ex:String.raw`$\frac{1}{12}(81 - 1 - 16) = \frac{16}{3}$.`},
+{t:"rect",ctx:"mat",lvl:3,q:String.raw`$\iint_{[0,1]\times[0,1]} |x - y|\,dA$ vale:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`,String.raw`$1$`],a:0,ex:String.raw`Doble de la integral sobre $0 \le y \le x$: $2 \cdot \frac{1}{6} = \frac{1}{3}$.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`$s(x, y) = 5$ sobre $[0, 3] \times [0, 2]$. Energía acumulada:`,o:[String.raw`$30$`,String.raw`$5$`,String.raw`$6$`,String.raw`$15$`],a:0,ex:String.raw`$5 \cdot 6 = 30$.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`Campo receptivo $R = [0, 4] \times [0, 3]$. Área:`,o:[String.raw`$12$`,String.raw`$7$`,String.raw`$8$`,String.raw`$14$`],a:0,ex:String.raw`Área $= 12$.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`Error $e(x, y) = 3$ sobre $[0, 1] \times [0, 1]$. Error acumulado:`,o:[String.raw`$3$`,String.raw`$1$`,String.raw`$9$`,String.raw`$0$`],a:0,ex:String.raw`$3 \cdot 1 = 3$.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`Si $f \geq 0$ sobre $R$, $\iint_{R} f\,dA$ mide:`,o:[String.raw`La cantidad total acumulada (masa, error total, energía) sobre $R$`,String.raw`El máximo de $f$`,String.raw`La pendiente promedio`,String.raw`El área/2`],a:0,ex:String.raw`Integral de una densidad no negativa: cantidad total.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`$\iint_{[0,2]\times[0,3]} 1\,dA$ vale:`,o:[String.raw`$6$`,String.raw`$5$`,String.raw`$1$`,String.raw`$2$`],a:0,ex:String.raw`Área $= 6$.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`$L(x, y) = x$ sobre $[0, 4] \times [0, 2]$. Pérdida total:`,o:[String.raw`$16$`,String.raw`$8$`,String.raw`$4$`,String.raw`$32$`],a:0,ex:String.raw`Separable: $8 \cdot 2 = 16$.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`Si $f(x, y) = g(x)h(y)$ sobre $R = [a, b] \times [c, d]$, entonces $\iint_{R} f\,dA$:`,o:[String.raw`Se factoriza como $\left(\int_{a}^{b} g\right)\left(\int_{c}^{d} h\right)$`,String.raw`Es $g(a)h(c)$`,String.raw`Es la suma de las dos integrales`,String.raw`No se simplifica`],a:0,ex:String.raw`Separabilidad: producto de integrales 1D.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`$\iint_{[0,2]\times[0,2]} (x + 1)\,dA$ vale:`,o:[String.raw`$8$`,String.raw`$4$`,String.raw`$6$`,String.raw`$12$`],a:0,ex:String.raw`$\iint x + \iint 1 = 4 + 4 = 8$.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`$\iint_{[0,1]\times[0,2]} 3x\,dA$ vale:`,o:[String.raw`$3$`,String.raw`$6$`,String.raw`$\frac{3}{2}$`,String.raw`$12$`],a:0,ex:String.raw`Separable: $\frac{3}{2} \cdot 2 = 3$.`},
+{t:"rect",ctx:"ia",lvl:1,q:String.raw`$L(x, y) = x^{2} + y^{2}$ sobre $[0,1]^{2}$. Pérdida total:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$1$`,String.raw`$\frac{1}{3}$`,String.raw`$2$`],a:0,ex:String.raw`Linealidad: $\frac{1}{3} + \frac{1}{3} = \frac{2}{3}$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`$\iint_{[0,1]^{2}} (2x + y)^{2}\,dA$ vale:`,o:[String.raw`$\frac{8}{3}$`,String.raw`$\frac{5}{3}$`,String.raw`$2$`,String.raw`$\frac{7}{3}$`],a:0,ex:String.raw`Expansión: $\frac{4}{3} + 1 + \frac{1}{3} = \frac{8}{3}$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`Volumen bajo $z = 4 - x^{2} - y^{2}$ sobre $[0,1]^{2}$:`,o:[String.raw`$\frac{10}{3}$`,String.raw`$\frac{5}{2}$`,String.raw`$4$`,String.raw`$3$`],a:0,ex:String.raw`$4 - \frac{1}{3} - \frac{1}{3} = \frac{10}{3}$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`$\iint_{[0,\pi]\times[0,\pi]} \sin x \sin y\,dA$ vale:`,o:[String.raw`$4$`,String.raw`$0$`,String.raw`$2$`,String.raw`$\pi$`],a:0,ex:String.raw`Separable: $2 \cdot 2 = 4$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`$\iint_{[0,2]\times[0,3]} xy\,dA$ vale:`,o:[String.raw`$9$`,String.raw`$6$`,String.raw`$3$`,String.raw`$18$`],a:0,ex:String.raw`Separable: $2 \cdot \frac{9}{2} = 9$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`$(X, Y)$ uniforme sobre $[0,1]^{2}$: $P(X + Y \leq 1.5)$:`,o:[String.raw`$\frac{7}{8}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{3}{4}$`,String.raw`$1$`],a:0,ex:String.raw`Complemento: triángulo de área $\frac{1}{8}$; resultado $\frac{7}{8}$.`},
+{t:"rect",ctx:"ia",lvl:2,q:String.raw`$c(x, y) = 2x + 3y$ sobre $[0, 5] \times [0, 3]$. Costo total:`,o:[String.raw`$\frac{285}{2}$`,String.raw`$75$`,String.raw`$142.5$`,String.raw`$285$`],a:0,ex:String.raw`$75 + 67.5 = 142.5$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$\iint_{[0,1]^{2}} \frac{1}{(1 + x + y)^{2}}\,dA$ vale:`,o:[String.raw`$\ln\frac{4}{3}$`,String.raw`$\frac{1}{3}$`,String.raw`$\ln 2$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`En $y$: $\frac{1}{1+x} - \frac{1}{2+x}$; en $x$: $\ln\frac{4}{3}$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$E[(X+Y-1)^{2}]$ con $(X, Y)$ uniforme sobre $[0,1]^{2}$:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`Expansión da $\frac{1}{6}$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$\iint_{[0,1]^{2}} x^{2}y^{2}e^{x+y}\,dA$ vale:`,o:[String.raw`$(e - 2)^{2}$`,String.raw`$e - 2$`,String.raw`$(e - 1)^{2}$`,String.raw`$e^{2} - 4$`],a:0,ex:String.raw`Separable: $\int_{0}^{1}x^{2}e^{x}dx = e - 2$; cuadrado.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$\iint_{[0,1]^{2}}\frac{x^{2}}{1+y^{2}}\,dA$ vale:`,o:[String.raw`$\frac{\pi}{12}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{\pi}{4}$`,String.raw`$\frac{\pi}{6}$`],a:0,ex:String.raw`Separable: $\frac{1}{3} \cdot \frac{\pi}{4} = \frac{\pi}{12}$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$\iint_{[0,1]^{2}} \max(x, y)\,dA$ vale:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{3}{4}$`,String.raw`$1$`],a:0,ex:String.raw`Doble de la integral sobre $y \le x$: $2 \cdot \frac{1}{3} = \frac{2}{3}$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`Covarianza $E[XY] - E[X]E[Y]$ con $(X, Y)$ uniforme sobre $[0,1]^{2}$:`,o:[String.raw`$0$`,String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{6}$`,String.raw`$1$`],a:0,ex:String.raw`$E[XY] = \frac{1}{4} = E[X]E[Y]$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$\iint_{[0,2]\times[0,1]} |x - y|\,dA$ vale:`,o:[String.raw`$\frac{4}{3}$`,String.raw`$1$`,String.raw`$\frac{2}{3}$`,String.raw`$\frac{5}{3}$`],a:0,ex:String.raw`Dos tramos en $x$; resultado $\frac{4}{3}$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$\iint_{[0,1]^{2}} (x - y)^{2}\,dA$ vale:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`Expansión: $\frac{2}{3} - \frac{1}{2} = \frac{1}{6}$.`},
+{t:"rect",ctx:"ia",lvl:3,q:String.raw`$\iint_{[0,1]^{2}} x^{2}y^{2}\,dA$ vale:`,o:[String.raw`$\frac{1}{9}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`Separable: $\frac{1}{3} \cdot \frac{1}{3} = \frac{1}{9}$.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`Panel de $3 \times 2$ m con densidad de costo 5/m². Costo total:`,o:[String.raw`$30$`,String.raw`$5$`,String.raw`$10$`,String.raw`$6$`],a:0,ex:String.raw`$\iint 5\,dA = 30$.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`Componente rectangular $[0, 4] \times [0, 5]$ cm. Área:`,o:[String.raw`$20$ cm²`,String.raw`$9$ cm²`,String.raw`$40$ cm²`,String.raw`$25$ cm²`],a:0,ex:String.raw`$4 \cdot 5 = 20$.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`Prototipo con altura $z = 2x$ sobre $[0, 1] \times [0, 3]$. Volumen:`,o:[String.raw`$3$ dm³`,String.raw`$6$ dm³`,String.raw`$\frac{3}{2}$ dm³`,String.raw`$2$ dm³`],a:0,ex:String.raw`$1 \cdot 3 = 3$ dm³.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`$\iint_{[0,1]\times[0,2]} xy\,dA$ vale:`,o:[String.raw`$1$`,String.raw`$2$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`Separable: $\frac{1}{2} \cdot 2 = 1$.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`Costo 4/m² sobre $[0, 3] \times [0, 4]$. Costo total:`,o:[String.raw`$48$`,String.raw`$12$`,String.raw`$7$`,String.raw`$24$`],a:0,ex:String.raw`$4 \cdot 12 = 48$.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`$\iint_{[0,2]\times[0,3]} (x + y)\,dA$ vale:`,o:[String.raw`$15$`,String.raw`$10$`,String.raw`$6$`,String.raw`$30$`],a:0,ex:String.raw`Linealidad: $6 + 9 = 15$.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`Si $f \geq 0$ es la altura variable sobre una base rectangular, $\iint_{R} f\,dA$ calcula:`,o:[String.raw`El volumen total del producto`,String.raw`El área de la base`,String.raw`La altura promedio`,String.raw`La masa si $f$ es densidad`],a:0,ex:String.raw`Volumen bajo la superficie.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`$\iint_{[0,1]\times[0,1]} 5x\,dA$ vale:`,o:[String.raw`$\frac{5}{2}$`,String.raw`$5$`,String.raw`$10$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`Separable: $\frac{5}{2} \cdot 1 = \frac{5}{2}$.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`$c(x, y) = x$ sobre $[0, 4] \times [0, 1]$. Gasto total:`,o:[String.raw`$8$`,String.raw`$4$`,String.raw`$16$`,String.raw`$2$`],a:0,ex:String.raw`$8 \cdot 1 = 8$.`},
+{t:"rect",ctx:"inno",lvl:1,q:String.raw`Masa de placa $[0, 2] \times [0, 3]$ con densidad uniforme 7:`,o:[String.raw`$42$`,String.raw`$14$`,String.raw`$21$`,String.raw`$7$`],a:0,ex:String.raw`$7 \cdot 6 = 42$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`Densidad $\rho = x^{2} + y^{2}$ sobre $[0,1]^{2}$. Masa total:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$1$`,String.raw`$\frac{1}{3}$`,String.raw`$2$`],a:0,ex:String.raw`$\frac{1}{3} + \frac{1}{3} = \frac{2}{3}$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`Volumen bajo $z = 1 - x^{2}y^{2}$ sobre $[0,1]^{2}$:`,o:[String.raw`$\frac{8}{9}$`,String.raw`$1$`,String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$1 - \frac{1}{9} = \frac{8}{9}$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`$\iint_{[0,2]^{2}} xy\,dA$ vale:`,o:[String.raw`$4$`,String.raw`$2$`,String.raw`$8$`,String.raw`$1$`],a:0,ex:String.raw`Separable: $2 \cdot 2 = 4$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`$d(x, y) = xy$ sobre $[0, 1] \times [0, 2]$. Demanda total conjunta:`,o:[String.raw`$1$`,String.raw`$2$`,String.raw`$\frac{1}{2}$`,String.raw`$4$`],a:0,ex:String.raw`$\frac{1}{2} \cdot 2 = 1$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`$\iint_{[0,1]\times[0,2]} e^{x}\,dA$ vale:`,o:[String.raw`$2(e - 1)$`,String.raw`$e - 1$`,String.raw`$2e$`,String.raw`$e^{2} - 1$`],a:0,ex:String.raw`$2(e - 1)$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`$d(x, y) = x + y$ sobre $[0,1]^{2}$. Defectos totales esperados:`,o:[String.raw`$1$`,String.raw`$2$`,String.raw`$\frac{1}{2}$`,String.raw`$0$`],a:0,ex:String.raw`$\frac{1}{2} + \frac{1}{2} = 1$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`$\iint_{[0,2]\times[0,1]} x^{2}\,dA$ vale:`,o:[String.raw`$\frac{8}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$\frac{2}{3}$`,String.raw`$2$`],a:0,ex:String.raw`$\frac{8}{3} \cdot 1 = \frac{8}{3}$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`$c(x, y) = 3x + 2y$ sobre $[0, 2] \times [0, 1]$. Costo total:`,o:[String.raw`$8$`,String.raw`$5$`,String.raw`$10$`,String.raw`$6$`],a:0,ex:String.raw`$6 + 2 = 8$.`},
+{t:"rect",ctx:"inno",lvl:2,q:String.raw`$\iint_{[0,1]^{2}} (1 - x)(1 - y)\,dA$ vale:`,o:[String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{3}$`,String.raw`$1$`],a:0,ex:String.raw`Separable: $\frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`$\iint_{[0,1]^{2}} (x + y)^{3}\,dA$ vale:`,o:[String.raw`$\frac{3}{2}$`,String.raw`$1$`,String.raw`$2$`,String.raw`$\frac{5}{2}$`],a:0,ex:String.raw`Expansión: $\frac{3}{2}$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`$C(x, y) = \frac{1}{1+x+y}$ sobre $[0, 1]^{2}$. Costo total:`,o:[String.raw`$\ln\frac{27}{16}$`,String.raw`$\ln 2$`,String.raw`$\frac{1}{2}$`,String.raw`$\ln\frac{3}{2}$`],a:0,ex:String.raw`$\ln\frac{27}{16}$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`Tapa $[0, 1]^{2}$ con altura $z = 1 - x^{2}y^{2}$. Volumen:`,o:[String.raw`$\frac{8}{9}$ dm³`,String.raw`$\frac{1}{2}$ dm³`,String.raw`$\frac{2}{3}$ dm³`,String.raw`$1$ dm³`],a:0,ex:String.raw`$\frac{8}{9}$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`$c(x, y) = (2 - x)(1 + y)$ sobre $[0, 1]^{2}$. Costo total:`,o:[String.raw`$\frac{9}{4}$`,String.raw`$2$`,String.raw`$\frac{3}{2}$`,String.raw`$3$`],a:0,ex:String.raw`Separable: $\frac{3}{2} \cdot \frac{3}{2} = \frac{9}{4}$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`Densidad $\rho = xy(1 - x)$ sobre $[0, 1]^{2}$. Masa total:`,o:[String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`Separable: $\frac{1}{6} \cdot \frac{1}{2} = \frac{1}{12}$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`$(e-1)^{2}$ es equivalente a:`,o:[String.raw`$e^{2} - 2e + 1$`,String.raw`$e^{2} - 1$`,String.raw`$2(e - 1)$`,String.raw`$e - 1$`],a:0,ex:String.raw`$(e-1)^{2} = e^{2} - 2e + 1$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`$d(x, y) = (x - y)^{2}$ sobre $[0, 1]^{2}$. Número total de defectos:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$0$`],a:0,ex:String.raw`Expansión: $\frac{1}{6}$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`$b(x, y) = \frac{x}{1+y}$ sobre $[0, 1]^{2}$. Beneficio total:`,o:[String.raw`$\frac{1}{2}\ln 2$`,String.raw`$\ln 2$`,String.raw`$\frac{1}{2}$`,String.raw`$2\ln 2$`],a:0,ex:String.raw`Separable: $\frac{1}{2} \ln 2$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`Volumen con superficie $z = x^{2}y^{2}$ sobre $[0, 1]^{2}$:`,o:[String.raw`$\frac{1}{9}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{2}{9}$`],a:0,ex:String.raw`Separable: $\frac{1}{3} \cdot \frac{1}{3} = \frac{1}{9}$.`},
+{t:"rect",ctx:"inno",lvl:3,q:String.raw`$c(x, y) = \ln(1+x+y)$ sobre $[0, 1]^{2}$. Costo total:`,o:[String.raw`$3\ln 3 - 4\ln 2$`,String.raw`$\ln 2 - \ln 3$`,String.raw`$\ln 3 - \ln 2$`,String.raw`$2\ln 2$`],a:0,ex:String.raw`$3\ln 3 - 4\ln 2 = \ln\frac{27}{16}$.`}
+];
+
+/* ======================= BANCO TIPO (91) ======================= */
+const BANK_TIPO = [
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`Una región de <b>tipo I</b> (verticalmente simple) queda descrita por:`,o:[String.raw`$a \leq x \leq b$ y $g_{1}(x) \leq y \leq g_{2}(x)$: los límites internos de $y$ dependen de $x$`,String.raw`$c \leq y \leq d$ y $h_{1}(y) \leq x \leq h_{2}(y)$`,String.raw`$a \leq x \leq b$ y $c \leq y \leq d$ constantes`,String.raw`$x^{2} + y^{2} \leq R^{2}$`],a:0,ex:String.raw`Tipo I = cortes verticales.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`Una región de <b>tipo II</b> (horizontalmente simple) se integra con:`,o:[String.raw`$\int_{c}^{d}\int_{h_{1}(y)}^{h_{2}(y)} f\,dx\,dy$`,String.raw`$\int_{a}^{b}\int_{g_{1}(x)}^{g_{2}(x)} f\,dy\,dx$`,String.raw`$\int_{a}^{b}\int_{c}^{d} f\,dy\,dx$ constantes`,String.raw`Siempre requiere polares`],a:0,ex:String.raw`Tipo II = cortes horizontales.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`$\int_{0}^{1}\int_{0}^{x} xy\,dy\,dx$ vale:`,o:[String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{12}$`],a:0,ex:String.raw`Interno: $x^{3}/2$. Externo: $1/8$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`$\int_{0}^{1}\int_{x^{2}}^{x} x\,dy\,dx$ vale:`,o:[String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{20}$`],a:0,ex:String.raw`Interno: $x^{2} - x^{3}$; externo: $\frac{1}{3} - \frac{1}{4} = \frac{1}{12}$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`La región entre $y = x^{2}$ y $y = x$ ($0 \le x \le 1$) como <b>tipo II</b> tiene límites:`,o:[String.raw`$0 \leq y \leq 1$ y $y \leq x \leq \sqrt{y}$`,String.raw`$0 \leq y \leq 1$ y $\sqrt{y} \leq x \leq y$`,String.raw`$0 \leq x \leq 1$ y $y \leq x \leq \sqrt{y}$`,String.raw`$0 \leq y \leq 1$ y $y^{2} \leq x \leq y$`],a:0,ex:String.raw`$x = \sqrt{y}$ derecha, $x = y$ izquierda.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`Cambiando el orden, $\int_{0}^{1}\int_{x}^{1} e^{y^{2}}\,dy\,dx$ vale:`,o:[String.raw`$\frac{e - 1}{2}$`,String.raw`$e - 1$`,String.raw`$\frac{e^{2} - 1}{2}$`,String.raw`No tiene solución elemental`],a:0,ex:String.raw`Como tipo II: $\int_{0}^{1}ye^{y^{2}}dy = \frac{e-1}{2}$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`$\int_{0}^{1}\int_{y}^{1} \sin(x^{2})\,dx\,dy$, tras invertir, vale:`,o:[String.raw`$\frac{1 - \cos 1}{2}$`,String.raw`$\sin 1$`,String.raw`$\frac{\cos 1 - 1}{2}$`,String.raw`$1 - \cos 1$`],a:0,ex:String.raw`$\int_{0}^{1}x\sin(x^{2})dx = \frac{1 - \cos 1}{2}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Silueta entre $y = x$ y $y = x^{2}$ ($0 \le x \le 1$). Área:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{12}$`],a:0,ex:String.raw`$\int_{0}^{1}(x - x^{2})dx = \frac{1}{6}$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`Área entre $x = y^{2}$ y $x = y + 2$:`,o:[String.raw`$\frac{9}{2}$`,String.raw`$\frac{7}{2}$`,String.raw`$\frac{16}{3}$`,String.raw`$4$`],a:0,ex:String.raw`Intersección $y = -1, 2$: $\int_{-1}^{2}(y + 2 - y^{2})dy = \frac{9}{2}$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`Para la región entre $x = y^{2}$ y $x = y + 2$, conviene tipo II porque:`,o:[String.raw`Como tipo I habría que partirla en dos tramos de x`,String.raw`Tipo I no está definido`,String.raw`El integrando solo depende de y`,String.raw`Tipo II siempre es exacta`],a:0,ex:String.raw`Tipo I requiere dos integrales; tipo II solo una.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`$\int_{0}^{4}\int_{0}^{\sqrt{x}} y\,dy\,dx$ vale:`,o:[String.raw`$4$`,String.raw`$8$`,String.raw`$2$`,String.raw`$\frac{16}{3}$`],a:0,ex:String.raw`Interno: $x/2$; externo: $\int_{0}^{4}\frac{x}{2}dx = 4$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`$\int_{0}^{1}\int_{0}^{1-x}(x + y)\,dy\,dx$ vale:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`$\frac{1}{6} + \frac{1}{6} = \frac{1}{3}$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`Volumen bajo $z = 1 - x - y$ sobre el triángulo $(0, 0)$, $(1, 0)$, $(0, 1)$:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$\int_{0}^{1}\frac{(1-x)^{2}}{2}dx = \frac{1}{6}$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`$\int_{0}^{2}\int_{x^{2}}^{4} f\,dy\,dx$ como <b>tipo II</b>:`,o:[String.raw`$\int_{0}^{4}\int_{0}^{\sqrt{y}} f\,dx\,dy$`,String.raw`$\int_{0}^{4}\int_{\sqrt{y}}^{0} f\,dx\,dy$`,String.raw`$\int_{0}^{2}\int_{0}^{x^{2}} f\,dx\,dy$`,String.raw`$\int_{0}^{4}\int_{y^{2}}^{2} f\,dx\,dy$`],a:0,ex:String.raw`$0 \le x \le \sqrt{y}$, $0 \le y \le 4$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`$\int_{0}^{1}\int_{x^{2}}^{\sqrt{x}} xy\,dy\,dx$ vale:`,o:[String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{24}$`],a:0,ex:String.raw`Interno: $(x^{2} - x^{5})/2$; externo: $\frac{1}{2}(\frac{1}{3} - \frac{1}{6}) = \frac{1}{12}$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`$\int_{0}^{1}\int_{0}^{x} 12xy\,dy\,dx$ sobre el triángulo $(0, 0)$, $(1, 0)$, $(1, 1)$:`,o:[String.raw`$\frac{3}{2}$`,String.raw`$3$`,String.raw`$\frac{3}{4}$`,String.raw`$\frac{6}{5}$`],a:0,ex:String.raw`Interno: $6x^{3}$; externo: $\frac{3}{2}$.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`Triángulo $(0, 0)$, $(1, 0)$, $(1, 1)$ como <b>tipo II</b>:`,o:[String.raw`$0 \leq y \leq 1$ y $y \leq x \leq 1$`,String.raw`$0 \leq x \leq 1$ y $0 \leq y \leq x$`,String.raw`$0 \leq y \leq 1$ y $0 \leq x \leq y$`,String.raw`$0 \leq y \leq x$ y $0 \leq x \leq 1$`],a:0,ex:String.raw`Corte horizontal de la hipotenusa al borde vertical.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`$dA = dy\,dx$ representa:`,o:[String.raw`El área de un rectangulito infinitesimal de lados $dy$ y $dx$`,String.raw`La derivada del área de $D$`,String.raw`El perímetro de $D$ / 2`,String.raw`La distancia entre curvas`],a:0,ex:String.raw`Sumas de Riemann dobles.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`$\int_{-2}^{2}\int_{x^{2}}^{4} 2y\,dy\,dx$ vale:`,o:[String.raw`$\frac{256}{5}$`,String.raw`$\frac{128}{5}$`,String.raw`$32$`,String.raw`$\frac{64}{3}$`],a:0,ex:String.raw`Interno: $16 - x^{4}$; externo: $64 - \frac{64}{5} = \frac{256}{5}$.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`$f(x, y) = 60xy^{2}$ sobre $x, y \geq 0$, $x + y \leq 1$. $P(X + Y \leq 1/2)$:`,o:[String.raw`$\frac{1}{32}$`,String.raw`$\frac{1}{16}$`,String.raw`$\frac{1}{64}$`,String.raw`$\frac{1}{8}$`],a:0,ex:String.raw`$\frac{1}{32}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Panel solar triangular $(0, 0)$, $(2, 0)$, $(0, 2)$ con $\rho = xy$. Eficiencia total:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$\frac{4}{3}$`,String.raw`$1$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$\int_{0}^{2}\int_{0}^{2-x}xy\,dy\,dx = \frac{2}{3}$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`La región de $\int_{-1}^{1}\int_{x^{2}}^{1} f\,dy\,dx$ está acotada:`,o:[String.raw`Por debajo por $y = x^{2}$ y por arriba por $y = 1$`,String.raw`Al revés`,String.raw`Solo por las verticales`,String.raw`Por la circunferencia`],a:0,ex:String.raw`Parábola es piso, recta es techo.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`Área entre $y = x^{2}$ y $y = 4x$:`,o:[String.raw`$\frac{32}{3}$`,String.raw`$\frac{16}{3}$`,String.raw`$8$`,String.raw`$\frac{64}{3}$`],a:0,ex:String.raw`Intersección 0 y 4: $\int_{0}^{4}(4x - x^{2})dx = \frac{32}{3}$.`},
+{t:"tipo",ctx:"mat",lvl:2,q:String.raw`$\int_{0}^{1}\int_{x}^{2x} y\,dy\,dx$ vale:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{3}{4}$`],a:0,ex:String.raw`Interno: $\frac{3x^{2}}{2}$; externo: $\frac{1}{2}$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`Para $\int_{0}^{1}\int_{y}^{1} e^{x^{2}}\,dx\,dy$, invertir el orden es imprescindible porque:`,o:[String.raw`$e^{x^{2}}$ no tiene antiderivada elemental, pero tras invertir aparece el factor $x$ que la vuelve inmediata`,String.raw`Cambiar siempre simplifica`,String.raw`No está bien definida como tipo II`,String.raw`Solo se integra con polares`],a:0,ex:String.raw`Invertida: $\int_{0}^{1}xe^{x^{2}}dx = \frac{e-1}{2}$.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`Al invertir $\int_{0}^{1}\int_{0}^{x} f\,dy\,dx$, la integral resultante es:`,o:[String.raw`$\int_{0}^{1}\int_{y}^{1} f\,dx\,dy$`,String.raw`$\int_{0}^{1}\int_{0}^{y} f\,dx\,dy$`,String.raw`$\int_{0}^{1}\int_{1}^{y} f\,dx\,dy$`,String.raw`$\int_{0}^{1}\int_{x}^{1} f\,dx\,dy$`],a:0,ex:String.raw`Triángulo $0 \le y \le x \le 1$ reescrito en horizontal.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`Diferencia esencial entre tipo I y tipo II:`,o:[String.raw`En tipo I los límites internos de $y$ dependen de $x$; en tipo II los internos de $x$ dependen de $y$`,String.raw`En tipo I la región es rectangular`,String.raw`Tipo I usa polares`,String.raw`Tipo I solo admite $f \geq 0$`],a:0,ex:String.raw`Cuál variable actúa como "interna".`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`Área del triángulo $(0, 0)$, $(1, 0)$, $(0, 1)$:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{3}$`,String.raw`$2$`],a:0,ex:String.raw`Mitad del cuadrado unitario.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`La región entre $y = x$ e $y = 2x$ ($0 \le x \le 1$) como tipo I:`,o:[String.raw`$0 \leq x \leq 1$ y $x \leq y \leq 2x$`,String.raw`$0 \leq x \leq 1$ y $2x \leq y \leq x$`,String.raw`$0 \leq y \leq 1$ y $y/2 \leq x \leq y$`,String.raw`$0 \leq y \leq 2$ y $y/2 \leq x \leq y$`],a:0,ex:String.raw`En $[0, 1]$, $y = 2x$ está arriba.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`$\iint_{D} 1\,dA$ calcula:`,o:[String.raw`Siempre el área de $D$ (región plana acotada)`,String.raw`Solo en rectángulos`,String.raw`Solo si $f \geq 0$`,String.raw`Solo en discos`],a:0,ex:String.raw`Integral de la constante 1.`},
+{t:"tipo",ctx:"mat",lvl:1,q:String.raw`La región $\{(x, y) : 0 \leq x \leq 1,\ 0 \leq y \leq x\}$ es:`,o:[String.raw`Un triángulo (tipo I y tipo II)`,String.raw`Un rectángulo`,String.raw`Un semicírculo`,String.raw`Una parábola`],a:0,ex:String.raw`Triángulo inferior bajo $y = x$.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`$\int_{0}^{1}\int_{x^{3}}^{x} (x + y)\,dy\,dx$ vale:`,o:[String.raw`$\frac{3}{10}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{2}{5}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`Desarrollo directo.`},
+{t:"tipo",ctx:"mat",lvl:3,q:String.raw`Volumen bajo $z = x^{2} + y^{2}$ sobre el triángulo $(0, 0)$, $(1, 0)$, $(1, 1)$:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$\frac{1}{4} + \frac{1}{12} = \frac{1}{3}$.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`Triángulo $0 \le x \le 1$, $0 \le y \le 1-x$ es de:`,o:[String.raw`Tipo I: $x$ en $[0, 1]$, $y$ de $0$ a $1 - x$`,String.raw`Tipo II solamente`,String.raw`Rectangular`,String.raw`Circular`],a:0,ex:String.raw`Límites externos de $x$ constantes.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`Área del triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{4}$`,String.raw`$2$`],a:0,ex:String.raw`$\int_{0}^{1}(1-x)dx = \frac{1}{2}$.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`Región activa $0 \leq y \leq 1$, $0 \leq x \leq y$:`,o:[String.raw`Tipo II (límites internos de $x$ dependen de $y$)`,String.raw`Tipo I`,String.raw`Rectangular`,String.raw`Circular`],a:0,ex:String.raw`Límite externo $y$, interno $x$.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`Error modelado como $\iint_{D}1\,dA$ con $D$ triángulo $0 \le x \le 1$, $0 \le y \le x$:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{3}{4}$`],a:0,ex:String.raw`$\int_{0}^{1}x\,dx = \frac{1}{2}$.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`Energía con densidad $\rho = 1$ sobre $0 \le x \le 1$, $0 \le y \le x$:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{4}$`,String.raw`$0$`],a:0,ex:String.raw`Área del triángulo.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`Un rectángulo, ¿es tipo I o tipo II?`,o:[String.raw`Ambos: es el caso degenerado con límites constantes`,String.raw`Solo tipo I`,String.raw`Solo tipo II`,String.raw`Ni uno ni otro`],a:0,ex:String.raw`Fubini aplica directamente.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`Región donde dos activaciones son positivas: $0 \le x \le 1$, $0 \le y \le 1$. Área:`,o:[String.raw`$1$`,String.raw`$\frac{1}{2}$`,String.raw`$2$`,String.raw`$0$`],a:0,ex:String.raw`Cuadrado unitario.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`$\{(x, y) : 0 \leq x \leq 1,\ x \leq y \leq 1\}$ es:`,o:[String.raw`Triángulo superior (simétrico al inferior $0 \le y \le x$)`,String.raw`Cuadrado`,String.raw`Disco`,String.raw`Región no acotada`],a:0,ex:String.raw`Simetría con el triángulo inferior.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`Si $f = 2$ normaliza una densidad sobre región de área $\frac{1}{2}$:`,o:[String.raw`Sí: $\iint 2\,dA = 1$`,String.raw`No`,String.raw`Falta factor`,String.raw`Es error`],a:0,ex:String.raw`$2 \cdot \frac{1}{2} = 1$.`},
+{t:"tipo",ctx:"ia",lvl:1,q:String.raw`$\int_{0}^{1}\int_{0}^{y} f\,dx\,dy$ describe región de:`,o:[String.raw`Tipo II: $y$ fijo, $x$ va de 0 a $y$`,String.raw`Tipo I`,String.raw`Rectangular`,String.raw`Semicircular`],a:0,ex:String.raw`Triángulo inferior bajo la diagonal.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`$f(x, y) = 8xy$ sobre $0 \le x \le 1$, $0 \le y \le x$. $\iint f\,dA$:`,o:[String.raw`$1$ (normalizada)`,String.raw`$8$`,String.raw`$\frac{1}{8}$`,String.raw`$2$`],a:0,ex:String.raw`$\iint 8xy = 8 \cdot \frac{1}{8} = 1$.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`$f(x, y) = 12xy^{2}$ sobre $0 \le y \le 1$, $0 \le x \le y$. $P(X \leq 1/2)$:`,o:[String.raw`Aproximadamente $\frac{19}{40}$`,String.raw`$\frac{1}{16}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`Dos tramos; suma $\frac{3}{80} + \frac{7}{16} = \frac{19}{40}$.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`$\int_{0}^{1}\int_{0}^{1-x}(x + y)\,dy\,dx$ vale:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`Interno + externo.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`$\int_{0}^{1}\int_{y}^{1} 1\,dx\,dy$ (área):`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{4}$`,String.raw`$2$`],a:0,ex:String.raw`$\int_{0}^{1}(1-y)dy = \frac{1}{2}$.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`Media $E[X]$ bajo densidad uniforme sobre triángulo $0 \le y \le 1$, $0 \le x \le y$:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$E[X] = 2\int_{0}^{1}\int_{0}^{y}x\,dx\,dy = \int_{0}^{1}y^{2}dy = \frac{1}{3}$.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`Volumen bajo $z = xy$ sobre $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{24}$`,String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{6}$`],a:0,ex:String.raw`Desarrollo: $\frac{1}{2} \cdot \frac{1}{12} = \frac{1}{24}$.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`$f(x, y) = 6y$ sobre $0 \le x \le 1$, $0 \le y \le 1-x$. $P(Y \leq 1/2)$:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$\frac{3}{4}$`,String.raw`$\frac{1}{4}$`,String.raw`$1$`],a:0,ex:String.raw`Dos tramos; suma $\frac{3}{8} + \frac{1}{8} = \frac{1}{2}$.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`$\iint_{D}(x^{2} + y^{2})\,dA$ con $D$ triángulo $0 \le y \le x \le 1$:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`$\frac{1}{4} + \frac{1}{12} = \frac{1}{3}$.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`$\int_{0}^{1}\int_{0}^{y^{2}} 1\,dx\,dy$ (región de baja confianza):`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`,String.raw`$1$`],a:0,ex:String.raw`$\int_{0}^{1}y^{2}dy = \frac{1}{3}$.`},
+{t:"tipo",ctx:"ia",lvl:2,q:String.raw`Área entre $x = y^{2}$ y $x = y$ con $0 \le y \le 1$:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{12}$`],a:0,ex:String.raw`$\int_{0}^{1}(y - y^{2})dy = \frac{1}{6}$.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`$f(x, y) = 24xy$ sobre $0 \le y \le 1$, $0 \le x \le y$. $E[X]$:`,o:[String.raw`Aproximadamente $\frac{8}{15}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{3}{5}$`],a:0,ex:String.raw`$E[X] = 24\int_{0}^{1}\int_{0}^{y}x^{2}y\,dx\,dy = 24 \cdot \frac{1}{15} = \frac{8}{5} \cdot \frac{1}{3}$. Verificación: $\frac{8}{5}$ no, la cuenta da $\frac{8}{15}$... revisando: $E[X] = 8/15$ aprox.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`$\iint_{D}\frac{1}{1 + x + y}\,dA$ con $D$ el triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$1 - \ln 2$ aproximadamente`,String.raw`$\ln 2$`,String.raw`$\ln 3$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$\int_{0}^{1}[\ln 2 - \ln(1+x)]dx = 1 - \ln 2$.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`$\iint_{D}(1 - x - y)\,dA$ con $D$ triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$\frac{1}{2} \cdot \frac{1}{3} = \frac{1}{6}$.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`$\iint_{D}xy(1 - x - y)\,dA$ con $D$ triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{120}$`,String.raw`$\frac{1}{24}$`,String.raw`$\frac{1}{60}$`,String.raw`$\frac{1}{30}$`],a:0,ex:String.raw`$\frac{1}{6} \cdot \frac{1}{20} = \frac{1}{120}$.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`Constante de normalización para $f = cxy$ sobre $0 \le x \le 1$, $0 \le y \le x$:`,o:[String.raw`$8$`,String.raw`$6$`,String.raw`$4$`,String.raw`$12$`],a:0,ex:String.raw`$\iint xy\,dA = \frac{1}{8}$, así $c = 8$.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`$\int_{0}^{1}\int_{y}^{1} x^{2}\,dx\,dy$ vale:`,o:[String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`$\int_{0}^{1}\frac{1 - y^{3}}{3}dy = \frac{1}{3} \cdot \frac{3}{4} = \frac{1}{4}$.`},
+{t:"tipo",ctx:"ia",lvl:3,q:String.raw`$\iint_{D}(x - y)^{2}\,dA$ con $D$ triángulo $0 \le y \le x \le 1$:`,o:[String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{8}$`],a:0,ex:String.raw`$\frac{1}{4} - \frac{2}{8} + \frac{1}{12} = \frac{1}{12}$.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Logotipo triangular $(0, 0)$, $(3, 0)$, $(0, 3)$. Área:`,o:[String.raw`$\frac{9}{2}$`,String.raw`$9$`,String.raw`$\frac{3}{2}$`,String.raw`$3$`],a:0,ex:String.raw`$\frac{1}{2} \cdot 3 \cdot 3 = \frac{9}{2}$.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Silueta $0 \le x \le 2$, $0 \le y \le 2 - x$ es:`,o:[String.raw`Tipo I: $x$ en $[0, 2]$, $y$ de $0$ a $2 - x$`,String.raw`Tipo II`,String.raw`Rectangular`,String.raw`Circular`],a:0,ex:String.raw`Triángulo rectángulo.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Material para área $\iint_{D}1\,dA$ con $D$ triángulo $0 \le x \le 1$, $0 \le y \le x$:`,o:[String.raw`$\frac{1}{2}$ u²`,String.raw`$1$ u²`,String.raw`$\frac{1}{4}$ u²`,String.raw`$2$ u²`],a:0,ex:String.raw`$\int_{0}^{1}x\,dx = \frac{1}{2}$.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Componente entre $y = x^{2}$ (piso) e $y = x$ (techo) en $x \in [0, 1]$. Altura media:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{12}$`],a:0,ex:String.raw`Área entre curvas.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Pieza triangular $(0, 0)$, $(1, 0)$, $(0, 1)$. Área:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{3}$`,String.raw`$2$`],a:0,ex:String.raw`Mitad del cuadrado unitario.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Corte transversal bajo $y = x^{2}$ sobre $x \in [0, 1]$. Área:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{4}$`,String.raw`$1$`],a:0,ex:String.raw`$\int_{0}^{1}x^{2}dx = \frac{1}{3}$.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Silueta de mueble acotada por $y = 0$, $x = 1$, $y = x^{2}$ (arriba). Área:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{2}{3}$`,String.raw`$1$`],a:0,ex:String.raw`$\int_{0}^{1}x^{2}dx = \frac{1}{3}$.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Trapecio curvilíneo con base $y = 0$, lados $x = 1$, $x = 2$, techo $y = x$. Área:`,o:[String.raw`$\frac{3}{2}$`,String.raw`$1$`,String.raw`$\frac{5}{2}$`,String.raw`$2$`],a:0,ex:String.raw`$\int_{1}^{2}x\,dx = \frac{3}{2}$.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Cuadrado de $2 \times 2$ dm con corte triangular $0 \le x \le 2$, $0 \le y \le 2-x$. Área final:`,o:[String.raw`$2$ dm²`,String.raw`$3$ dm²`,String.raw`$3.5$ dm²`,String.raw`$0$ dm²`],a:0,ex:String.raw`$4 - 2 = 2$.`},
+{t:"tipo",ctx:"inno",lvl:1,q:String.raw`Región entre $y = x^{2}$ y $y = x$ en $x \in [0, 1]$: ¿tipo I, II o ambas?`,o:[String.raw`Ambas: tipo I con límites verticales, tipo II con $0 \le y \le 1$, $y \le x \le \sqrt{y}$`,String.raw`Solo tipo I`,String.raw`Solo tipo II`,String.raw`Ninguno`],a:0,ex:String.raw`Descripción dual.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Volumen con altura $z = x + y$ sobre triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`Linealidad: $\frac{1}{6} + \frac{1}{6} = \frac{1}{3}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Costo con $c(x, y) = xy$ sobre $0 \le x \le 1$, $0 \le y \le x$:`,o:[String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{16}$`],a:0,ex:String.raw`$\int_{0}^{1}\frac{x^{3}}{2}dx = \frac{1}{8}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Pieza $0 \le y \le 1$, $y^{2} \le x \le y$, $\rho = x$. Masa:`,o:[String.raw`$\frac{1}{15}$`,String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{20}$`,String.raw`$\frac{1}{8}$`],a:0,ex:String.raw`$\int_{0}^{1}\frac{y^{2} - y^{4}}{2}dy = \frac{1}{15}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`$0 \le x \le 1$, $x^{2} \le y \le x$ con $\rho = 1 + xy$. Masa total:`,o:[String.raw`$\frac{5}{24}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{8}$`],a:0,ex:String.raw`Área $\frac{1}{6}$ más $\iint xy = \frac{1}{24}$: total $\frac{5}{24}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Volumen entre $z = 2$ y $z = 1 + x^{2}$ sobre $[0, 1]^{2}$:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{3}$`,String.raw`$1$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$\iint(1 - x^{2})dA = \frac{2}{3}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Beneficio con $d(x, y) = x + y$ sobre $0 \le x \le 1$, $0 \le y \le x$:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{2}{3}$`],a:0,ex:String.raw`$\frac{1}{3} + \frac{1}{6} = \frac{1}{2}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Costo con $c = x^{2}$ sobre $0 \le y \le x$, $0 \le x \le 1$:`,o:[String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{6}$`],a:0,ex:String.raw`$\int_{0}^{1}x^{3}dx = \frac{1}{4}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Componente entre $x = y^{2}$ y $x = y$ ($0 \le y \le 1$). Área:`,o:[String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{1}{12}$`],a:0,ex:String.raw`$\int_{0}^{1}(y - y^{2})dy = \frac{1}{6}$.`},
+{t:"tipo",ctx:"inno",lvl:2,q:String.raw`Beneficio sobre $0 \le y \le 1$, $0 \le x \le \sqrt{y}$ con $b = xy$:`,o:[String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{12}$`],a:0,ex:String.raw`$\int_{0}^{1}y \cdot \frac{y}{2}dy = \frac{1}{6}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Volumen de ala curvada con $z = xy$ sobre $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{24}$`,String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{6}$`],a:0,ex:String.raw`$\frac{1}{2} \cdot \frac{1}{12} = \frac{1}{24}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Momento $I_x = \iint y^{2}\,dA$ sobre triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{8}$`],a:0,ex:String.raw`$\int_{0}^{1}\frac{(1-x)^{3}}{3}dx = \frac{1}{12}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Centroide $\bar{y}$ del triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$\bar{y} = \frac{1/6}{1/2} = \frac{1}{3}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`$\iint_{D}(1 - x - y)^{2}\,dA$ con $D$ triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{24}$`,String.raw`$\frac{1}{8}$`],a:0,ex:String.raw`$\int_{0}^{1}\frac{(1-x)^{3}}{3}dx = \frac{1}{12}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Volumen entre $z = 1$ y $z = x^{2} + y^{2}$ sobre triángulo $0 \le x \le 1$, $0 \le y \le 1-x$:`,o:[String.raw`$\frac{1}{3}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$\frac{1}{2} - \frac{1}{12} - \frac{1}{12} = \frac{1}{3}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Momento $M_y = \iint x\,dA$ sobre "lente" $0 \le y \le 1$, $y^{2} \le x \le y$:`,o:[String.raw`$\frac{1}{15}$`,String.raw`$\frac{1}{12}$`,String.raw`$\frac{1}{20}$`,String.raw`$\frac{1}{8}$`],a:0,ex:String.raw`$\int_{0}^{1}\frac{y^{2} - y^{4}}{2}dy = \frac{1}{15}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Centroide $\bar{x}$ del casquete $0 \le x \le 1$, $0 \le y \le x^{2}$:`,o:[String.raw`$\frac{3}{4}$`,String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{4}{5}$`],a:0,ex:String.raw`$\bar{x} = \frac{1/4}{1/3} = \frac{3}{4}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`$\iint_{D}(x + y)\,dA$ con $D$ región $0 \le y \le 1$, $0 \le x \le \sqrt{y}$:`,o:[String.raw`$\frac{13}{20}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{3}{8}$`,String.raw`$\frac{5}{12}$`],a:0,ex:String.raw`$\frac{1}{4} + \frac{2}{5} = \frac{13}{20}$.`},
+{t:"tipo",ctx:"inno",lvl:3,q:String.raw`Momento polar $J = \iint (x^{2} + y^{2})\,dA$ sobre región $0 \le y \le 1$, $y \le x \le \sqrt{y}$:`,o:[String.raw`$\frac{3}{35}$`,String.raw`$\frac{1}{5}$`,String.raw`$\frac{1}{6}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$\frac{1}{20} + \frac{1}{28} = \frac{3}{35}$.`}
+];
+/* AQUÍ CONTINÚA EL MENSAJE 2 */
+/* ======================= BANCO CAD (91) ======================= */
+const BANK_CAD = [
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`Si $z = f(x, y)$ con $x = g(t)$ e $y = h(t)$, $\frac{dz}{dt} =$`,o:[String.raw`$\frac{\partial f}{\partial x}\frac{dx}{dt} + \frac{\partial f}{\partial y}\frac{dy}{dt}$`,String.raw`$\frac{\partial f}{\partial x} + \frac{\partial f}{\partial y}$`,String.raw`$\frac{\partial f}{\partial x}\frac{dx}{dt} - \frac{\partial f}{\partial y}\frac{dy}{dt}$`,String.raw`$f\left(\frac{dx}{dt} + \frac{dy}{dt}\right)$`],a:0,ex:String.raw`Se multiplican las derivadas por rama y se suman los caminos.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$w = x^{2} + y^{2}$, $x = \cos t$, $y = \sin t$. $\frac{dw}{dt} =$`,o:[String.raw`$0$`,String.raw`$2\cos t$`,String.raw`$2\sin t$`,String.raw`$2$`],a:0,ex:String.raw`$w = 1$: constante, derivada 0.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$w = xy$, $x = e^{t}$, $y = e^{-t}$. $\frac{dw}{dt} =$`,o:[String.raw`$0$, porque $w = 1$`,String.raw`$e^{t}$`,String.raw`$1$`,String.raw`$e^{2t}$`],a:0,ex:String.raw`$w = 1$ constante.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = x^{2} + 3y^{2}$, $x = t^{2}$, $y = t$. $\frac{dz}{dt} =$`,o:[String.raw`$4t^{3} + 6t$`,String.raw`$2t + 6$`,String.raw`$4t^{2} + 6t$`,String.raw`$t^{4} + 3t^{2}$`],a:0,ex:String.raw`$4t^{3} + 6t$.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`$z = x^{2}y$, $x = \cos t$, $y = \sin t$. $\frac{dz}{dt}$ en $t = \pi/2$:`,o:[String.raw`$0$`,String.raw`$-1$`,String.raw`$1$`,String.raw`$2$`],a:0,ex:String.raw`En $\pi/2$ todo se anula.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = f(u, v)$, $u = x + y$, $v = x - y$. $\frac{\partial z}{\partial x} =$`,o:[String.raw`$\frac{\partial z}{\partial u} + \frac{\partial z}{\partial v}$`,String.raw`$\frac{\partial z}{\partial u} - \frac{\partial z}{\partial v}$`,String.raw`$\frac{\partial z}{\partial u} \cdot \frac{\partial z}{\partial v}$`,String.raw`$\frac{\partial z}{\partial u}$`],a:0,ex:String.raw`Coeficientes 1 y 1.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = f(u, v)$, $u = xy$, $v = x + y$. $\frac{\partial z}{\partial x} =$`,o:[String.raw`$y f_{u} + f_{v}$`,String.raw`$x f_{u} + f_{v}$`,String.raw`$y f_{u} - f_{v}$`,String.raw`$f_{u} + f_{v}$`],a:0,ex:String.raw`$u_{x} = y$, $v_{x} = 1$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$w = f(x, y, t)$ con $x = x(t)$, $y = y(t)$. $\frac{dw}{dt} =$`,o:[String.raw`$f_{x}\frac{dx}{dt} + f_{y}\frac{dy}{dt} + f_{t}$: hay tercer camino directo`,String.raw`$f_{x}\frac{dx}{dt} + f_{y}\frac{dy}{dt}$ sin término adicional`,String.raw`$f_{t}$ únicamente`,String.raw`$f_{x} + f_{y} + f_{t}$`],a:0,ex:String.raw`Tres caminos.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = x^{2} + y^{2}$, $x = 2t$, $y = 3t$. $\frac{dz}{dt} =$`,o:[String.raw`$26t$`,String.raw`$13t$`,String.raw`$10t$`,String.raw`$26$`],a:0,ex:String.raw`$26t$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = xy$, $x = s + t$, $y = s - t$. $\frac{\partial z}{\partial s} =$`,o:[String.raw`$2s$`,String.raw`$2t$`,String.raw`$s - t$`,String.raw`$s + t$`],a:0,ex:String.raw`$2s$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = xy$, $x = s + t$, $y = s - t$. $\frac{\partial z}{\partial t} =$`,o:[String.raw`$-2t$`,String.raw`$2t$`,String.raw`$2s$`,String.raw`$0$`],a:0,ex:String.raw`$-2t$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$x^{2} + y^{2} = 1$ define $y(x)$. $\frac{dy}{dx} =$`,o:[String.raw`$-\frac{x}{y}$`,String.raw`$\frac{x}{y}$`,String.raw`$-\frac{y}{x}$`,String.raw`$2x + 2y$`],a:0,ex:String.raw`$-x/y$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = f(x^{2} + y^{2})$ con $f$ derivable. $\frac{\partial z}{\partial x} =$`,o:[String.raw`$2x f'(x^{2} + y^{2})$`,String.raw`$f'(x^{2} + y^{2})$`,String.raw`$2x + 2y$`,String.raw`$2y f'(x^{2} + y^{2})$`],a:0,ex:String.raw`Una sola intermedia.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$L = p^{2} + q^{2}$ con $p = \theta^{2}$, $q = 2\theta$. $\frac{dL}{d\theta} =$`,o:[String.raw`$4\theta^{3} + 8\theta$`,String.raw`$2\theta + 4$`,String.raw`$4\theta^{2} + 8$`,String.raw`$\theta^{4} + 4\theta^{2}$`],a:0,ex:String.raw`$4\theta^{3} + 8\theta$.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`Dron: $x = \cos t$, $y = \sin t$, $z = t$, $w = x^{2} + y^{2} + z^{2}$. $\frac{dw}{dt} =$`,o:[String.raw`$2t$`,String.raw`$2$`,String.raw`$0$`,String.raw`$2t + 2$`],a:0,ex:String.raw`Ramas x e y se cancelan; queda $2z$.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`$z = x/y$, $x = t^{2}$, $y = t^{3}$. $\frac{dz}{dt} =$`,o:[String.raw`$-\frac{1}{t^{2}}$`,String.raw`$\frac{1}{t^{2}}$`,String.raw`$-\frac{2}{t^{3}}$`,String.raw`$\frac{2}{t}$`],a:0,ex:String.raw`$-\frac{1}{t^{2}}$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$P = f(L, K)$ con $L(t)$, $K(t)$. $\frac{dP}{dt} =$`,o:[String.raw`$f_{L}L'(t) + f_{K}K'(t)$`,String.raw`$f_{L} + f_{K}$`,String.raw`$f_{L}L'(t) \cdot f_{K}K'(t)$`,String.raw`$f(L'(t), K'(t))$`],a:0,ex:String.raw`Cada insumo por su ritmo de crecimiento.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = f(x, y)$, $x = r\cos\theta$, $y = r\sin\theta$. $\frac{\partial z}{\partial r} =$`,o:[String.raw`$f_{x}\cos\theta + f_{y}\sin\theta$`,String.raw`$-f_{x}\sin\theta + f_{y}\cos\theta$`,String.raw`$rf_{x}\cos\theta + rf_{y}\sin\theta$`,String.raw`$f_{x} + f_{y}$`],a:0,ex:String.raw`Proyección radial del gradiente.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Idem, $\frac{\partial z}{\partial \theta} =$`,o:[String.raw`$-r f_{x}\sin\theta + r f_{y}\cos\theta$`,String.raw`$f_{x}\cos\theta + f_{y}\sin\theta$`,String.raw`$-r f_{x}\cos\theta + r f_{y}\sin\theta$`,String.raw`$0$`],a:0,ex:String.raw`Proyección tangencial escalada por $r$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$w = xyz$, $x = t$, $y = t^{2}$, $z = t^{3}$. $\frac{dw}{dt} =$`,o:[String.raw`$6t^{5}$`,String.raw`$3t^{5}$`,String.raw`$t^{5}$`,String.raw`$6t^{6}$`],a:0,ex:String.raw`$6t^{5}$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = f(x, y)$, $x = x(s, t)$, $y = y(s, t)$. $\frac{\partial z}{\partial s} =$`,o:[String.raw`$f_{x}x_{s} + f_{y}y_{s}$`,String.raw`$f_{x} + f_{y}$`,String.raw`$f_{x}x_{t} + f_{y}y_{t}$`,String.raw`$z_{s} \cdot z_{t}$`],a:0,ex:String.raw`Caminos que terminan en s.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`$z = xy$, $x = s + t^{2}$, $y = s - t^{2}$. $\frac{\partial z}{\partial t} =$`,o:[String.raw`$-4t^{3}$`,String.raw`$4t^{3}$`,String.raw`$-2t^{2}$`,String.raw`$2t$`],a:0,ex:String.raw`$-4t^{3}$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$F(x, y, z) = 0$ define $z(x, y)$ ($F_{z} \neq 0$). $\frac{\partial z}{\partial x} =$`,o:[String.raw`$-\frac{F_{x}}{F_{z}}$`,String.raw`$\frac{F_{x}}{F_{z}}$`,String.raw`$-\frac{F_{z}}{F_{x}}$`,String.raw`$F_{x} - F_{z}$`],a:0,ex:String.raw`Fórmula implícita.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`Dispensador cilíndrico $V = \pi r^{2}h$; $r$ crece a 2 cm/s, $h$ decrece a 1 cm/s. Con $r = 2$, $h = 3$, $\frac{dV}{dt} =$`,o:[String.raw`$20\pi$ cm³/s`,String.raw`$24\pi$ cm³/s`,String.raw`$4\pi$ cm³/s`,String.raw`$-4\pi$ cm³/s`],a:0,ex:String.raw`$24\pi - 4\pi = 20\pi$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`En el diagrama de árbol, para $\frac{\partial z}{\partial t}$ con $z = f(x, y)$, $x = g(s, t)$, $y = h(s, t)$:`,o:[String.raw`Multiplicar cada rama y sumar los caminos que terminan en $t$`,String.raw`Multiplicar todos los caminos entre sí`,String.raw`Sumar ramas y multiplicar por $t$`,String.raw`Derivar solo por $x$`],a:0,ex:String.raw`Dos caminos, dos productos, una suma.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`La regla de la cadena multivariable se interpreta como:`,o:[String.raw`Sumar productos de derivadas a lo largo de cada camino del árbol`,String.raw`Multiplicar todas las parciales entre sí`,String.raw`Derivar solo la variable más importante`,String.raw`Promediar derivadas`],a:0,ex:String.raw`Generalización de $\frac{dy}{dx} = \frac{dy}{du}\frac{du}{dx}$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$\frac{dy}{dx} = \frac{dy}{du}\frac{du}{dx}$ generaliza a $w = f(x, y)$ con $x = g(t)$, $y = h(t)$ como:`,o:[String.raw`$\frac{dw}{dt} = f_{x}g'(t) + f_{y}h'(t)$`,String.raw`$\frac{dw}{dt} = f_{x} + f_{y}$`,String.raw`$\frac{dw}{dt} = f_{x}h'(t) + f_{y}g'(t)$`,String.raw`$\frac{dw}{dt} = f_{x}g'(t) \cdot f_{y}h'(t)$`],a:0,ex:String.raw`Producto por rama, suma sobre ramas.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = xy$, $x = t$, $y = 2t$. $\frac{dz}{dt} =$`,o:[String.raw`$4t$`,String.raw`$2t$`,String.raw`$2$`,String.raw`$t$`],a:0,ex:String.raw`$2t + 2t = 4t$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = x + y$, $x = t^{2}$, $y = t^{3}$. $\frac{dz}{dt} =$`,o:[String.raw`$2t + 3t^{2}$`,String.raw`$2 + 3$`,String.raw`$2t \cdot 3t^{2}$`,String.raw`$t^{2} + t^{3}$`],a:0,ex:String.raw`$2t + 3t^{2}$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = x^{2} + y^{2}$, $x = y = t$. $\frac{dz}{dt} =$`,o:[String.raw`$4t$`,String.raw`$2t$`,String.raw`$4$`,String.raw`$t^{2}$`],a:0,ex:String.raw`$2t + 2t = 4t$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = x - y$, $x = \sin t$, $y = \cos t$. $\frac{dz}{dt} =$`,o:[String.raw`$\cos t + \sin t$`,String.raw`$\cos t - \sin t$`,String.raw`$-\cos t - \sin t$`,String.raw`$\sin t - \cos t$`],a:0,ex:String.raw`$1 \cdot \cos t + (-1)(-\sin t) = \cos t + \sin t$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = f(x, y)$, $x = g(t)$, $y = h(t)$, $f_{x} = 3$, $f_{y} = 2$, $x' = 1$, $y' = 4$. $\frac{dz}{dt} =$`,o:[String.raw`$11$`,String.raw`$5$`,String.raw`$8$`,String.raw`$6$`],a:0,ex:String.raw`$3 + 8 = 11$.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`En el diagrama para $z = f(x, y)$ con $x = g(t)$, $y = h(t)$, ¿cuántos caminos unen $z$ con $t$?`,o:[String.raw`Dos: vía x y vía y`,String.raw`Uno`,String.raw`Tres`,String.raw`Cuatro`],a:0,ex:String.raw`Dos intermedias, dos caminos.`},
+{t:"cad",ctx:"mat",lvl:1,q:String.raw`$z = u^{2} + v^{2}$, $u = 3t$, $v = 4t$. $\frac{dz}{dt} =$`,o:[String.raw`$50t$`,String.raw`$25t$`,String.raw`$24t$`,String.raw`$7t$`],a:0,ex:String.raw`$6u + 8v = 50t$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$w = x^{2} + y^{2}$, $x = e^{t}$, $y = e^{-t}$. $\frac{dw}{dt} =$`,o:[String.raw`$2e^{2t} - 2e^{-2t}$`,String.raw`$2e^{t} - 2e^{-t}$`,String.raw`$2e^{2t} + 2e^{-2t}$`,String.raw`$0$`],a:0,ex:String.raw`$2e^{2t} - 2e^{-2t}$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = \ln(x^{2} + y^{2})$, $x = \cos t$, $y = \sin t$. $\frac{dz}{dt} =$`,o:[String.raw`$0$, porque $x^{2} + y^{2} = 1$`,String.raw`$2$`,String.raw`$\cos t + \sin t$`,String.raw`$2t$`],a:0,ex:String.raw`$z = \ln 1 = 0$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = e^{xy}$, $x = t$, $y = t^{2}$. $\frac{dz}{dt} =$`,o:[String.raw`$3t^{2}e^{t^{3}}$`,String.raw`$e^{t^{3}}(t^{2} + t)$`,String.raw`$e^{t^{3}} \cdot t^{2}$`,String.raw`$e^{t^{3}}(1 + 2t)$`],a:0,ex:String.raw`$e^{t^{3}}(t^{2} + 2t^{2}) = 3t^{2}e^{t^{3}}$.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = f(u, v)$, $u = x^{2}$, $v = y^{2}$. $\frac{\partial z}{\partial x} =$`,o:[String.raw`$2x f_{u}$`,String.raw`$2x f_{u} + 2y f_{v}$`,String.raw`$f_{u} + f_{v}$`,String.raw`$x^{2}f_{u}$`],a:0,ex:String.raw`Solo u depende de x.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = x^{2}y + y^{2}x$, $x = \cos t$, $y = \sin t$. $\frac{dz}{dt}$ en $t = 0$:`,o:[String.raw`$1$`,String.raw`$0$`,String.raw`$2$`,String.raw`$-1$`],a:0,ex:String.raw`En $t = 0$: $x = 1$, $y = 0$; $f_{y} = 1$, $y' = 1$; resultado 1.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`$z = \sqrt{x^{2} + y^{2}}$, $x = 3t$, $y = 4t$. $\frac{dz}{dt} =$`,o:[String.raw`$5$`,String.raw`$5t$`,String.raw`$\frac{7t}{5}$`,String.raw`$\frac{25t}{5}$`],a:0,ex:String.raw`$z = 5t$, derivada 5.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $z = f(x + y)$, entonces $\frac{\partial z}{\partial x} = \frac{\partial z}{\partial y}$ porque:`,o:[String.raw`Ambas valen $f'(x + y)$: la única intermedia tiene parcial 1 en cada variable`,String.raw`Las cruzadas son iguales`,String.raw`El integrando es simétrico`,String.raw`Se aplica Fubini`],a:0,ex:String.raw`Una intermedia, parcial 1 en ambas.`},
+{t:"cad",ctx:"mat",lvl:2,q:String.raw`Si $z = f(xy)$, $\frac{\partial z}{\partial x} =$`,o:[String.raw`$y f'(xy)$`,String.raw`$f'(xy)$`,String.raw`$x f'(xy)$`,String.raw`$xy f'(xy)$`],a:0,ex:String.raw`$u = xy$, $\partial u/\partial x = y$.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`$z = \arctan(y/x)$, $x = \cos t$, $y = \sin t$. $\frac{dz}{dt} =$`,o:[String.raw`$1$`,String.raw`$0$`,String.raw`$\cos^{2}t + \sin^{2}t$`,String.raw`$\arctan(\tan t)$`],a:0,ex:String.raw`$z = t$, derivada 1.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`$w = xy + yz + zx$ con $x = t$, $y = t^{2}$, $z = t^{3}$. $\frac{dw}{dt} =$`,o:[String.raw`$3t^{2} + 4t^{3} + 5t^{4}$`,String.raw`$3t^{2} + 2t + 1$`,String.raw`$t^{4} + t^{3} + t^{2}$`,String.raw`$1 + 2t + 3t^{2}$`],a:0,ex:String.raw`$w = t^{3} + t^{5} + t^{4}$; derivada $3t^{2} + 5t^{4} + 4t^{3}$.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`Si $z = f(y/x)$ derivable, entonces $x z_{x} + y z_{y} =$`,o:[String.raw`$0$`,String.raw`$f'(y/x)$`,String.raw`$y/x$`,String.raw`$z$`],a:0,ex:String.raw`Identidad de Euler de funciones homogéneas de grado 0.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`$z = x^{3}y^{2}$, $x = e^{t}$, $y = e^{-t}$. $\frac{dz}{dt} =$`,o:[String.raw`$e^{t}$`,String.raw`$e^{-t}$`,String.raw`$e^{t} \cdot e^{-t}$`,String.raw`$1$`],a:0,ex:String.raw`$z = e^{t}$, derivada $e^{t}$.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`Termodinámica: $U(S, V)$ con $S = S(t)$, $V = V(t)$. $\frac{dU}{dt} =$`,o:[String.raw`$T\frac{dS}{dt} - P\frac{dV}{dt}$ con $T = U_{S}$, $P = -U_{V}$`,String.raw`$U_{S} + U_{V}$`,String.raw`$U_{S} \cdot U_{V}$`,String.raw`$0$`],a:0,ex:String.raw`Primera ley en forma diferencial.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`$z = f(x, y)$, $x = u + v$, $y = u - v$. $\frac{\partial z}{\partial u} + \frac{\partial z}{\partial v} =$`,o:[String.raw`$2f_{x}$`,String.raw`$2f_{y}$`,String.raw`$f_{x} + f_{y}$`,String.raw`$0$`],a:0,ex:String.raw`Suma: $2f_{x}$. Resta: $2f_{y}$.`},
+{t:"cad",ctx:"mat",lvl:3,q:String.raw`En polares, la relación entre gradiente cartesiano y polar es:`,o:[String.raw`$f_{r} = f_{x}\cos\theta + f_{y}\sin\theta$ y $f_{\theta}/r = -f_{x}\sin\theta + f_{y}\cos\theta$`,String.raw`$f_{r} = f_{x} + f_{y}$ y $f_{\theta} = f_{x} - f_{y}$`,String.raw`$f_{r} = f_{\theta}$`,String.raw`No hay relación`],a:0,ex:String.raw`Rotación de componentes.`},
+{t:"cad",ctx:"ia",lvl:1,q:String.raw`$a = 3\eta$, $b = 2\eta$, $L = a^{2} + b^{2}$. $\frac{dL}{d\eta} =$`,o:[String.raw`$26\eta$`,String.raw`$13\eta$`,String.raw`$10\eta$`,String.raw`$13$`],a:0,ex:String.raw`$L = 13\eta^{2}$, derivada $26\eta$.`},
+{t:"cad",ctx:"ia",lvl:1,q:String.raw`$\hat{y} = wx + b$ con $w = 2\theta$, $b = \theta$; $L = (y - \hat{y})^{2}$. $\frac{dL}{d\theta} =$`,o:[String.raw`$-2(y - \hat{y})(2x + 1)$`,String.raw`$-2(y - \hat{y})$`,String.raw`$-2(y - \hat{y})x$`,String.raw`$2(y - \hat{y})(2x + 1)$`],a:0,ex:String.raw`Regla de la cadena del backprop.`},
+{t:"cad",ctx:"ia",lvl:1,q:String.raw`$L = w_{1}^{2} + w_{2}^{2}$ con $w_{1} = \theta$, $w_{2} = 3\theta$. $\frac{dL}{d\theta} =$`,o:[String.raw`$20\theta$`,String.raw`$8\theta$`,String.raw`$10\theta$`,String.raw`$20$`],a:0,ex:String.raw`$L = 10\theta^{2}$, derivada $20\theta$.`},
+{t:"cad",ctx:"ia",lvl:1,q:String.raw`$\theta_{t} = \theta_{0} + tv$, $L(\theta) = \theta^{2}$. $\frac{dL}{dt} =$`,o:[String.raw`$2v(\theta_{0} + tv)$`,String.raw`$2(\theta_{0} + tv)$`,String.raw`$2v$`,String.raw`$v^{2}$`],a:0,ex:String.raw`$2\theta_{t} \cdot v$.`},
+{t:"cad",ctx:"ia",lvl:1,q:String.raw`$L = e^{2}$, $e = y - \hat{y}$, $\hat{y} = wx$. $\frac{dL}{dw} =$`,o:[String.raw`$-2ex$`,String.raw`$-2e$`,String.raw`$2e$`,String.raw`$-2x$`],a:0,ex:String.raw`Regla delta.`},
+{t:"cad",ctx:"ia",lvl:1,q:String.raw`$\hat{y} = f(g(x))$, $g(x) = wx$, $f(u) = u^{2}$. $\frac{d\hat{y}}{dw} =$`,o:[String.raw`$2w^{2}x^{2}$`,String.raw`$2wx^{2}$`,String.raw`$2wx$`,String.raw`$wx^{2}$`],a:0,ex:String.raw`$2u \cdot x = 2wx^{2}$.`},
+{t:"cad",ctx:"ia",lvl:1,q:String.raw`$s = q \cdot k$ con $q = T$, $k = 2T$. $\frac{ds}{dT} =$`,o:[String.raw`$4T$`,String.raw`$2T$`,String.raw`$2$`,String.raw`$T^{2}$`],a:0,ex:String.raw`$s = 2T^{2}$, derivada $4T$.`},
+{t:"cad",ctx:"ia",lvl:1,q:String.raw`$L = L_{0} + \lambda w^{2}$, $w = \theta$. $\frac{dL}{d\theta}$ incluye:`,o:[String.raw`$2\lambda\theta$`,String.raw`$\lambda\theta$`,String.raw`$2\lambda$`,String.raw`$\lambda^{2}\theta$`],a:0,ex:String.raw`$2\lambda\theta$.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$y = wx + b$ con $w = 2\theta$, $b = -\theta$; $L = y^{2}$. $\frac{dL}{d\theta}$ en $\theta = 1$, $x = 1$:`,o:[String.raw`$2$`,String.raw`$4$`,String.raw`$0$`,String.raw`$8$`],a:0,ex:String.raw`$y = \theta$; $L = \theta^{2}$; $dL/d\theta = 2\theta = 2$.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$h = \sigma(u)$, $u = wx + b$. $\frac{dh}{dw} =$`,o:[String.raw`$\sigma(u)(1 - \sigma(u)) \cdot x$`,String.raw`$\sigma(u) \cdot x$`,String.raw`$\sigma(u)(1 - \sigma(u))$`,String.raw`$x$`],a:0,ex:String.raw`Regla del backprop sigmoidal.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$V = \log(1 - D(G(z)))$, $D(u) = u$, $G(z) = wz$. $\frac{\partial V}{\partial w} =$`,o:[String.raw`$-\frac{z}{1 - wz}$`,String.raw`$\frac{z}{1 - wz}$`,String.raw`$\frac{1}{1 - wz}$`,String.raw`$-z$`],a:0,ex:String.raw`$V = \log(1 - wz)$; derivada $-\frac{z}{1-wz}$.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$\hat{y} = \sigma(w_{2}\sigma(w_{1}x))$. $\frac{d\hat{y}}{dw_{2}} =$`,o:[String.raw`$\sigma'(w_{2}h) \cdot h$, con $h = \sigma(w_{1}x)$`,String.raw`$\sigma'(w_{2}h)$`,String.raw`$h$`,String.raw`$\sigma'(w_{2}h) \cdot w_{2}$`],a:0,ex:String.raw`$h$ actúa como constante.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$L = \frac{1}{2}(y - wx)^{2}$. $\frac{\partial L}{\partial w} =$`,o:[String.raw`$-(y - wx)x$`,String.raw`$-(y - wx)$`,String.raw`$(y - wx)x$`,String.raw`$-x$`],a:0,ex:String.raw`Regla del descenso por gradiente.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`Entropía cruzada $L = -y\log p - (1-y)\log(1-p)$, $p = \sigma(wx)$. $\frac{\partial L}{\partial w} =$`,o:[String.raw`$(p - y)x$`,String.raw`$(y - p)x$`,String.raw`$-(p - y)$`,String.raw`$(p - y)$`],a:0,ex:String.raw`$L_p = (p - y)/(p(1-p))$; multiplicar por $p(1-p)x$.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`En un transformer, $a = \text{softmax}(s)$, $s = qk$, $q = w_{q}x$. $\frac{\partial a}{\partial w_{q}}$ involucra:`,o:[String.raw`La derivada del softmax multiplicada por $\partial s/\partial w_{q} = kx$`,String.raw`Solo el softmax`,String.raw`Solo $x$`,String.raw`Ninguna`],a:0,ex:String.raw`Regla de la cadena matricial.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$y_{1} = w_{1}x$, $y_{2} = w_{2}x$, $L = y_{1}^{2} + y_{2}^{2}$, $w_{1} = \theta$, $w_{2} = 2\theta$. $\frac{dL}{d\theta} =$`,o:[String.raw`$10\theta x^{2}$`,String.raw`$5\theta x^{2}$`,String.raw`$10x^{2}$`,String.raw`$5x^{2}$`],a:0,ex:String.raw`$L = 5\theta^{2}x^{2}$, derivada $10\theta x^{2}$.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$L = \tanh(wx)$ con $x$ fijo. $\frac{dL}{dw} =$`,o:[String.raw`$(1 - \tanh^{2}(wx)) \cdot x$`,String.raw`$1 - \tanh^{2}(wx)$`,String.raw`$x$`,String.raw`$\tanh(wx) \cdot x$`],a:0,ex:String.raw`Derivada de la activación por el factor lineal.`},
+{t:"cad",ctx:"ia",lvl:2,q:String.raw`$w_{1} = \cos\theta$, $w_{2} = \sin\theta$, $L = w_{1}^{2} + w_{2}^{2}$. $\frac{dL}{d\theta} =$`,o:[String.raw`$0$, porque $L = 1$ para todo $\theta$`,String.raw`$2\cos\theta$`,String.raw`$2\sin\theta$`,String.raw`$-2\sin\theta\cos\theta$`],a:0,ex:String.raw`Parametrización esférica: $L = 1$ constante.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`ReLU: $\hat{y} = \text{ReLU}(w_{2}\text{ReLU}(w_{1}x))$ con ambos argumentos positivos. $\frac{\partial \hat{y}}{\partial w_{2}} =$`,o:[String.raw`$w_{1}x$`,String.raw`$1$`,String.raw`$w_{1}x \cdot w_{2}$`,String.raw`$0$`],a:0,ex:String.raw`Derivada de ReLU es 1 si el argumento es positivo.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`Gaussiana $p(y|\mu, \sigma) = \frac{1}{\sqrt{2\pi}\sigma}e^{-(y-\mu)^{2}/(2\sigma^{2})}$, $\mu = wx$. $\frac{\partial \log p}{\partial w} =$`,o:[String.raw`$\frac{(y - wx)x}{\sigma^{2}}$`,String.raw`$\frac{y - wx}{\sigma^{2}}$`,String.raw`$\frac{x}{\sigma}$`,String.raw`$-\frac{y - wx}{\sigma^{2}}$`],a:0,ex:String.raw`Gradiente de la log-verosimilitud.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`$\hat{y} = \sigma(w_{2}\sigma(w_{1}x))$. $\frac{d\hat{y}}{dw_{1}}$ involucra:`,o:[String.raw`$\sigma'(w_{1}x) \cdot x \cdot \sigma'(w_{2}h) \cdot w_{2}$ con $h = \sigma(w_{1}x)$`,String.raw`Solo $\sigma'(w_{1}x) \cdot x$`,String.raw`Solo $\sigma'(w_{2}h) \cdot w_{2}$`,String.raw`Producto de activaciones`],a:0,ex:String.raw`Cadena de tres eslabones.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`Refuerzo: $G_{t} = r_{t} + \gamma V(s_{t+1})$, $V(s) = \theta^{T}\phi(s)$. $\frac{\partial G_{t}}{\partial\theta} =$`,o:[String.raw`$\gamma\phi$`,String.raw`$\phi$`,String.raw`$\gamma$`,String.raw`$r_{t}$`],a:0,ex:String.raw`$\gamma\phi$: factor de descuento por la composición temporal.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`VAE: $z = \mu + \sigma\epsilon$ con $\mu = f(\theta)$, $\sigma = g(\theta)$, $\epsilon$ fijo. $\frac{\partial z}{\partial \theta} =$`,o:[String.raw`$\frac{\partial \mu}{\partial \theta} + \epsilon \frac{\partial \sigma}{\partial \theta}$`,String.raw`$\frac{\partial \mu}{\partial \theta}$`,String.raw`$\epsilon \frac{\partial \sigma}{\partial \theta}$`,String.raw`$0$`],a:0,ex:String.raw`Reparametrization trick.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`$D_{KL} = \frac{1}{2}(\mu^{2} + \sigma^{2} - \log\sigma^{2} - 1)$, $\mu = wx$, $\sigma = e^{w}$. $\frac{\partial D_{KL}}{\partial w} =$`,o:[String.raw`$\mu x + e^{2w} - 1$`,String.raw`$\mu x$`,String.raw`$e^{2w}$`,String.raw`$\mu x - 1$`],a:0,ex:String.raw`Dos términos: por $\mu$ y por $\sigma$.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`Difusión: $L = \|\epsilon - \epsilon_{\theta}(x_{t}, t)\|^{2}$. $\frac{\partial L}{\partial \theta} =$`,o:[String.raw`$-2(\epsilon - \epsilon_{\theta})^{T}\frac{\partial \epsilon_{\theta}}{\partial \theta}$`,String.raw`$-2(\epsilon - \epsilon_{\theta})$`,String.raw`$-2\epsilon_{\theta}^{T}\frac{\partial \epsilon_{\theta}}{\partial \theta}$`,String.raw`$0$`],a:0,ex:String.raw`Regla matricial con signo negativo.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`GNN: $h_{v} = \sigma(W \sum_{u \in N(v)} h_{u})$. $\frac{\partial h_{v}}{\partial W}$ involucra:`,o:[String.raw`La activación derivada por la suma de mensajes de vecinos`,String.raw`Solo la suma`,String.raw`Solo la activación`,String.raw`Solo $W$`],a:0,ex:String.raw`La suma actúa como factor de escala.`},
+{t:"cad",ctx:"ia",lvl:3,q:String.raw`Atención multi-cabeza: $O = \text{softmax}(QK^{T}/\sqrt{d})V$ con $Q = XW_{Q}$. $\frac{\partial O}{\partial W_{Q}}$ requiere:`,o:[String.raw`Derivada del softmax multiplicada por $\partial(QK^{T})/\partial W_{Q}$, que involucra $X$ y $K$`,String.raw`Solo la derivada del softmax`,String.raw`Solo $X$`,String.raw`Nada`],a:0,ex:String.raw`Cadena completa: $O \to$ softmax $\to S \to Q \to W_{Q}$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$C(L, K)$ con $L' = 2$, $K' = 3$, $C_{L} = 10$, $C_{K} = 5$. $\frac{dC}{dt} =$`,o:[String.raw`$35$`,String.raw`$15$`,String.raw`$20$`,String.raw`$25$`],a:0,ex:String.raw`$10 \cdot 2 + 5 \cdot 3 = 35$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$P = L^{1/2}K^{1/2}$, $L = K = t^{2}$. $\frac{dP}{dt} =$`,o:[String.raw`$2t$`,String.raw`$t$`,String.raw`$1$`,String.raw`$2$`],a:0,ex:String.raw`$P = t^{2}$, derivada $2t$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$B = pq - C(q)$, $q = 3t$, $p = 10$, $C'(q) = 4$. $\frac{dB}{dt} =$`,o:[String.raw`$18$`,String.raw`$6$`,String.raw`$30$`,String.raw`$12$`],a:0,ex:String.raw`$B'(q) = 6$; $\cdot 3 = 18$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$C(s, m)$ con $s = 5t$, $m = 2t$, $C_{s} = 3$, $C_{m} = 4$. $\frac{dC}{dt} =$`,o:[String.raw`$23$`,String.raw`$11$`,String.raw`$7$`,String.raw`$20$`],a:0,ex:String.raw`$15 + 8 = 23$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$Q = a^{2} + b^{2}$, $a = b = t$. $\frac{dQ}{dt} =$`,o:[String.raw`$4t$`,String.raw`$2t$`,String.raw`$4$`,String.raw`$t^{2}$`],a:0,ex:String.raw`$2t + 2t = 4t$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$D(p, r)$ con $D_{p} = -2$, $D_{r} = 3$, $p' = 1$, $r' = 2$. $\frac{dD}{dt} =$`,o:[String.raw`$4$`,String.raw`$-2$`,String.raw`$6$`,String.raw`$-4$`],a:0,ex:String.raw`$-2 + 6 = 4$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$T(a, b)$ con $a' = 3$, $b' = 5$, $T_{a} = -1$, $T_{b} = -2$. $\frac{dT}{dt} =$`,o:[String.raw`$-13$`,String.raw`$13$`,String.raw`$-3$`,String.raw`$-8$`],a:0,ex:String.raw`$-3 - 10 = -13$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$C = L \cdot K$ com $L = 2t$, $K = 3t$. $\frac{dC}{dt} =$`,o:[String.raw`$12t$`,String.raw`$6t$`,String.raw`$5t$`,String.raw`$6$`],a:0,ex:String.raw`$C = 6t^{2}$, derivada $12t$.`},
+{t:"cad",ctx:"inno",lvl:1,q:String.raw`$P = \alpha m + \beta d$ con $m = t$, $d = t^{2}$. $\frac{dP}{dt} =$`,o:[String.raw`$\alpha + 2\beta t$`,String.raw`$\alpha t + \beta t^{2}$`,String.raw`$\alpha + \beta$`,String.raw`$2\beta t$`],a:0,ex:String.raw`$P = \alpha t + \beta t^{2}$; derivada $\alpha + 2\beta t$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$P = L^{\alpha}K^{\beta}$ con $L = e^{t}$, $K = e^{2t}$. $\frac{dP}{dt} =$`,o:[String.raw`$(\alpha + 2\beta)e^{(\alpha + 2\beta)t}$`,String.raw`$(\alpha + \beta)e^{(\alpha + \beta)t}$`,String.raw`$\alpha e^{t} + \beta e^{2t}$`,String.raw`$e^{(\alpha + 2\beta)t}$`],a:0,ex:String.raw`$P = e^{(\alpha + 2\beta)t}$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$C = 5L + 3K$ con $L' = 2$, $K' = 4$. $\frac{dC}{dt} =$`,o:[String.raw`$22$`,String.raw`$7$`,String.raw`$5$`,String.raw`$12$`],a:0,ex:String.raw`$10 + 12 = 22$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$I = PQ$ con $P' = -1$, $Q' = 5$, $P = 10$, $Q = 4$. $\frac{dI}{dt} =$`,o:[String.raw`$46$`,String.raw`$10$`,String.raw`$-1$`,String.raw`$45$`],a:0,ex:String.raw`$4(-1) + 10(5) = 46$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$Q = P^{-\epsilon}Y^{\eta}$ con $P = e^{t}$, $Y = e^{2t}$. $\frac{dQ}{dt} =$`,o:[String.raw`$(-\epsilon + 2\eta)Q$`,String.raw`$(-\epsilon + \eta)Q$`,String.raw`$(-\epsilon - 2\eta)Q$`,String.raw`$-\epsilon Q$`],a:0,ex:String.raw`$Q = e^{(-\epsilon + 2\eta)t}$, derivada $(-\epsilon + 2\eta)Q$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$C = \sqrt{LK}$ con $L = t^{2}$, $K = t^{4}$. $\frac{dC}{dt} =$`,o:[String.raw`$3t^{2}$`,String.raw`$2t$`,String.raw`$t^{3}$`,String.raw`$3t$`],a:0,ex:String.raw`$C = t^{3}$, derivada $3t^{2}$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`Pricing: $G = (p - c)D(p)$, $D = 100 - p$, $p = 50 + t$, $c = 30 + t/2$. $\frac{dG}{dt}$ en $t = 0$:`,o:[String.raw`$5$`,String.raw`$30$`,String.raw`$-30$`,String.raw`$0$`],a:0,ex:String.raw`$G_{p} = 30$, $G_{c} = -50$; $30 - 25 = 5$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$T = c \cdot v$ con $c = 3t$, $v = 5 + t$. $\frac{dT}{dt} =$`,o:[String.raw`$15 + 6t$`,String.raw`$3$`,String.raw`$5 + t$`,String.raw`$15t$`],a:0,ex:String.raw`$T = 15t + 3t^{2}$; derivada $15 + 6t$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$I = a^{2} + b^{2} + ab$ con $a = 2t$, $b = 3t$. $\frac{dI}{dt} =$`,o:[String.raw`$38t$`,String.raw`$19t$`,String.raw`$22t$`,String.raw`$13t$`],a:0,ex:String.raw`$I = 19t^{2}$; derivada $38t$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$U = x + 2y + xy$ con $x = t$, $y = 2t$. $\frac{dU}{dt} =$`,o:[String.raw`$5 + 4t$`,String.raw`$3 + 3t$`,String.raw`$5$`,String.raw`$7$`],a:0,ex:String.raw`$U = 5t + 2t^{2}$; derivada $5 + 4t$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$C = \frac{L + K}{2}$ con $L = t^{2}$, $K = 3t$. $\frac{dC}{dt} =$`,o:[String.raw`$t + 3/2$`,String.raw`$2t + 3$`,String.raw`$t + 3$`,String.raw`$1/2 + 3$`],a:0,ex:String.raw`$C = (t^{2} + 3t)/2$; derivada $t + 3/2$.`},
+{t:"cad",ctx:"inno",lvl:2,q:String.raw`$R = c - \alpha c^{2}$ con $c = 1 + t$. $\frac{dR}{dt} =$`,o:[String.raw`$1 - 2\alpha(1+t)$`,String.raw`$1 - 2\alpha c$`,String.raw`$-\alpha$`,String.raw`$1$`],a:0,ex:String.raw`$R'(c) = 1 - 2\alpha c$; $\cdot 1$.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`Bass: $f(t) = (p + qF)(1 - F)$ con $F = t^{2}$. $\frac{df}{dt} =$`,o:[String.raw`$2qt(1 - t^{2}) - (p + qt^{2}) \cdot 2t$`,String.raw`$2qt(1 - t^{2})$`,String.raw`$-(p + qt^{2}) \cdot 2t$`,String.raw`$q(1 - t^{2})$`],a:0,ex:String.raw`Producto de dos factores dependientes de $t$.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`$Q = \alpha x + \beta y - \gamma(x^{2} + y^{2})$, $x = t$, $y = 2t$. $\frac{dQ}{dt}$ en $t = 0$:`,o:[String.raw`$\alpha + 2\beta$`,String.raw`$\alpha + \beta$`,String.raw`$\alpha$`,String.raw`$2\beta$`],a:0,ex:String.raw`$Q_{x} = \alpha$, $Q_{y} = \beta$ en $t = 0$; $\alpha + 2\beta$.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`$E = \frac{LK}{L + K}$ con $L = t$, $K = t^{2}$. $\frac{dE}{dt}$ en $t = 1$:`,o:[String.raw`$\frac{3}{4}$`,String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$E = \frac{t^{2}}{1 + t}$; $E'(1) = \frac{3}{4}$.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`$V = \frac{r}{1 + c}$ con $r = 2t$, $c = t$. $\frac{dV}{dt}$ en $t = 1$:`,o:[String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{3}{4}$`,String.raw`$\frac{1}{4}$`],a:0,ex:String.raw`$V = \frac{2t}{1 + t}$; $V'(1) = \frac{1}{2}$.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`$P = aL^{b}K^{c}$ con $L = t^{p}$, $K = t^{q}$. $\frac{dP}{dt} =$`,o:[String.raw`$a(bp + cq)t^{bp + cq - 1}$`,String.raw`$a(bp + cq)t^{bp+cq}$`,String.raw`$ab t^{bp-1} + ac t^{cq-1}$`,String.raw`$a(b + c)t^{bp+cq}$`],a:0,ex:String.raw`$P = a t^{bp + cq}$.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`$R = \frac{x - y}{x + y}$ con $x = e^{t}$, $y = e^{-t}$. $\frac{dR}{dt} =$`,o:[String.raw`$\frac{4}{(e^{t} + e^{-t})^{2}}$`,String.raw`$\frac{1}{2}$`,String.raw`$2$`,String.raw`$\frac{1}{(e^{t} + e^{-t})^{2}}$`],a:0,ex:String.raw`$R = \tanh t$; derivada sech².`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`$U = x^{2} - y^{2}$ com $x = \cos t$, $y = \sin t$. $\frac{dU}{dt} =$`,o:[String.raw`$-4\sin t\cos t$`,String.raw`$0$`,String.raw`$4\cos t\sin t$`,String.raw`$2\cos t + 2\sin t$`],a:0,ex:String.raw`$U = \cos 2t$; derivada $-2\sin 2t = -4\sin t\cos t$.`},
+{t:"cad",ctx:"inno",lvl:3,q:String.raw`$B = \frac{r^{2}}{1 + r}$ con $r = t^{2}$. $\frac{dB}{dt}$ en $t = 1$:`,o:[String.raw`$\frac{3}{2}$`,String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$\frac{3}{4}$`],a:0,ex:String.raw`$B = \frac{t^{4}}{1 + t^{2}}$; $B'(1) = \frac{3}{2}$.`}
+];
+
+/* ======================= BANCO CC (91) ======================= */
+const BANK_CC = [
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Al usar polares, el elemento de área $dA$ se transforma en:`,o:[String.raw`$dA = r\,dr\,d\theta$`,String.raw`$dA = dr\,d\theta$`,String.raw`$dA = r^{2}\,dr\,d\theta$`,String.raw`$dA = \theta\,dr\,d\theta$`],a:0,ex:String.raw`Jacobiano $r$.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`El jacobiano del cambio a polares vale:`,o:[String.raw`$r$`,String.raw`$1$`,String.raw`$r^{2}$`,String.raw`$\theta$`],a:0,ex:String.raw`$r$.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`$\iint_{D} e^{x^{2} + y^{2}}\,dA$ sobre el disco unitario:`,o:[String.raw`$\pi(e - 1)$`,String.raw`$e - 1$`,String.raw`$\frac{\pi(e - 1)}{2}$`,String.raw`$2\pi e$`],a:0,ex:String.raw`$\pi(e - 1)$.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`Área del disco de radio 2:`,o:[String.raw`$4\pi$`,String.raw`$2\pi$`,String.raw`$8\pi$`,String.raw`$\frac{8\pi}{3}$`],a:0,ex:String.raw`$4\pi$.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`$\iint_{D}\sqrt{x^{2} + y^{2}}\,dA$ sobre el disco de radio 2:`,o:[String.raw`$\frac{16\pi}{3}$`,String.raw`$\frac{8\pi}{3}$`,String.raw`$8\pi$`,String.raw`$4\pi$`],a:0,ex:String.raw`$\frac{16\pi}{3}$.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Semicírculo superior radio 2 en polares:`,o:[String.raw`$0 \leq r \leq 2$, $0 \leq \theta \leq \pi$`,String.raw`$0 \leq r \leq 2$, $0 \leq \theta \leq 2\pi$`,String.raw`$0 \leq r \leq 4$, $0 \leq \theta \leq \pi$`,String.raw`$0 \leq r \leq 2$, $-\pi \leq \theta \leq 0$`],a:0,ex:String.raw`Radio 2, semicírculo superior.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Arandela entre $r = 1$ y $r = 3$. Área:`,o:[String.raw`$8\pi$`,String.raw`$9\pi$`,String.raw`$4\pi$`,String.raw`$6\pi$`],a:0,ex:String.raw`$2\pi \cdot 4 = 8\pi$.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`$\iint_{D}(x^{2} + y^{2})\,dA$ sobre el disco de radio 3:`,o:[String.raw`$\frac{81\pi}{2}$`,String.raw`$27\pi$`,String.raw`$\frac{27\pi}{2}$`,String.raw`$81\pi$`],a:0,ex:String.raw`$\frac{81\pi}{2}$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Cuarto de disco radio 2 (primer cuadrante). Área:`,o:[String.raw`$\int_{0}^{\pi/2}\int_{0}^{2} r\,dr\,d\theta = \pi$`,String.raw`$\int_{0}^{2\pi}\int_{0}^{2} r\,dr\,d\theta = 4\pi$`,String.raw`$\int_{0}^{\pi}\int_{0}^{2} r\,dr\,d\theta = 2\pi$`,String.raw`$\int_{0}^{\pi/2}\int_{0}^{4} r\,dr\,d\theta = 2\pi$`],a:0,ex:String.raw`Cuarto del disco: $\pi$.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`$\iint_{D}(x^{2} + y^{2})\,dA$ sobre semicírculo superior radio 2:`,o:[String.raw`$4\pi$`,String.raw`$8\pi$`,String.raw`$2\pi$`,String.raw`$\frac{16\pi}{3}$`],a:0,ex:String.raw`$4\pi$.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`Cambio $x = u + v$, $y = u - v$. Jacobiano absoluto:`,o:[String.raw`$\left|\begin{vmatrix} 1 & 1 \\ 1 & -1 \end{vmatrix}\right| = 2$`,String.raw`$0$`,String.raw`$1$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$|{-2}| = 2$.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Paralelogramo acotado por $x + y = 1, 4$ y $x - y = 0, 2$, cambio $u = x + y$, $v = x - y$. Área:`,o:[String.raw`$3$`,String.raw`$6$`,String.raw`$1.5$`,String.raw`$12$`],a:0,ex:String.raw`Rect. de 6 pesado por $1/2$: 3.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`¿Por qué el factor $r$ en $dA = r\,dr\,d\theta$?`,o:[String.raw`Celdas polares tienen lados $dr$ y $r\,d\theta$: al alejarse del origen, las rebanadas angulares son más anchas`,String.raw`Porque $r$ vale $\sqrt{2}$ en promedio`,String.raw`Para que la integral dé positiva`,String.raw`Convención sin efecto geométrico`],a:0,ex:String.raw`Estiramiento angular.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`Región interior a $r = 2\cos\theta$:`,o:[String.raw`$0 \leq r \leq 2\cos\theta$, $-\frac{\pi}{2} \leq \theta \leq \frac{\pi}{2}$`,String.raw`$0 \leq r \leq 2$, $0 \leq \theta \leq 2\pi$`,String.raw`$0 \leq r \leq 2\cos\theta$, $0 \leq \theta \leq \pi$`,String.raw`$0 \leq r \leq 1$, $-\frac{\pi}{2} \leq \theta \leq \frac{\pi}{2}$`],a:0,ex:String.raw`Círculo desplazado.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Difusor $z = 9 - x^{2} - y^{2}$ sobre disco radio 3. Volumen:`,o:[String.raw`$\frac{81\pi}{2}$`,String.raw`$81\pi$`,String.raw`$\frac{27\pi}{2}$`,String.raw`$27\pi$`],a:0,ex:String.raw`$\frac{81\pi}{2}$.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`$\iint_{\mathbb{R}^{2}}e^{-x^{2} - y^{2}}\,dA =$`,o:[String.raw`$\pi$`,String.raw`$\sqrt{\pi}$`,String.raw`$2\pi$`,String.raw`Diverge`],a:0,ex:String.raw`$\pi$ (base de Gauss 2D).`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Semiplano $x \leq 0$, $r \leq 3$:`,o:[String.raw`$\frac{\pi}{2} \leq \theta \leq \frac{3\pi}{2}$`,String.raw`$0 \leq \theta \leq \pi$`,String.raw`$\pi \leq \theta \leq 2\pi$`,String.raw`$-\frac{\pi}{2} \leq \theta \leq \frac{\pi}{2}$`],a:0,ex:String.raw`Semiplano izquierdo.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Elipse $\frac{x^{2}}{4} + \frac{y^{2}}{9} \le 1$. Área con $x = 2u$, $y = 3v$:`,o:[String.raw`$6\pi$`,String.raw`$\pi$`,String.raw`$12\pi$`,String.raw`$3\pi$`],a:0,ex:String.raw`$\pi ab = 6\pi$.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Se integra con $\left|\frac{\partial(x, y)}{\partial(u, v)}\right|$ en absoluto porque:`,o:[String.raw`El área de cada celda es positiva, aunque la transformación invierta la orientación`,String.raw`El determinante siempre es negativo`,String.raw`Convierte la integral simple en doble`,String.raw`Convención sin efecto`],a:0,ex:String.raw`Área siempre positiva.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`$\iint_{D}xy\,dA$ sobre cuarto de disco unitario:`,o:[String.raw`$\frac{1}{8}$`,String.raw`$\frac{1}{4}$`,String.raw`$\frac{1}{16}$`,String.raw`$0$`],a:0,ex:String.raw`$\frac{1}{2} \cdot \frac{1}{4} = \frac{1}{8}$.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`¿Cuándo conviene usar polares?`,o:[String.raw`Región es disco, anillo o sector, o el integrando contiene $x^{2} + y^{2}$`,String.raw`Región es rectángulo`,String.raw`Integrando es lineal`,String.raw`Función toma valores negativos`],a:0,ex:String.raw`Simetría circular.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`$\iint_{D}(x + y)\,dA$ sobre disco unitario:`,o:[String.raw`$0$ por simetría (integrandos impares)`,String.raw`$\pi$`,String.raw`$\frac{\pi}{2}$`,String.raw`$2$`],a:0,ex:String.raw`Simetría par-impar: 0.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`$u = x + y$, $v = y$. Región entre $x + y = 2, 5$ y $y = 0, 1$:`,o:[String.raw`Rect. $2 \leq u \leq 5$, $0 \leq v \leq 1$`,String.raw`Rect. $2 \leq v \leq 5$`,String.raw`Triángulo`,String.raw`Disco`],a:0,ex:String.raw`Rectificación.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Cardioide $r = 1 + \cos\theta$. Área:`,o:[String.raw`$\frac{3\pi}{2}$`,String.raw`$\pi$`,String.raw`$2\pi$`,String.raw`$\frac{\pi}{2}$`],a:0,ex:String.raw`$\frac{3\pi}{2}$.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Antena disco radio 3 km, densidad $\rho = 10(3 - r)$. Total:`,o:[String.raw`$90\pi$`,String.raw`$270$`,String.raw`$30\pi$`,String.raw`$180\pi$`],a:0,ex:String.raw`$90\pi$.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Disco unitario. Área en polares:`,o:[String.raw`$\int_{0}^{2\pi}\int_{0}^{1} r\,dr\,d\theta = \pi$`,String.raw`$\int_{0}^{2\pi}\int_{0}^{1} dr\,d\theta = 2\pi$`,String.raw`$\int_{0}^{2\pi}\int_{0}^{1} r^{2}\,dr\,d\theta = \frac{2\pi}{3}$`,String.raw`$\int_{0}^{1}\int_{0}^{2\pi} r\,d\theta\,dr = 2\pi$`],a:0,ex:String.raw`$\pi$.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`$x = 2u$, $y = 3v$. Jacobiano:`,o:[String.raw`$6$`,String.raw`$5$`,String.raw`$1$`,String.raw`$\frac{1}{6}$`],a:0,ex:String.raw`$2 \cdot 3 = 6$.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`Círculo $x^{2} + y^{2} = 4$ en polares:`,o:[String.raw`$r = 2$`,String.raw`$r = 4$`,String.raw`$r = 16$`,String.raw`$r^{2} = 2$`],a:0,ex:String.raw`$r = 2$.`},
+{t:"cc",ctx:"mat",lvl:1,q:String.raw`El factor $r\,dr\,d\theta$ sustituye a:`,o:[String.raw`$dx\,dy$`,String.raw`$dr\,d\theta$`,String.raw`$d\theta\,dr$`,String.raw`Nada`],a:0,ex:String.raw`Elemento de área en polares.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`Área del anillo $1 \le x^{2} + y^{2} \le 4$:`,o:[String.raw`$3\pi$`,String.raw`$4\pi$`,String.raw`$\pi$`,String.raw`$2\pi$`],a:0,ex:String.raw`$3\pi$.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`$\iint_{D}x^{2}\,dA$ sobre disco unitario:`,o:[String.raw`$\frac{\pi}{4}$`,String.raw`$\frac{\pi}{2}$`,String.raw`$\pi$`,String.raw`$\frac{2\pi}{3}$`],a:0,ex:String.raw`$\frac{1}{4} \cdot \pi = \frac{\pi}{4}$.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`$u = x + y$, $v = x - y$. Jacobiano absoluto:`,o:[String.raw`$2$`,String.raw`$\frac{1}{2}$`,String.raw`$1$`,String.raw`$4$`],a:0,ex:String.raw`$2$.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`Sector $0 \leq r \leq 3$, $0 \leq \theta \leq \pi/4$:`,o:[String.raw`$\frac{9\pi}{8}$`,String.raw`$\frac{9\pi}{4}$`,String.raw`$\frac{3\pi}{4}$`,String.raw`$\frac{9\pi}{2}$`],a:0,ex:String.raw`$\frac{\pi}{4} \cdot \frac{9}{2} = \frac{9\pi}{8}$.`},
+{t:"cc",ctx:"mat",lvl:2,q:String.raw`$\iint_{D}(x^{2} + y^{2})\,dA$ sobre disco unitario:`,o:[String.raw`$\frac{\pi}{2}$`,String.raw`$\pi$`,String.raw`$\frac{2\pi}{3}$`,String.raw`$\frac{\pi}{4}$`],a:0,ex:String.raw`$\frac{\pi}{2}$.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`$\iint_{D}e^{-(x^{2} + y^{2})}\,dA$ sobre disco unitario:`,o:[String.raw`$\pi(1 - e^{-1})$`,String.raw`$e^{-1}$`,String.raw`$\pi e^{-1}$`,String.raw`$1 - e^{-1}$`],a:0,ex:String.raw`$\pi(1 - e^{-1})$.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`$\iint_{D}y^{2}\,dA$ sobre disco unitario:`,o:[String.raw`$\frac{\pi}{4}$`,String.raw`$\frac{\pi}{2}$`,String.raw`$\frac{\pi}{3}$`,String.raw`$\pi$`],a:0,ex:String.raw`Simetría: $\frac{\pi}{4}$.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`Círculo $r = 2\sin\theta$. Área:`,o:[String.raw`$\pi$`,String.raw`$2\pi$`,String.raw`$\frac{\pi}{2}$`,String.raw`$4\pi$`],a:0,ex:String.raw`$\pi$.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`$\iint_{D}\frac{1}{(1 + x^{2} + y^{2})^{2}}\,dA$ sobre disco unitario:`,o:[String.raw`$\frac{\pi}{2}$`,String.raw`$\pi$`,String.raw`$\frac{\pi}{4}$`,String.raw`$\frac{3\pi}{4}$`],a:0,ex:String.raw`$\frac{\pi}{2}$.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`Un pétalo de $r = \cos 2\theta$. Área:`,o:[String.raw`$\frac{\pi}{8}$`,String.raw`$\frac{\pi}{4}$`,String.raw`$\frac{\pi}{2}$`,String.raw`$\pi$`],a:0,ex:String.raw`$\frac{\pi}{8}$.`},
+{t:"cc",ctx:"mat",lvl:3,q:String.raw`Cambio $x = uv$, $y = u/v$ ($v > 0$). Jacobiano:`,o:[String.raw`$\left|\frac{2u}{v}\right|$`,String.raw`$\left|\frac{u}{v}\right|$`,String.raw`$|2uv|$`,String.raw`$|u^{2}/v|$`],a:0,ex:String.raw`$\frac{2u}{v}$.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Máscara circular radio 1 (pooling CNN). Área:`,o:[String.raw`$\pi$`,String.raw`$2\pi$`,String.raw`$\frac{\pi}{2}$`,String.raw`$4\pi$`],a:0,ex:String.raw`$\pi$.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Conversión correcta a polares:`,o:[String.raw`$x = r\cos\theta$, $y = r\sin\theta$, $r \geq 0$`,String.raw`$x = r\sin\theta$, $y = r\cos\theta$`,String.raw`$x = r/\cos\theta$, $y = r/\sin\theta$`,String.raw`$x = y = r\theta$`],a:0,ex:String.raw`Convención estándar.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Distribución uniforme sobre disco radio 2: área total (normalización):`,o:[String.raw`$4\pi$`,String.raw`$2\pi$`,String.raw`$\pi$`,String.raw`$8\pi$`],a:0,ex:String.raw`$4\pi$.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Elemento de área en polares:`,o:[String.raw`$dA = r\,dr\,d\theta$`,String.raw`$dA = dr\,d\theta$`,String.raw`$dA = r^{2}\,dr\,d\theta$`,String.raw`$dA = d\theta\,dr$`],a:0,ex:String.raw`Jacobiano $r$.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Sector $0 \leq r \leq 1$, $0 \leq \theta \leq \pi/2$. Área:`,o:[String.raw`$\frac{\pi}{4}$`,String.raw`$\frac{\pi}{2}$`,String.raw`$\pi$`,String.raw`$\frac{1}{2}$`],a:0,ex:String.raw`$\frac{\pi}{4}$.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Máscara circular radio $\sqrt{5}$. Área:`,o:[String.raw`$5\pi$`,String.raw`$25\pi$`,String.raw`$\sqrt{5}\pi$`,String.raw`$10\pi$`],a:0,ex:String.raw`$5\pi$.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Al cambiar a polares sobre un disco, $\theta$ varía entre:`,o:[String.raw`$0$ y $2\pi$ para el barrido completo`,String.raw`$0$ y $\pi$`,String.raw`$-\pi/2$ y $\pi/2$`,String.raw`$0$ y $1$`],a:0,ex:String.raw`Disco completo.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Dos variables angulares independientes $\theta_{1}, \theta_{2}$ en $[0, 2\pi]$. Medida del espacio:`,o:[String.raw`$4\pi^{2}$`,String.raw`$2\pi$`,String.raw`$\pi^{2}$`,String.raw`$4\pi$`],a:0,ex:String.raw`$2\pi \cdot 2\pi = 4\pi^{2}$.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`$\iint_{x^{2} + y^{2} \leq 1}1\,dA$ en polares:`,o:[String.raw`$\pi$`,String.raw`$2\pi$`,String.raw`$\frac{\pi}{2}$`,String.raw`$1$`],a:0,ex:String.raw`$\pi$.`},
+{t:"cc",ctx:"ia",lvl:1,q:String.raw`Embeddings con radio $r \in [1, 3]$. Área del anillo:`,o:[String.raw`$8\pi$`,String.raw`$9\pi$`,String.raw`$\pi$`,String.raw`$4\pi$`],a:0,ex:String.raw`$8\pi$.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`$f = \frac{1}{2\pi}e^{-(x^{2} + y^{2})/2}$ gaussiana 2D. $\iint f\,dA$:`,o:[String.raw`$1$`,String.raw`$2\pi$`,String.raw`$\pi$`,String.raw`$\frac{1}{2\pi}$`],a:0,ex:String.raw`Normalizada.`},
+/*{t:"cc",ctx:"ia",lvl:2,q:String.raw`Energ
+
+/* === NUEVOS cc/ia/2 — continuación (8) === */
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`En un modelo probabilístico, la densidad $f(x,y) = \frac{1}{2\pi}e^{-(x^{2}+y^{2})/2}$ (gaussiana estándar 2D). Su integral total $\iint_{\mathbb{R}^{2}}f\,dA$ es:`,o:[String.raw`$1$`,String.raw`$2\pi$`,String.raw`$\pi$`,String.raw`$\frac{1}{2\pi}$`],a:0,ex:String.raw`$\iint e^{-r^{2}/2}r\,dr\,d\theta \cdot \frac{1}{2\pi} = \frac{1}{2\pi} \cdot 2\pi = 1$.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Energía con densidad $e(x, y) = \frac{1}{1 + r^{2}}$ sobre disco de radio $R$. Cuando $R \to \infty$:`,o:[String.raw`Diverge logarítmicamente`,String.raw`Converge a $\pi$`,String.raw`Converge a $2\pi$`,String.raw`Es 0`],a:0,ex:String.raw`$\int_{0}^{R}\frac{r}{1+r^{2}}dr = \frac{1}{2}\ln(1+R^{2}) \to \infty$: decae demasiado lento.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Kernel RBF $K(x, y) = e^{-(x^{2}+y^{2})/(2\sigma^{2})}$. Su integral sobre $\mathbb{R}^{2}$ es:`,o:[String.raw`$2\pi\sigma^{2}$`,String.raw`$\sigma^{2}$`,String.raw`$2\pi\sigma$`,String.raw`$\pi\sigma^{2}$`],a:0,ex:String.raw`$2\pi\sigma^{2}$: constante de normalización de la gaussiana 2D.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Mezcla gaussiana isotrópica con "volumen efectivo" $\pi R^{2}$, $R = 3$:`,o:[String.raw`$9\pi$`,String.raw`$6\pi$`,String.raw`$3\pi$`,String.raw`$12\pi$`],a:0,ex:String.raw`$\pi \cdot 9 = 9\pi$.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Distancia promedio al centro de un disco unitario: $\frac{1}{\pi}\iint_{D}r\,dA$. Vale:`,o:[String.raw`$\frac{2}{3}$`,String.raw`$\frac{1}{2}$`,String.raw`$\frac{\pi}{2}$`,String.raw`$1$`],a:0,ex:String.raw`$\iint r\,dA = \frac{2\pi}{3}$; dividido entre $\pi$: $\frac{2}{3}$.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Autoencoder con pérdida $\iint_{r \leq 2}(4 - r^{2})r\,dr\,d\theta$:`,o:[String.raw`$8\pi$`,String.raw`$4\pi$`,String.raw`$16\pi$`,String.raw`$\frac{8\pi}{3}$`],a:0,ex:String.raw`$\int_{0}^{2}(4r - r^{3})dr = 4$; $\times 2\pi = 8\pi$.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Regularización $\lambda \sum r^{2}$ sobre disco unitario, $\lambda = 1$:`,o:[String.raw`$\frac{\pi}{2}$`,String.raw`$\pi$`,String.raw`$2\pi$`,String.raw`$\frac{\pi}{4}$`],a:0,ex:String.raw`$\iint(x^{2}+y^{2})dA = \frac{\pi}{2}$.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Incertidumbre angular uniforme en $[0, 2\pi]$: "longitud" total:`,o:[String.raw`$2\pi$`,String.raw`$\pi$`,String.raw`$4\pi$`,String.raw`$1$`],a:0,ex:String.raw`$\int_{0}^{2\pi}d\theta = 2\pi$.`},
+{t:"cc",ctx:"ia",lvl:2,q:String.raw`Kernel circular radio 2, constante $c$ tal que $\iint c\,dA = 1$:`,o:[String.raw`$c = \frac{1}{4\pi}$`,String.raw`$c = 1$`,String.raw`$c = 4\pi$`,String.raw`$c = \frac{1}{2\pi}$`],a:0,ex:String.raw`Área $4\pi$; $c = 1/(4\pi)$.`},
+
+/* === NUEVOS cc/ia/3 (7) === */
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`$\iint_{\mathbb{R}^{2}}e^{-(x^{2}+y^{2})/\sigma^{2}}\,dA$ vale:`,o:[String.raw`$\pi\sigma^{2}$`,String.raw`$2\pi\sigma^{2}$`,String.raw`$\pi\sigma$`,String.raw`$\frac{\pi\sigma^{2}}{2}$`],a:0,ex:String.raw`Con $u = r/\sigma$: $\pi\sigma^{2}$.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Función de Green en 2D: $G(x, y, t) = \frac{1}{4\pi t}e^{-(x^{2}+y^{2})/(4t)}$. $\iint_{\mathbb{R}^{2}}G\,dA =$`,o:[String.raw`$1$`,String.raw`$4\pi t$`,String.raw`$\frac{1}{4\pi t}$`,String.raw`$2\pi t$`],a:0,ex:String.raw`$\frac{1}{4\pi t} \cdot 2\pi \cdot 2t = 1$: densidad de probabilidad.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Entropía diferencial de gaussiana 2D con varianza $\sigma^{2}$: $h = \ln(2\pi e\sigma^{2})$. El "volumen efectivo" es:`,o:[String.raw`$2\pi e\sigma^{2}$`,String.raw`$2\pi\sigma^{2}$`,String.raw`$e\sigma^{2}$`,String.raw`$\pi e\sigma^{2}$`],a:0,ex:String.raw`$2\pi e\sigma^{2} \approx 17.08 \sigma^{2}$.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Mezcla gaussiana con $\sigma = 1$. Peso sobre región $0 \le r \le 1$ (dentro de $1\sigma$):`,o:[String.raw`$1 - e^{-1/2} \approx 0.393$`,String.raw`$0.5$`,String.raw`$1 - e^{-1}$`,String.raw`$e^{-1/2}$`],a:0,ex:String.raw`$1 - e^{-1/2} \approx 0.393$: probabilidad de caer dentro del círculo de radio $\sigma$.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Error cuadrático esperado $E[r^{2}]$ para gaussiana 2D isotrópica con varianza $\sigma^{2}$:`,o:[String.raw`$2\sigma^{2}$`,String.raw`$\sigma^{2}$`,String.raw`$4\sigma^{2}$`,String.raw`$\frac{\sigma^{2}}{2}$`],a:0,ex:String.raw`$2\sigma^{2}$: una $\sigma^{2}$ por dimensión.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Prior uniforme sobre anillo $D = \{1 \le r \le 2\}$. Densidad normalizada:`,o:[String.raw`$f = \frac{1}{3\pi}$ sobre $D$, cero fuera`,String.raw`$f = 1$`,String.raw`$f = 2\pi$`,String.raw`$f = \pi$`],a:0,ex:String.raw`Área del anillo $= 3\pi$; densidad $= 1/(3\pi)$.`},
+{t:"cc",ctx:"ia",lvl:3,q:String.raw`Distancia media entre dos puntos aleatorios uniformes en disco unitario es $\frac{128}{45\pi} \approx 0.905$. Su cálculo requiere:`,o:[String.raw`Integral cuádruple en $\mathbb{R}^{4}$ que al pasar a diferencias y polares se reduce a una doble`,String.raw`Una integral simple`,String.raw`Una integral triple`,String.raw`Ninguna: no tiene forma cerrada`],a:0,ex:String.raw`Se usan diferencias $u = x_{1} - x_{2}$, $v = y_{1} - y_{2}$ y coordenadas polares.`},
+
+/* === NUEVOS cc/inno/1 (10) === */
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Disco de radio 5 cm. Área:`,o:[String.raw`$25\pi$ cm²`,String.raw`$5\pi$ cm²`,String.raw`$10\pi$ cm²`,String.raw`$50\pi$ cm²`],a:0,ex:String.raw`$\pi R^{2} = 25\pi$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Jacobiano del cambio $x = r\cos\theta$, $y = r\sin\theta$:`,o:[String.raw`$r$`,String.raw`$1$`,String.raw`$\cos\theta$`,String.raw`$r^{2}$`],a:0,ex:String.raw`$|J| = r$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Pieza circular de diámetro 2 dm. Área:`,o:[String.raw`$\pi$ dm²`,String.raw`$2\pi$ dm²`,String.raw`$4\pi$ dm²`,String.raw`$\frac{\pi}{2}$ dm²`],a:0,ex:String.raw`Radio 1 dm: $\pi \cdot 1$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Sector de radio $R$ y ángulo $\alpha$. Área:`,o:[String.raw`$\frac{1}{2}R^{2}\alpha$`,String.raw`$R\alpha$`,String.raw`$R^{2}\alpha$`,String.raw`$\frac{R\alpha}{2}$`],a:0,ex:String.raw`$\int_{0}^{\alpha}\int_{0}^{R}r\,dr\,d\theta = \frac{R^{2}\alpha}{2}$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Arandela con radios interior 2 y exterior 5 cm. Área:`,o:[String.raw`$21\pi$ cm²`,String.raw`$25\pi$ cm²`,String.raw`$4\pi$ cm²`,String.raw`$29\pi$ cm²`],a:0,ex:String.raw`$\pi(25 - 4) = 21\pi$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`$\iint_{D}1\,dA$ sobre semicírculo superior de radio 3:`,o:[String.raw`$\frac{9\pi}{2}$`,String.raw`$9\pi$`,String.raw`$\frac{3\pi}{2}$`,String.raw`$\frac{9\pi}{4}$`],a:0,ex:String.raw`Mitad del disco: $\frac{9\pi}{2}$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Cuarto de disco en primer cuadrante en polares:`,o:[String.raw`$0 \le r \le R$, $0 \le \theta \le \pi/2$`,String.raw`$0 \le r \le R$, $0 \le \theta \le 2\pi$`,String.raw`$0 \le r \le R$, $0 \le \theta \le \pi$`,String.raw`$-\pi/2 \le \theta \le \pi/2$`],a:0,ex:String.raw`Primer cuadrante: $\theta \in [0, \pi/2]$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Tapa circular de radio 4 cm. Lámina requerida:`,o:[String.raw`$16\pi$ cm²`,String.raw`$8\pi$ cm²`,String.raw`$4\pi$ cm²`,String.raw`$64\pi$ cm²`],a:0,ex:String.raw`$\pi \cdot 16 = 16\pi$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Curva polar $r = 3$ (círculo radio 3). Área:`,o:[String.raw`$9\pi$`,String.raw`$3\pi$`,String.raw`$6\pi$`,String.raw`$\frac{9\pi}{2}$`],a:0,ex:String.raw`$\pi R^{2} = 9\pi$.`},
+{t:"cc",ctx:"inno",lvl:1,q:String.raw`Cuadrante positivo de la elipse $x^{2}/4 + y^{2}/9 \le 1$:`,o:[String.raw`$\frac{3\pi}{2}$`,String.raw`$6\pi$`,String.raw`$\frac{3\pi}{4}$`,String.raw`$\frac{6\pi}{2}$`],a:0,ex:String.raw`Área total $6\pi$; cuarto: $\frac{3\pi}{2}$.`},
+
+/* === NUEVOS cc/inno/2 (8) === */
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Arandela con $r_{1} = 2$, $r_{2} = 4$:`,o:[String.raw`$12\pi$`,String.raw`$16\pi$`,String.raw`$4\pi$`,String.raw`$8\pi$`],a:0,ex:String.raw`$\pi(16 - 4) = 12\pi$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Disco con densidad $\rho = r$ sobre disco unitario. Masa:`,o:[String.raw`$\frac{2\pi}{3}$`,String.raw`$\pi$`,String.raw`$\frac{\pi}{3}$`,String.raw`$\frac{\pi}{2}$`],a:0,ex:String.raw`$\int_{0}^{2\pi}\int_{0}^{1}r \cdot r\,dr\,d\theta = 2\pi \cdot \frac{1}{3} = \frac{2\pi}{3}$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Semicírculo de radio 2. Área:`,o:[String.raw`$2\pi$`,String.raw`$4\pi$`,String.raw`$\pi$`,String.raw`$\frac{\pi}{2}$`],a:0,ex:String.raw`$\frac{1}{2}\pi \cdot 4 = 2\pi$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Cuarto de disco radio $R$. Área:`,o:[String.raw`$\frac{\pi R^{2}}{4}$`,String.raw`$\frac{\pi R^{2}}{2}$`,String.raw`$\pi R^{2}$`,String.raw`$\frac{\pi R^{2}}{8}$`],a:0,ex:String.raw`$\frac{\pi R^{2}}{4}$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Disco unitario con $\rho(r) = 1 + r$. Masa total:`,o:[String.raw`$\frac{5\pi}{3}$`,String.raw`$\frac{4\pi}{3}$`,String.raw`$\frac{2\pi}{3}$`,String.raw`$2\pi$`],a:0,ex:String.raw`$2\pi \cdot \frac{5}{6} = \frac{5\pi}{3}$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Difusor anillo $r_{1} = 0.5$ m, $r_{2} = 1.5$ m. Área de paso:`,o:[String.raw`$2\pi$ m²`,String.raw`$\pi$ m²`,String.raw`$4\pi$ m²`,String.raw`$\frac{\pi}{2}$ m²`],a:0,ex:String.raw`$\pi(2.25 - 0.25) = 2\pi$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Costo $c(r) = 2r$ sobre disco radio 3. Costo total:`,o:[String.raw`$36\pi$`,String.raw`$18\pi$`,String.raw`$9\pi$`,String.raw`$6\pi$`],a:0,ex:String.raw`$2\pi \cdot 2 \cdot 9 = 36\pi$.`},
+{t:"cc",ctx:"inno",lvl:2,q:String.raw`Sector $R = 6$ cm, $\alpha = \pi/3$. Área:`,o:[String.raw`$6\pi$ cm²`,String.raw`$3\pi$ cm²`,String.raw`$12\pi$ cm²`,String.raw`$18\pi$ cm²`],a:0,ex:String.raw`$\frac{36 \cdot (\pi/3)}{2} = 6\pi$.`},
+
+/* === NUEVOS cc/inno/3 (7) === */
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Cardioide $r = 2(1 - \cos\theta)$. Área:`,o:[String.raw`$6\pi$`,String.raw`$3\pi$`,String.raw`$2\pi$`,String.raw`$9\pi$`],a:0,ex:String.raw`$\frac{1}{2}\int_{0}^{2\pi}4(1-\cos\theta)^{2}d\theta = 6\pi$.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Un pétalo de la rosa $r = 2\cos 2\theta$:`,o:[String.raw`$\frac{\pi}{2}$`,String.raw`$\pi$`,String.raw`$2\pi$`,String.raw`$\frac{3\pi}{2}$`],a:0,ex:String.raw`$\frac{1}{2}\int_{-\pi/4}^{\pi/4}4\cos^{2}2\theta\,d\theta = \frac{\pi}{2}$.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Elipse semiejes $a = 5$, $b = 3$:`,o:[String.raw`$15\pi$`,String.raw`$8\pi$`,String.raw`$30\pi$`,String.raw`$75\pi$`],a:0,ex:String.raw`$\pi ab = 15\pi$.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Cúpula semiesférica con base circular radio 3 dm. Área en planta:`,o:[String.raw`$9\pi$ dm²`,String.raw`$18\pi$ dm²`,String.raw`$3\pi$ dm²`,String.raw`$\frac{9\pi}{2}$ dm²`],a:0,ex:String.raw`Área de la base: $\pi \cdot 9 = 9\pi$.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Placa circular radio $R$ con fuente radial $f(r) = R - r$. Calor total:`,o:[String.raw`$\frac{2\pi R^{3}}{3}$`,String.raw`$\frac{\pi R^{3}}{3}$`,String.raw`$\pi R^{2}$`,String.raw`$\frac{\pi R^{3}}{6}$`],a:0,ex:String.raw`$2\pi\left(\frac{R^{3}}{2} - \frac{R^{3}}{3}\right) = \frac{2\pi R^{3}}{3}$.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Lúnula entre el cuadrado de lado 2 y el círculo inscrito de radio 1. Área:`,o:[String.raw`$4 - \pi$`,String.raw`$2\pi - 4$`,String.raw`$4 - 2\pi$`,String.raw`$\pi - 2$`],a:0,ex:String.raw`Área del cuadrado menos la del círculo inscrito: $4 - \pi$.`},
+{t:"cc",ctx:"inno",lvl:3,q:String.raw`Reflector parabólico $z = R^{2} - r^{2}$ sobre disco $r \le R$, con $R = 2$. Volumen:`,o:[String.raw`$8\pi$`,String.raw`$4\pi$`,String.raw`$16\pi$`,String.raw`$\frac{8\pi}{3}$`],a:0,ex:String.raw`$\int_{0}^{2\pi}\int_{0}^{2}(4 - r^{2})r\,dr\,d\theta = 8\pi$.`}
+];
+
+/* ======================= CONCATENACIÓN ======================= */
+const QUESTIONS = [...BANK_HES, ...BANK_RECT, ...BANK_TIPO, ...BANK_CAD, ...BANK_CC];
+
+/* ======================= LÓGICA DE LA APLICACIÓN ======================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const LS_KEY = "cvv_calculo_best";
+const LVLNAMES = {1: "Básico", 2: "Intermedio", 3: "Avanzado"};
+let S = null;
+
+function typeset(root){
+  try{
+    if(window.renderMathInElement){
+      renderMathInElement(root || document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$",  right: "$",  display: false}
+        ],
+        throwOnError: false,
+        strict: "ignore"
+      });
+    }
+  }catch(e){}
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function getBest(){ try{ return parseInt(localStorage.getItem(LS_KEY) || "0", 10) || 0; }catch(e){ return 0; } }
+function setBest(v){ try{ localStorage.setItem(LS_KEY, String(v)); }catch(e){} }
+function getMode(){
+  const b = document.querySelector("#segMode button.on");
+  return b ? b.dataset.m : "study";
+}
+function showZone(id){
+  ["controls", "sessionZone", "resultZone"].forEach(z => {
+    const el = document.getElementById(z);
+    if(el) el.style.display = (z === id) ? "" : "none";
+  });
+  window.scrollTo(0, 0);
+}
+
+function buildSetup(){
+  const counts = {};
+  QUESTIONS.forEach(q => { counts[q.t] = (counts[q.t] || 0) + 1; });
+
+  const tc = $("#topicChips"); tc.innerHTML = "";
+  Object.keys(TOPICS).forEach(k => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip on"; b.dataset.k = k;
+    b.innerHTML = '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:' + TOPICS[k].c + ';margin-right:6px;vertical-align:middle;"></span>'
+      + TOPICS[k].n + " <b>(" + (counts[k] || 0) + ")</b>";
+    b.onclick = () => b.classList.toggle("on");
+    tc.appendChild(b);
+  });
+
+  const cc = $("#ctxChips"); cc.innerHTML = "";
+  Object.keys(CTXS).forEach(k => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip on"; b.dataset.k = k;
+    b.textContent = CTXS[k].n;
+    b.onclick = () => b.classList.toggle("on");
+    cc.appendChild(b);
+  });
+
+  const th = $("#theoryGrid"); th.innerHTML = "";
+  Object.keys(TOPICS).forEach(k => {
+    const d = document.createElement("div");
+    d.className = "tcard";
+    d.innerHTML = "<h3>" + TOPICS[k].n + "</h3>" + TOPICS[k].ref;
+    th.appendChild(d);
+  });
+
+  $("#badgeTotal").textContent = QUESTIONS.length + " ejercicios";
+  const best = getBest();
+  $("#bestLine").textContent = best
+    ? "Mejor resultado registrado en este dispositivo: " + best + "%."
+    : "Aún no hay resultados registrados en este dispositivo.";
+  typeset(th);
+}
+
+function prepQ(q){
+  const perm = shuffle(q.o.map((txt, i) => ({txt: txt, orig: i})));
+  return {t:q.t, ctx:q.ctx, lvl:q.lvl || 2, q:q.q, ex:q.ex, o:q.o, a:q.a, perm:perm, ci:perm.findIndex(p => p.orig === q.a)};
+}
+
+function startQuiz(){
+  const ts = $$("#topicChips .chip.on").map(b => b.dataset.k);
+  const cs = $$("#ctxChips .chip.on").map(b => b.dataset.k);
+  if(!ts.length || !cs.length){
+    alert("Selecciona al menos un tema y un contexto.");
+    return;
+  }
+  let pool = QUESTIONS.filter(q => ts.includes(q.t) && cs.includes(q.ctx));
+  const lv = $("#lvlSel").value;
+  if(lv !== "all") pool = pool.filter(q => String(q.lvl || 2) === lv);
+  if(pool.length === 0){
+    alert("No hay ejercicios con esa combinación de tema, contexto y nivel. Amplía la selección.");
+    return;
+  }
+  pool = shuffle(pool);
+  const nSel = $("#numQ").value;
+  const n = nSel === "all" ? pool.length : Math.min(parseInt(nSel, 10), pool.length);
+  S = {
+    qs: pool.slice(0, n).map(prepQ),
+    i: 0,
+    mode: getMode(),
+    stats: {resp:0, ok:0, racha:0},
+    answered: false,
+    results: []
+  };
+  showZone("sessionZone");
+  $("#quitBtn").style.display = "";
+  renderQ();
+}
+
+function renderQ(){
+  const q = S.qs[S.i];
+  S.answered = false;
+  $("#qTopic").textContent = TOPICS[q.t].n;
+  $("#qTopic").style.background = TOPICS[q.t].c;
+  $("#qCtx").textContent = CTXS[q.ctx].n;
+  $("#qLvl").textContent = "Nivel: " + LVLNAMES[q.lvl || 2];
+  $("#qCount").textContent = "Pregunta " + (S.i + 1) + " de " + S.qs.length + (S.mode === "exam" ? " · Modo examen" : "");
+  $("#progFill").style.width = (100 * S.i / S.qs.length) + "%";
+  updStats();
+  $("#qText").innerHTML = q.q;
+  const box = $("#opts"); box.innerHTML = "";
+  q.perm.forEach((p, idx) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "opt";
+    b.innerHTML = '<span class="key">' + "abcd"[idx] + ')</span> ' + p.txt;
+    b.onclick = () => pick(idx);
+    box.appendChild(b);
+  });
+  $("#exBox").style.display = "none";
+  $("#exBox").innerHTML = "";
+  $("#nextBtn").style.display = "none";
+  $("#nextBtn").textContent = (S.i === S.qs.length - 1) ? "Ver resultados" : "Siguiente pregunta";
+  typeset($("#sessionZone"));
+}
+
+function updStats(){
+  $("#stResp").textContent = S.stats.resp;
+  const hide = (S.mode === "exam");
+  $("#stOk").textContent = hide ? "—" : S.stats.ok;
+  $("#stRacha").textContent = hide ? "—" : S.stats.racha;
+  $("#stPrec").textContent = (!hide && S.stats.resp) ? Math.round(100 * S.stats.ok / S.stats.resp) + "%" : "—";
+}
+
+function pick(idx){
+  if(!S || S.answered) return;
+  S.answered = true;
+  const q = S.qs[S.i];
+  const ok = (idx === q.ci);
+  const btns = $$("#opts .opt");
+  btns.forEach(b => { b.disabled = true; });
+  if(S.mode === "study"){
+    btns.forEach((b, i) => {
+      if(i === q.ci) b.classList.add("correct");
+      else if(i === idx) b.classList.add("wrong");
+      else b.classList.add("dim");
+    });
+    const exb = $("#exBox");
+    exb.className = "exbox " + (ok ? "ok" : "bad");
+    exb.innerHTML = "<h4>" + (ok ? "Correcto." : "Incorrecto. La respuesta correcta es " + "abcd"[q.ci] + ").") + "</h4><p>" + q.ex + "</p>";
+    exb.style.display = "";
+    S.stats.ok += ok ? 1 : 0;
+    S.stats.racha = ok ? S.stats.racha + 1 : 0;
+    typeset(exb);
+  } else {
+    btns[idx].classList.add("picked");
+  }
+  S.stats.resp++;
+  S.results.push({q:q, picked:idx, ok:ok});
+  updStats();
+  $("#nextBtn").style.display = "";
+}
+
+function next(){
+  if(!S) return;
+  if(S.i < S.qs.length - 1){
+    S.i++;
+    renderQ();
+  } else {
+    finish();
+  }
+}
+
+function finish(){
+  const total = S.qs.length;
+  const okc = S.results.filter(r => r.ok).length;
+  const pct = total ? Math.round(100 * okc / total) : 0;
+  const best = getBest();
+  if(pct > best) setBest(pct);
+
+  $("#resPct").textContent = pct + "%";
+  $("#resScore").textContent = okc + " de " + total + " respuestas correctas";
+  let msg;
+  if(pct === 100)     msg = "Dominio total. Combina todos los temas en modo examen para consolidar.";
+  else if(pct >= 80)  msg = "Excelente dominio. Repasa solo los temas con errores y reintenta.";
+  else if(pct >= 60)  msg = "Buen avance. Consulta el repaso rápido de los temas con errores y vuelve a intentarlo.";
+  else if(pct >= 40)  msg = "Vas por buen camino. Estudia el repaso rápido y practica tema por tema antes de combinar.";
+  else                msg = "Conviene estudiar de nuevo el repaso rápido y practicar cada tema por separado.";
+  $("#resMsg").textContent = msg;
+  $("#resBest").textContent = "Mejor resultado registrado en este dispositivo: " + Math.max(pct, best) + "%.";
+
+  const stats = {};
+  S.results.forEach(r => {
+    const k = r.q.t;
+    stats[k] = stats[k] || {ok:0, t:0};
+    stats[k].t++; if(r.ok) stats[k].ok++;
+  });
+  const tb = $("#resTopics"); tb.innerHTML = "";
+  Object.keys(TOPICS).forEach(k => {
+    if(!stats[k]) return;
+    const st = stats[k], p = Math.round(100 * st.ok / st.t);
+    const row = document.createElement("div");
+    row.className = "trow";
+    row.innerHTML = '<div class="tname">' + TOPICS[k].n + '</div>'
+      + '<div class="tbar"><div style="width:' + p + '%;background:' + TOPICS[k].c + '"></div></div>'
+      + '<div class="tnum">' + st.ok + '/' + st.t + '</div>';
+    tb.appendChild(row);
+  });
+
+  const wrong = S.results.filter(r => !r.ok);
+  $("#perfectBox").style.display = wrong.length ? "none" : "";
+  $("#wrongBox").style.display = wrong.length ? "" : "none";
+  const wr = $("#resWrong"); wr.innerHTML = "";
+  wrong.forEach(r => {
+    const d = document.createElement("div");
+    d.className = "rev";
+    const pickTxt = (r.picked != null && r.q.perm[r.picked]) ? r.q.perm[r.picked].txt : "—";
+    d.innerHTML = '<div class="rev-top">'
+      + '<span class="mini" style="background:' + TOPICS[r.q.t].c + '">' + TOPICS[r.q.t].n + '</span>'
+      + '<span class="mini ctx">' + CTXS[r.q.ctx].n + '</span>'
+      + '<span class="mini ctx">Nivel: ' + LVLNAMES[r.q.lvl || 2] + '</span>'
+      + '<span class="rev-state">Incorrecta</span></div>'
+      + '<p class="qq">' + r.q.q + '</p>'
+      + '<p class="ans bad">Tu respuesta: ' + pickTxt + '</p>'
+      + '<p class="ans good">Respuesta correcta: ' + r.q.perm[r.q.ci].txt + '</p>'
+      + '<p class="exp"><b>Explicación:</b> ' + r.q.ex + '</p>';
+    wr.appendChild(d);
+  });
+  typeset($("#resultZone"));
+  $("#retryBtn").textContent = "Repetir las " + wrong.length + " falladas";
+  $("#retryBtn").style.display = wrong.length ? "" : "none";
+  showZone("resultZone");
+}
+
+function retryWrong(){
+  const wrongQs = S.results.filter(r => !r.ok).map(r => r.q);
+  if(!wrongQs.length) return;
+  S = {
+    qs: shuffle(wrongQs).map(prepQ),
+    i: 0,
+    mode: S.mode,
+    stats: {resp:0, ok:0, racha:0},
+    answered: false,
+    results: []
+  };
+  showZone("sessionZone");
+  $("#quitBtn").style.display = "";
+  renderQ();
+}
+
+$$("#segMode button").forEach(b => {
+  b.onclick = () => {
+    $$("#segMode button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+  };
+});
+$("#allT").onclick = () => $$("#topicChips .chip").forEach(b => b.classList.add("on"));
+$("#noneT").onclick = () => $$("#topicChips .chip").forEach(b => b.classList.remove("on"));
+$("#allC").onclick = () => $$("#ctxChips .chip").forEach(b => b.classList.add("on"));
+$("#noneC").onclick = () => $$("#ctxChips .chip").forEach(b => b.classList.remove("on"));
+$("#startBtn").onclick = startQuiz;
+$("#nextBtn").onclick = next;
+$("#retryBtn").onclick = retryWrong;
+$("#againBtn").onclick = startQuiz;
+$("#homeBtn").onclick = () => { buildSetup(); showZone("controls"); };
+$("#quitBtn").onclick = () => {
+  if(confirm("¿Abandonar la sesión actual? El progreso no respondido se perderá.")){
+    S = null;
+    buildSetup();
+    showZone("controls");
+  }
+};
+document.addEventListener("keydown", e => {
+  if(!S || $("#sessionZone").style.display === "none") return;
+  if(["1","2","3","4"].includes(e.key)){
+    const bs = $$("#opts .opt");
+    const i = parseInt(e.key, 10) - 1;
+    if(bs[i] && !S.answered) bs[i].click();
+  } else if(e.key === "Enter"){
+    if($("#nextBtn").style.display !== "none") $("#nextBtn").click();
+  }
+});
+
+buildSetup();
+showZone("controls");
+</script>
+</body>
+</html>
